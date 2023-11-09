@@ -1,0 +1,25 @@
+{
+  "name": "the-cdj",
+  "version": "1.0.0",
+  "description": "A smart cognitive behavioral therapy journaling tool.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiyaryan/the-cdj.git"
+  },
+  "author": "Ryan Meneses",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hiyaryan/the-cdj/issues"
+  },
+  "homepage": "https://github.com/hiyaryan/the-cdj#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
