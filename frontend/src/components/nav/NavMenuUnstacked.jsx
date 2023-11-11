@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import MenuLink from './MenuLink';
 
 export default function NavMenuStacked({ pages = [], handleCloseNavMenu }) {
     return (
@@ -10,7 +11,7 @@ export default function NavMenuStacked({ pages = [], handleCloseNavMenu }) {
                     onClick={handleCloseNavMenu}
                     sx={{ my: 2, color: 'white', display: 'block' }}
                 >
-                    {page}
+                    <MenuLink page={page} />
                 </Button>
             ))}
         </Box>
