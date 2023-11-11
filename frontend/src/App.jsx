@@ -1,7 +1,9 @@
 import './App.css'
+
 import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Header from '../components/Header';
+
+import Header from './components/Header';
 
 const darkTheme = createTheme({
   palette: {

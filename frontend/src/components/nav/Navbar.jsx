@@ -4,10 +4,11 @@ import Container from '@mui/material/Container';
 
 import TitleUnstacked from './TitleUnstacked';
 import TitleStacked from './TitleStacked';
-import { useState } from 'react';
 import NavMenuStacked from './NavMenuStacked';
 import NavMenuUnstacked from './NavMenuUnstacked';
 import UserMenu from './UserMenu';
+
+import { useState } from 'react';
 
 const pages = ['Home', 'Entries'];
 const settings = ['Account', 'Logout'];
