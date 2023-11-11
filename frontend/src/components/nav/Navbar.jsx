@@ -33,7 +33,7 @@ export default function Navbar() {
     };
 
     return (
-        <AppBar position="fixed" >
+        <AppBar position="sticky" >
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <TitleUnstacked />
