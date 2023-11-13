@@ -43,4 +43,53 @@ router.post('/journals/:journalId/entries', async (req, res) => {
     }
 });
 
+// Update an entry by ID
+router.put('/journals/:journalId/entries/:entryId', async (req, res) => {
+    try {
+        const entryId = req.params.entryId; // Extract entryId from URL params
+        const { title, content, mood, tags, privacy_settings } = req.body;
+
+        // Find the entry by ID and update its fields
+        const updatedEntry = await Entry.findByIdAndUpdate(
+            entryId,
+            {
+                title,
+                content,
+                mood,
+                tags,
+                privacy_settings,
+            },
+            { new: true } // Return the updated entry
+        );
+
+        if (!updatedEntry) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+
+        res.status(200).json(updatedEntry);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Delete an entry by ID
+router.delete('/journals/:journalId/entries/:entryId', async (req, res) => {
+    try {
+        const entryId = req.params.entryId;
+
+        // Find the entry by ID and remove it from the database
+        const deletedEntry = await Entry.findByIdAndDelete(entryId);
+
+        if (!deletedEntry) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+
+        res.status(204).send(); // No content response
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 export default router;

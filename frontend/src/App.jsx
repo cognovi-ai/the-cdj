@@ -14,6 +14,16 @@ const lightTheme = createTheme({
     primary: {
       main: '#282828',
     },
+    edit: {
+      main: '#4fc3f7',
+    },
+    cancel: {
+      main: '#f44336',
+      contrastText: '#fff',
+    },
+    danger: {
+      main: '#e57373',
+    },
   },
 });
 
