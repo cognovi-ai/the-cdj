@@ -1,0 +1,6 @@
+.MenuLink {
+    text-decoration: none;
+    /* Remove underline */
+    color: inherit;
+    /* Use the default text color */
+}

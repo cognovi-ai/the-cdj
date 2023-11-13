@@ -1,4 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
+import "./MenuLink.css"
 
 export default function MenuLink({ page }) {
     const directTo = (page) => {
@@ -7,7 +8,7 @@ export default function MenuLink({ page }) {
 
     return (
         <>
-            <Link to={directTo(page)}>{page}</Link>
+            <Link className='MenuLink' to={directTo(page)}>{page}</Link>
         </>
     )
 }

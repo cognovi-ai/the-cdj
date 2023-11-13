@@ -5,9 +5,10 @@ import Toolbar from '@mui/material/Toolbar';
 export default function Footer() {
     return (
         <Box sx={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             width: '100%',
+            minHeight: '100%',
         }}>
             <AppBar position="static" color="primary">
                 <Toolbar>
