@@ -1,19 +1,20 @@
-import { Box, TextField, IconButton } from '@mui/material';
-import { CancelPresentation as UnfocusIcon, Send as SendIcon } from '@mui/icons-material';
+import { Box, IconButton } from '@mui/material';
+import { CancelPresentation as UnfocusIcon } from '@mui/icons-material';
 
-export default function Analysis({ focusedData, setFocusing, messages, setMessages, chatData, setChatData }) {
+import { useState } from "react";
+
+import ChatEntry from '../../chat/ChatEntry';
+import Messages from '../../chat/Messages';
+
+export default function Analysis({ focusedData, setFocusing }) {
+    const [messages, setMessages] = useState([]);
+    const [chatData, setChatData] = useState({
+        content: '',
+        createdAt: Date(),
+    });
+
     const handleUnfocus = () => {
         setFocusing(false);
-    }
-
-    const handleSendChat = () => {
-
-        setMessages([
-            ...messages,
-            { content: chatData, createdAt: Date() }
-        ])
-
-        setChatData("");
     }
 
     return (
@@ -32,38 +33,15 @@ export default function Analysis({ focusedData, setFocusing, messages, setMessag
                 </div>
             </Box>
             <Box>
-                <h2>Chat</h2>
-                {messages.map((message, index) => (
-                    <div key={index}>
-                        <p>TODO: Setup Chat.</p>
-                        {/* FIXME: message.content does not work: Objects are not valid as a React Child */}
-                        {/* <p>{message.content}</p> */}
-                    </div>
-                ))}
-                <TextField
-                    label="Dive deeper."
-                    variant="filled"
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    maxRows={6}
-                    onChange={(e) =>
-                        setChatData({
-                            ...chatData,
-                            content: e.target.value,
-                        })
-                    }
+                <Messages
+                    messages={messages}
                 />
-                <Box display="flex"
-                    justifyContent="flex-end"
-                    marginTop={2}>
-                    <IconButton
-                        aria-label="Send Chat"
-                        color="primary"
-                        onClick={() => handleSendChat()}>
-                        <SendIcon />
-                    </IconButton>
-                </Box>
+                <ChatEntry
+                    messages={messages}
+                    setMessages={setMessages}
+                    chatData={chatData}
+                    setChatData={setChatData}
+                />
             </Box>
         </div>
     );

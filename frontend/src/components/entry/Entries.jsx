@@ -1,6 +1,8 @@
 import { styled } from '@mui/material/styles';
 import { Paper, Grid } from '@mui/material';
+
 import { useState, useEffect } from "react";
+
 import Thoughts from './thought/Thoughts';
 import Analysis from './thought/Analysis';
 import Entry from './thought/Entry';
@@ -28,11 +30,6 @@ export default function Entries() {
         privacy_settings: {},
     });
     const [focusedEntryId, setFocusedEntryId] = useState('');
-    const [messages, setMessages] = useState([]);
-    const [chatData, setChatData] = useState({
-        content: '',
-        createdAt: Date(),
-    });
 
     useEffect(() => {
         const makeRequest = async () => {
@@ -74,10 +71,6 @@ export default function Entries() {
                         <Analysis
                             focusedData={focusedData}
                             setFocusing={setFocusing}
-                            messages={messages}
-                            setMessages={setMessages}
-                            chatData={chatData}
-                            setChatData={setChatData}
                         />
                     ) : (
                         <Thoughts
