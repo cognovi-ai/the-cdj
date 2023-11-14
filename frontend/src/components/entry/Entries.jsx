@@ -1,6 +1,6 @@
 import { styled } from '@mui/material/styles';
 import { Paper, Grid, Box, Button, TextField, IconButton } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as EnlargeIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon, CancelPresentation as UnfocusIcon, Send as SendIcon } from '@mui/icons-material';
 import { useState, useEffect } from "react";
 
 const testJournal = "6552c74152807822e7df31a1";
@@ -18,6 +18,20 @@ export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
     const [newEntry, setNewEntry] = useState('');
+    const [focusing, setFocusing] = useState(false);
+    const [focusedData, setFocusedData] = useState({
+        title: '',
+        content: '',
+        mood: '',
+        tags: [],
+        privacy_settings: {},
+    });
+    const [focusedEntryId, setFocusedEntryId] = useState('');
+    const [messages, setMessages] = useState([]);
+    const [chatData, setChatData] = useState({
+        content: '',
+        createdAt: Date(),
+    });
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -87,8 +101,6 @@ export default function Entries() {
     };
 
     const handleFocus = async (entryId) => {
-        console.log(`Focusing on entry ${ entryId }`);
-
         try {
             // Fetch the entry data for editing
             const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
@@ -98,11 +110,35 @@ export default function Entries() {
                 throw new Error("Network response was not ok");
             }
 
-            console.dir(entryResponse)
+            const entryData = await entryResponse.json();
+
+            setFocusing(true);
+            setFocusedData({
+                title: entryData.title,
+                content: entryData.content,
+                mood: entryData.mood,
+                tags: entryData.tags,
+                privacy_settings: entryData.privacy_settings,
+            });
+            setFocusedEntryId(entryId);
 
         } catch (error) {
             console.error("Error:", error);
         }
+    }
+
+    const handleUnfocus = () => {
+        setFocusing(false);
+    }
+
+    const handleSendChat = () => {
+
+        setMessages([
+            ...messages,
+            { content: chatData, createdAt: Date() }
+        ])
+
+        setChatData("");
     }
 
     const handleEdit = async (entryId) => {
@@ -222,68 +258,123 @@ export default function Entries() {
             </Grid>
             <Grid item xs={12} md={6}>
                 <Item>
-                    <h2>Thoughts</h2>
-                    {entries.map((entry) => (
-                        <div key={entry._id}>
-                            <p>{entry.content}</p>
-                            {editing && editedEntryId === entry._id ? (
-                                <div>
-                                    <TextField
-                                        label="Edit your thought."
-                                        variant="filled"
-                                        fullWidth
-                                        multiline
-                                        minRows={3}
-                                        maxRows={6}
-                                        value={editedData.content}
-                                        onChange={(e) =>
-                                            setEditedData({ ...editedData, content: e.target.value })
-                                        }
-                                    />
-                                    <Box display="flex" justifyContent="flex-end" marginTop={2}>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={handleSaveEdit}
-                                        >
-                                            Save
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="cancel"
-                                            onClick={handleCancelEdit}
-                                            style={{ marginLeft: 8 }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </Box>
-                                </div>
-                            ) : (
+                    {focusing ? (
+                        <div>
+                            <Box>
+                                <h2>Thought Analysis</h2>
+                                <h3>{focusedData.content}</h3>
+                                <p>TODO: Setup Analyses.</p>
                                 <div>
                                     <IconButton
-                                        aria-label="Focus"
+                                        aria-label="Unfocus"
                                         color="primary"
-                                        onClick={() => handleFocus(entry._id)}>
-                                        <EnlargeIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        aria-label="Edit"
-                                        color="edit"
-                                        onClick={() => handleEdit(entry._id)}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        aria-label="Delete"
-                                        color="danger"
-                                        onClick={() => handleDelete(entry._id)}
-                                    >
-                                        <DeleteIcon />
+                                        onClick={() => handleUnfocus()}>
+                                        <UnfocusIcon />
                                     </IconButton>
                                 </div>
-                            )}
+                            </Box>
+                            <Box>
+                                <h2>Chat</h2>
+                                {messages.map((message, index) => (
+                                    <div key={index}>
+                                        <p>TODO: Setup Chat.</p>
+                                        {/* FIXME: message.content does not work: Objects are not valid as a React Child */}
+                                        {/* <p>{message.content}</p> */}
+                                    </div>
+                                ))}
+                                <TextField
+                                    label="Dive deeper."
+                                    variant="filled"
+                                    fullWidth
+                                    multiline
+                                    minRows={3}
+                                    maxRows={6}
+                                    onChange={(e) =>
+                                        setChatData({
+                                            ...chatData,
+                                            content: e.target.value,
+                                        })
+                                    }
+                                />
+                                <Box display="flex"
+                                    justifyContent="flex-end"
+                                    marginTop={2}>
+                                    <IconButton
+                                        aria-label="Send Chat"
+                                        color="primary"
+                                        onClick={() => handleSendChat()}>
+                                        <SendIcon />
+                                    </IconButton>
+                                </Box>
+                            </Box>
                         </div>
-                    ))}
+                    ) : (
+                        <div>
+                            <h2>Thoughts</h2>
+                            {entries.map((entry) => (
+                                <div key={entry._id}>
+                                    <p>{entry.content}</p>
+                                    {editing && editedEntryId === entry._id ? (
+                                        <div>
+                                            <TextField
+                                                label="Edit your thought."
+                                                variant="filled"
+                                                fullWidth
+                                                multiline
+                                                minRows={3}
+                                                maxRows={6}
+                                                value={editedData.content}
+                                                onChange={(e) =>
+                                                    setEditedData({ ...editedData, content: e.target.value })
+                                                }
+                                            />
+                                            <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    onClick={handleSaveEdit}
+                                                >
+                                                    Save
+                                                </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    color="cancel"
+                                                    onClick={handleCancelEdit}
+                                                    style={{ marginLeft: 8 }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </Box>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <IconButton
+                                                aria-label="Focus"
+                                                color="primary"
+                                                onClick={() => handleFocus(entry._id)}>
+                                                <FocusIcon />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label="Edit"
+                                                color="edit"
+                                                onClick={() => handleEdit(entry._id)}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label="Delete"
+                                                color="danger"
+                                                onClick={() => handleDelete(entry._id)}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                 </Item>
             </Grid>
         </Grid>
