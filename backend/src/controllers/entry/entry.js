@@ -11,6 +11,11 @@ export const createEntry = async (journalId, entryData) => {
     return await newEntry.save();
 };
 
+// Get an entry
+export const getAnEntry = async (entryId) => {
+    return await Entry.findById(entryId);
+};
+
 // Update an entry by ID
 export const updateEntry = async (entryId, entryData) => {
     return await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
