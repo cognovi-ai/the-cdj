@@ -78,7 +78,6 @@ export default function Entries() {
 
             // Assuming the server responds with the created entry
             const data = await response.json();
-            console.log("New Entry Submitted:", data);
 
             // Clear the input field and update the entries state if needed
             setNewEntry('');
@@ -116,14 +115,12 @@ export default function Entries() {
                 throw new Error("Network response was not ok");
             }
 
-            console.dir(entryResponse)
-
-            const entryData = entryResponse.body;
+            const entryData = await entryResponse.json();
 
             setEditing(true);
             setEditedData({
                 title: entryData.title,
-                content: entryData.content || '',
+                content: entryData.content,
                 mood: entryData.mood,
                 tags: entryData.tags,
                 privacy_settings: entryData.privacy_settings,
