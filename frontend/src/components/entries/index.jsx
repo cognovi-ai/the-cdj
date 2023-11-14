@@ -1,7 +1,9 @@
 import { styled } from '@mui/material/styles';
 import { Paper, Grid, Box, Button, TextField, IconButton } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as EnlargeIcon } from '@mui/icons-material';
 import { useState, useEffect } from "react";
+
+const testJournal = "65527e163eecf053324e4f1b";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -30,8 +32,8 @@ export default function Entries() {
         const makeRequest = async () => {
             try {
                 // Construct the URL with the specific journal ID
-                setJournalId("654d3abea2e75bc664a982eb");
-                const url = `http://192.168.50.112:3000/journals/654d3abea2e75bc664a982eb/entries`;
+                setJournalId(testJournal);
+                const url = `http://192.168.50.112:3000/journals/${ testJournal }/entries`;
 
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -55,7 +57,7 @@ export default function Entries() {
         event.preventDefault();
 
         // Construct the URL with the specific journal ID
-        const journalId = "654d3abea2e75bc664a982eb";
+        const journalId = testJournal;
         const url = `http://192.168.50.112:3000/journals/${ journalId }/entries`;
 
         try {
@@ -85,6 +87,25 @@ export default function Entries() {
         }
     };
 
+    const handleFocus = async (entryId) => {
+        console.log(`Focusing on entry ${ entryId }`);
+
+        try {
+            // Fetch the entry data for editing
+            const entryUrl = `http://192.168.50.112:3000/journals/${ journalId }/entries/${ entryId }`;
+            const entryResponse = await fetch(entryUrl);
+
+            if (!entryResponse.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            console.dir(entryResponse)
+
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
     const handleEdit = async (entryId) => {
         try {
             // Fetch the entry data for editing
@@ -95,7 +116,9 @@ export default function Entries() {
                 throw new Error("Network response was not ok");
             }
 
-            const entryData = await entryResponse.json();
+            console.dir(entryResponse)
+
+            const entryData = entryResponse.body;
 
             setEditing(true);
             setEditedData({
@@ -240,6 +263,12 @@ export default function Entries() {
                                 </div>
                             ) : (
                                 <div>
+                                    <IconButton
+                                        aria-label="Focus"
+                                        color="primary"
+                                        onClick={() => handleFocus(entry._id)}>
+                                        <EnlargeIcon />
+                                    </IconButton>
                                     <IconButton
                                         aria-label="Edit"
                                         color="edit"
