@@ -3,7 +3,7 @@ import { Paper, Grid, Box, Button, TextField, IconButton } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as EnlargeIcon } from '@mui/icons-material';
 import { useState, useEffect } from "react";
 
-const testJournal = "65527e163eecf053324e4f1b";
+const testJournal = "6552c74152807822e7df31a1";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -33,7 +33,7 @@ export default function Entries() {
             try {
                 // Construct the URL with the specific journal ID
                 setJournalId(testJournal);
-                const url = `http://192.168.50.112:3000/journals/${ testJournal }/entries`;
+                const url = `http://192.168.50.157:3000/journals/${ testJournal }/entries`;
 
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -58,7 +58,7 @@ export default function Entries() {
 
         // Construct the URL with the specific journal ID
         const journalId = testJournal;
-        const url = `http://192.168.50.112:3000/journals/${ journalId }/entries`;
+        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries`;
 
         try {
             const response = await fetch(url, {
@@ -92,7 +92,7 @@ export default function Entries() {
 
         try {
             // Fetch the entry data for editing
-            const entryUrl = `http://192.168.50.112:3000/journals/${ journalId }/entries/${ entryId }`;
+            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
             const entryResponse = await fetch(entryUrl);
 
             if (!entryResponse.ok) {
@@ -109,7 +109,7 @@ export default function Entries() {
     const handleEdit = async (entryId) => {
         try {
             // Fetch the entry data for editing
-            const entryUrl = `http://192.168.50.112:3000/journals/${ journalId }/entries/${ entryId }`;
+            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
             const entryResponse = await fetch(entryUrl);
 
             if (!entryResponse.ok) {
@@ -143,7 +143,7 @@ export default function Entries() {
 
     const handleSaveEdit = async () => {
         // Construct the URL with the specific entry ID
-        const url = `http://192.168.50.112:3000/journals/${ journalId }/entries/${ editedEntryId }`;
+        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ editedEntryId }`;
 
         try {
             const response = await fetch(url, {
@@ -175,7 +175,7 @@ export default function Entries() {
     };
 
     const handleDelete = async (entryId) => {
-        const url = `http://192.168.50.112:3000/journals/${ journalId }/entries/${ entryId }`;
+        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
 
         try {
             const response = await fetch(url, {
