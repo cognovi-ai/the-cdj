@@ -43,7 +43,7 @@ export default function Entries() {
         };
 
         makeRequest();
-    }, [entries]);
+    }, []);
 
     return (
         <Grid container spacing={2}>
@@ -55,7 +55,10 @@ export default function Entries() {
             <Grid item xs={12} md={6}>
                 <Item>
                     <Entry
-                        testJournal={testJournal} />
+                        testJournal={testJournal}
+                        entries={entries}
+                        setEntries={setEntries}
+                    />
                 </Item>
             </Grid>
             <Grid item xs={12} md={6}>

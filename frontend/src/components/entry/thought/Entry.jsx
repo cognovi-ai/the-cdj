@@ -2,7 +2,7 @@ import { Box, Button, TextField } from '@mui/material';
 
 import { useState } from "react";
 
-export default function Entry({ testJournal }) {
+export default function Entry({ testJournal, setEntries }) {
     const [newEntry, setNewEntry] = useState('');
 
     const handleNewEntryChange = (event) => {
@@ -37,6 +37,11 @@ export default function Entry({ testJournal }) {
 
             // Clear the input field and update the entries state if needed
             setNewEntry('');
+
+            // Add new entry to thought list
+            setEntries((entries) => (
+                [...entries, data]
+            ))
         } catch (error) {
             console.error("Error:", error);
         }
