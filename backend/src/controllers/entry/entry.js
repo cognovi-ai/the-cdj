@@ -8,6 +8,12 @@ export const getAllEntries = async (journalId) => {
 // Create a new entry in a specific journal
 export const createEntry = async (journalId, entryData) => {
     const newEntry = new Entry({ journal_id: journalId, ...entryData });
+
+    // TODO: Save a real analysis from CDGPT
+    const newAnalysis = new EntryAnalysis({ entry_id: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
+
+    newAnalysis.save();
+
     return await newEntry.save();
 };
 
