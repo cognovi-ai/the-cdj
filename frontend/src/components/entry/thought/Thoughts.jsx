@@ -3,7 +3,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from
 
 import { useState } from "react";
 
-export default function Thoughts({ journalId, entries, setEntries, setFocusing, setFocusedData, setFocusedEntryId }) {
+export default function Thoughts({ journalId, entries, setEntries, setFocusing, setFocusedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -15,26 +15,8 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
     const [editedEntryId, setEditedEntryId] = useState('');
 
     const handleFocus = async (entryId) => {
-        try {
-            // Fetch the entry data for editing
-            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }/analysis`;
-            const entryAnalysisResponse = await fetch(entryUrl);
-
-            if (!entryAnalysisResponse.ok) {
-                throw new Error("Network response was not ok");
-            }
-
-            const entryAnalysisData = await entryAnalysisResponse.json();
-
-            console.log(entryAnalysisData);
-
-            setFocusing(true);
-            setFocusedData(entryAnalysisData);
-            setFocusedEntryId(entryId);
-
-        } catch (error) {
-            console.error("Error:", error);
-        }
+        setFocusing(true);
+        setFocusedEntryId(entryId);
     }
 
     const handleEdit = async (entryId) => {

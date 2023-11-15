@@ -22,7 +22,6 @@ export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
     const [focusing, setFocusing] = useState(false);
-    const [focusedData, setFocusedData] = useState({});
     const [focusedEntryId, setFocusedEntryId] = useState('');
 
     useEffect(() => {
@@ -63,7 +62,8 @@ export default function Entries() {
                 <Item>
                     {focusing ? (
                         <Analysis
-                            focusedData={focusedData}
+                            journalId={journalId}
+                            focusedEntryId={focusedEntryId}
                             setFocusing={setFocusing}
                         />
                     ) : (
@@ -72,7 +72,6 @@ export default function Entries() {
                             entries={entries}
                             setEntries={setEntries}
                             setFocusing={setFocusing}
-                            setFocusedData={setFocusedData}
                             setFocusedEntryId={setFocusedEntryId}
                         />
                     )}
