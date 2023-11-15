@@ -22,7 +22,7 @@ export default function Analysis({ focusedData, setFocusing }) {
             <Box>
                 <h2>Thought Analysis</h2>
                 <h3>{focusedData.content}</h3>
-                <p>TODO: Setup Analyses.</p>
+                <p>{focusedData.analysis_content}</p>
                 <div>
                     <IconButton
                         aria-label="Unfocus"

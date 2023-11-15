@@ -7,7 +7,7 @@ import Thoughts from './thought/Thoughts';
 import Analysis from './thought/Analysis';
 import Entry from './thought/Entry';
 
-const testJournal = "6552c74152807822e7df31a1";
+const testJournal = "65545bdc5ed8459132a787c6";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -22,13 +22,7 @@ export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
     const [focusing, setFocusing] = useState(false);
-    const [focusedData, setFocusedData] = useState({
-        title: '',
-        content: '',
-        mood: '',
-        tags: [],
-        privacy_settings: {},
-    });
+    const [focusedData, setFocusedData] = useState({});
     const [focusedEntryId, setFocusedEntryId] = useState('');
 
     useEffect(() => {

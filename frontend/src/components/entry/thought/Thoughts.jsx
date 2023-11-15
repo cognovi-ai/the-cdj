@@ -17,23 +17,19 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
     const handleFocus = async (entryId) => {
         try {
             // Fetch the entry data for editing
-            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
-            const entryResponse = await fetch(entryUrl);
+            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }/analysis`;
+            const entryAnalysisResponse = await fetch(entryUrl);
 
-            if (!entryResponse.ok) {
+            if (!entryAnalysisResponse.ok) {
                 throw new Error("Network response was not ok");
             }
 
-            const entryData = await entryResponse.json();
+            const entryAnalysisData = await entryAnalysisResponse.json();
+
+            console.log(entryAnalysisData);
 
             setFocusing(true);
-            setFocusedData({
-                title: entryData.title,
-                content: entryData.content,
-                mood: entryData.mood,
-                tags: entryData.tags,
-                privacy_settings: entryData.privacy_settings,
-            });
+            setFocusedData(entryAnalysisData);
             setFocusedEntryId(entryId);
 
         } catch (error) {

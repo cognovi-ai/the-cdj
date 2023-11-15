@@ -1,4 +1,4 @@
-import { Entry } from '../../models/index.js'; // Import your Entry model
+import { Entry, EntryAnalysis } from '../../models/index.js'; // Import your Entry model
 
 // Get all entries for a specific journal
 export const getAllEntries = async (journalId) => {
@@ -25,3 +25,11 @@ export const updateEntry = async (entryId, entryData) => {
 export const deleteEntry = async (entryId) => {
     return await Entry.findByIdAndDelete(entryId);
 };
+
+// Get an entry and the analysis
+export const getEntryAnalysis = async (entryId) => {
+    const entry = await getAnEntry(entryId);
+    const analysis = await EntryAnalysis.find({ entry_id: entryId });
+
+    return { ...entry._doc, ...analysis[0]._doc };
+}
