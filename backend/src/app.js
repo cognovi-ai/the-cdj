@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import morgan from "morgan";
 
 import connectDB from "./db.js";
 
@@ -13,6 +14,8 @@ app.use(cors());
 
 // only parse json
 app.use(express.json());
+
+app.use(morgan("dev"));
 
 // use the entry router path '/journal/:journalId/'
 app.use('/', entry);
