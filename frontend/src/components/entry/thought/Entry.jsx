@@ -2,7 +2,7 @@ import { Box, Button, TextField } from '@mui/material';
 
 import { useState } from "react";
 
-export default function Entry({ testJournal, setEntries }) {
+export default function Entry({ testJournal, setEntries, setFocusing }) {
     const [newEntry, setNewEntry] = useState('');
 
     const handleNewEntryChange = (event) => {
@@ -42,6 +42,8 @@ export default function Entry({ testJournal, setEntries }) {
             setEntries((entries) => (
                 [...entries, data]
             ))
+
+            setFocusing(false);
         } catch (error) {
             console.error("Error:", error);
         }

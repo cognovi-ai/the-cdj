@@ -56,8 +56,8 @@ export default function Entries() {
                 <Item>
                     <Entry
                         testJournal={testJournal}
-                        entries={entries}
                         setEntries={setEntries}
+                        setFocusing={setFocusing}
                     />
                 </Item>
             </Grid>
