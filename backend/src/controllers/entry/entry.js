@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
 
 // Get all entries for a specific journal
@@ -27,9 +29,32 @@ export const updateEntry = async (entryId, entryData) => {
     return await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
 };
 
-// Delete an entry by ID
+// Delete an entry by ID and associated documents
 export const deleteEntry = async (entryId) => {
-    return await Entry.findByIdAndDelete(entryId);
+    // Start a session and transaction for atomicity
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // Delete the entry
+        await Entry.findByIdAndDelete(entryId, { session });
+
+        // Delete associated documents
+        await EntryConversation.deleteMany({ entry_id: entryId }, { session });
+        await EntryAnalysis.deleteMany({ entry_id: entryId }, { session });
+
+        // Commit the transaction
+        await session.commitTransaction();
+    } catch (error) {
+        // If an error occurs, abort the transaction
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        // End the session
+        session.endSession();
+    }
+
+    return {}
 };
 
 // Get an entry and the analysis
