@@ -1,4 +1,4 @@
-import { Entry, EntryAnalysis } from '../../models/index.js'; // Import your Entry model
+import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
 
 // Get all entries for a specific journal
 export const getAllEntries = async (journalId) => {
@@ -38,4 +38,12 @@ export const getEntryAnalysis = async (entryId) => {
     const analysis = await EntryAnalysis.find({ entry_id: entryId });
 
     return { ...entry._doc, ...analysis[0]._doc };
+}
+
+// Get conversation associated with an entry
+export const getEntryConversation = async (entryId) => {
+    const response = await EntryConversation.find({ entry_id: entryId });
+    const entryConversation = response.length ? { ...response[0]._doc } : {};
+
+    return entryConversation;
 }

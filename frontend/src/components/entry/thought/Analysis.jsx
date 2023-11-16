@@ -58,7 +58,10 @@ export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
             </Box>
             <Box>
                 <Messages
+                    journalId={journalId}
                     messages={messages}
+                    setMessages={setMessages}
+                    focusedEntryId={focusedEntryId}
                 />
                 <ChatEntry
                     messages={messages}
