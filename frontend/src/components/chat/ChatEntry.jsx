@@ -1,15 +1,53 @@
 import { Box, TextField, IconButton } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
-export default function ChatEntry({ messages, setMessages, chatData, setChatData }) {
-    const handleSendChat = () => {
+import { useState, useEffect } from "react";
 
-        setMessages([
-            ...messages,
-            { content: chatData, createdAt: Date() }
-        ])
+export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) {
+    const [newChat, setNewChat] = useState("");
 
-        setChatData("");
+    const handleNewChatChange = (event) => {
+        setNewChat(event.target.value);
+    };
+
+    const handleSendChat = async () => {
+        try {
+            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat/${ chat.chat_id ? chat.chat_id : "" }`;
+
+            const response = await fetch(url, {
+                method: chat.messages ? "PUT" : "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message_content: newChat }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            // Assuming the server responds with the created entry
+            const chatData = await response.json();
+
+            // Update the chat state by adding the new message
+            setChat((prevChat) => {
+                if (prevChat.messages) {
+                    return {
+                        ...prevChat,
+                        messages: [...chatData.messages],
+                    };
+                } else {
+                    return {
+                        ...chatData,
+                    };
+                }
+            });
+
+            // Clear the input field
+            setNewChat("");
+        } catch (error) {
+            console.error("Error:", error);
+        }
     }
 
     return (
@@ -21,12 +59,8 @@ export default function ChatEntry({ messages, setMessages, chatData, setChatData
                 multiline
                 minRows={3}
                 maxRows={6}
-                onChange={(e) =>
-                    setChatData({
-                        ...chatData,
-                        content: e.target.value,
-                    })
-                }
+                value={newChat}
+                onChange={handleNewChatChange}
             />
             <Box display="flex"
                 justifyContent="flex-end"

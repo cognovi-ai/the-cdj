@@ -42,8 +42,40 @@ export const getEntryAnalysis = async (entryId) => {
 
 // Get conversation associated with an entry
 export const getEntryConversation = async (entryId) => {
-    const response = await EntryConversation.find({ entry_id: entryId });
-    const entryConversation = response.length ? { ...response[0]._doc } : {};
+    const response = await EntryConversation.findOne({ entry_id: entryId });
+    const entryConversation = response ? { ...response._doc, chat_id: response._id } : {};
 
     return entryConversation;
 }
+
+// Create a new conversation for a specific entry
+export const createEntryConversation = async (entryId, messageData) => {
+    const response = new EntryConversation({
+        entry_id: entryId,
+        messages: [{
+            message_content: messageData.message_content,
+            llm_response: `Response from LLM to entry ${ entryId }`,
+        }]
+    });
+
+    response.save();
+    return await getEntryConversation(entryId);
+};
+
+// Update a conversation for a specific entry
+export const updateEntryConversation = async (chatId, messageData) => {
+    const response = await EntryConversation.findOneAndUpdate(
+        { _id: chatId },
+        {
+            $push: {
+                messages: [{
+                    message_content: messageData.message_content,
+                    llm_response: `Response from LLM to entry ${ chatId }`,
+                }]
+            }
+        },
+        { new: true }
+    )
+
+    return response;
+};

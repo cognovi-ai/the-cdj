@@ -7,7 +7,7 @@ import Thoughts from './thought/Thoughts';
 import Analysis from './thought/Analysis';
 import Entry from './thought/Entry';
 
-const testJournal = "65545bdc5ed8459132a787c6";
+const testJournal = "6555c8b561fb25d5edb15ea7";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
