@@ -9,7 +9,7 @@ export default function Messages({ chat }) {
             {chat.messages && chat.messages.map((message, index) => (
                 <Grid container margin="0 0 1em" spacing={1} key={index}>
                     <Grid item xs={6} />
-                    <Grid item xs={6} style={{ textAlign: 'right' }}>
+                    <Grid item xs={6} style={{ textAlign: 'left' }}>
                         <div className="message-bubble blue-bg">
                             <Typography variant="body2">
                                 {message.message_content}

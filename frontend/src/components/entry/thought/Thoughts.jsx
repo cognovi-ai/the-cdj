@@ -3,7 +3,9 @@ import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from
 
 import { useState } from "react";
 
-export default function Thoughts({ journalId, entries, setEntries, setFocusedEntryId }) {
+import "./Thoughts.css"
+
+export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -15,6 +17,10 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusedEnt
     const [editedEntryId, setEditedEntryId] = useState('');
 
     const handleFocus = async (entryId) => {
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Focus thought analysis view on selected entry
         setFocusedEntryId(entryId);
     }
 
@@ -111,9 +117,15 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusedEnt
 
     return (
         <div>
-            <Typography variant='h2'>Thoughts</Typography>
+            <Typography variant='h2'>Recent Thoughts</Typography>
             {entries.map((entry) => (
-                <Box sx={{ margin: "0 0 2em" }} key={entry._id}>
+                <Box
+                    className={entry._id === focusedEntryId ? "focused" : ""}
+                    sx={{
+                        margin: "0 0 2em",
+                        padding: "8px 12px",
+                    }}
+                    key={entry._id}>
                     <Typography variant='body1'>{entry.content}</Typography>
                     {editing && editedEntryId === entry._id ? (
                         <div>

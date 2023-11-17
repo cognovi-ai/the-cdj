@@ -73,6 +73,7 @@ export default function Entries() {
                         journalId={journalId}
                         entries={entries}
                         setEntries={setEntries}
+                        focusedEntryId={focusedEntryId}
                         setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>
