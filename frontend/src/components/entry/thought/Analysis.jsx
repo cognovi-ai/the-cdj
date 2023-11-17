@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from "react";
 
 import Chat from '../../chat/Chat';
@@ -44,9 +44,18 @@ export default function Analysis({ journalId, focusedEntryId }) {
     return (
         <div>
             <Box>
-                <h2>Thought Analysis</h2>
-                <h3>{focusedData.content}</h3>
-                <p>{focusedData.analysis_content}</p>
+                <Typography variant='h2'>Thought Analysis</Typography>
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                        <Typography variant='body1'>{focusedData.analysis_content}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant='body2'>{focusedData.content}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Typography variant='caption'>{focusedData.created_at}</Typography>
+                    </Grid>
+                </Grid>
             </Box>
             <Box>
                 <Chat

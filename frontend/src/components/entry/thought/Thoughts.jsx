@@ -1,4 +1,4 @@
-import { Box, Button, TextField, IconButton } from '@mui/material';
+import { Box, Button, TextField, IconButton, Typography } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
 import { useState } from "react";
@@ -111,10 +111,10 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusedEnt
 
     return (
         <div>
-            <h2>Thoughts</h2>
+            <Typography variant='h2'>Thoughts</Typography>
             {entries.map((entry) => (
-                <div key={entry._id}>
-                    <p>{entry.content}</p>
+                <Box sx={{ margin: "0 0 2em" }} key={entry._id}>
+                    <Typography variant='body1'>{entry.content}</Typography>
                     {editing && editedEntryId === entry._id ? (
                         <div>
                             <TextField
@@ -171,7 +171,7 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusedEnt
                             </IconButton>
                         </div>
                     )}
-                </div>
+                </Box>
             ))}
         </div>
     )

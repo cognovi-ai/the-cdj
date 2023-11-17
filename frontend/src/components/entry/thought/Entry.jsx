@@ -1,4 +1,4 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { useState } from "react";
 
@@ -7,6 +7,13 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
 
     const handleNewEntryChange = (event) => {
         setNewEntry(event.target.value);
+    };
+
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line
+            handleSubmit(event);
+        }
     };
 
     const handleSubmit = async (event) => {
@@ -52,7 +59,7 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
 
     return (
         <div>
-            <h2>Thought Entry</h2>
+            <Typography variant="h2">Thought Entry</Typography>
             <form onSubmit={handleSubmit}>
                 <TextField
                     id="new-entry"
@@ -64,9 +71,18 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                     maxRows={6}
                     value={newEntry}
                     onChange={handleNewEntryChange}
+                    onKeyDown={handleEnterKeyPress}
                 />
-                <Box display="flex" justifyContent="flex-end" marginTop={2}>
-                    <Button type="submit" variant="contained" color="primary">
+                <Box
+                    display="flex"
+                    justifyContent="flex-end"
+                    marginTop={2}
+                >
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                    >
                         Submit
                     </Button>
                 </Box>

@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles';
-import { Paper, Grid } from '@mui/material';
+import { Paper, Grid, Typography } from '@mui/material';
 
 import { useState, useEffect } from "react";
 
@@ -49,7 +49,7 @@ export default function Entries() {
         <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
-                    <h1>Ryan&apos;s Thought Journal</h1>
+                    <Typography variant="h1">Ryan&apos;s Thought Journal</Typography>
                 </Item>
             </Grid>
             <Grid item xs={12} md={6}>

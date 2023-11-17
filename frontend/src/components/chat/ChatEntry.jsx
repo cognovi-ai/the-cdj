@@ -10,6 +10,13 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         setNewChat(event.target.value);
     };
 
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line
+            handleSendChat(event);
+        }
+    };
+
     const handleSendChat = async () => {
         try {
             const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? "/" + chat.chat_id : "" }`;
@@ -53,26 +60,33 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
 
     return (
         <div>
-            <TextField
-                label="Dive deeper."
-                variant="filled"
-                fullWidth
-                multiline
-                minRows={3}
-                maxRows={6}
-                value={newChat}
-                onChange={handleNewChatChange}
-            />
-            <Box display="flex"
-                justifyContent="flex-end"
-                marginTop={2}>
-                <IconButton
-                    aria-label="Send Chat"
-                    color="primary"
-                    onClick={() => handleSendChat()}>
-                    <SendIcon />
-                </IconButton>
-            </Box>
+            <form onSubmit={handleSendChat}>
+                <TextField
+                    id="new-message"
+                    label="Dive deeper."
+                    variant="filled"
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    maxRows={6}
+                    value={newChat}
+                    onChange={handleNewChatChange}
+                    onKeyDown={handleEnterKeyPress}
+                />
+                <Box
+                    display="flex"
+                    justifyContent="flex-end"
+                    marginTop={2}
+                >
+                    <IconButton
+                        aria-label="Send Chat"
+                        color="primary"
+                        onClick={() => handleSendChat()}
+                    >
+                        <SendIcon />
+                    </IconButton>
+                </Box>
+            </form>
         </div>
     )
 }
