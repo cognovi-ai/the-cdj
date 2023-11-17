@@ -63,12 +63,12 @@ const seedDatabase = async () => {
                     entry_id: entry._id,
                     messages: [
                         {
-                            user_id: user._id,
-                            message_content: `User comment on entry ${ j }`
+                            message_content: `User comment on entry ${ j }`,
+                            llm_response: `LLM response on entry ${ j }`,
                         },
                         {
-                            user_id: user._id,
-                            message_content: `Another user comment on entry ${ j }`
+                            message_content: `Another user comment on entry ${ j }`,
+                            llm_response: `Another LLM response on entry ${ j }`,
                         }
                     ]
                 });

@@ -1,12 +1,19 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { useState } from "react";
 
-export default function Entry({ testJournal, setEntries }) {
+export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
 
     const handleNewEntryChange = (event) => {
         setNewEntry(event.target.value);
+    };
+
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line
+            handleSubmit(event);
+        }
     };
 
     const handleSubmit = async (event) => {
@@ -38,9 +45,12 @@ export default function Entry({ testJournal, setEntries }) {
             // Clear the input field and update the entries state if needed
             setNewEntry('');
 
+            // Make the new entry the focused entry on submit
+            setFocusedEntryId(data._id)
+
             // Add new entry to thought list
             setEntries((entries) => (
-                [...entries, data]
+                [data, ...entries]
             ))
         } catch (error) {
             console.error("Error:", error);
@@ -49,7 +59,7 @@ export default function Entry({ testJournal, setEntries }) {
 
     return (
         <div>
-            <h2>Thought Entry</h2>
+            <Typography variant="h2">Thought Entry</Typography>
             <form onSubmit={handleSubmit}>
                 <TextField
                     id="new-entry"
@@ -61,9 +71,18 @@ export default function Entry({ testJournal, setEntries }) {
                     maxRows={6}
                     value={newEntry}
                     onChange={handleNewEntryChange}
+                    onKeyDown={handleEnterKeyPress}
                 />
-                <Box display="flex" justifyContent="flex-end" marginTop={2}>
-                    <Button type="submit" variant="contained" color="primary">
+                <Box
+                    display="flex"
+                    justifyContent="flex-end"
+                    marginTop={2}
+                >
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                    >
                         Submit
                     </Button>
                 </Box>

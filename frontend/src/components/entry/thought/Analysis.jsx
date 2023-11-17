@@ -1,21 +1,14 @@
-import { Box, IconButton } from '@mui/material';
-import { CancelPresentation as UnfocusIcon } from '@mui/icons-material';
-
+import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from "react";
 
-import ChatEntry from '../../chat/ChatEntry';
-import Messages from '../../chat/Messages';
+import Chat from '../../chat/Chat';
 
-export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
+export default function Analysis({ journalId, focusedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
-    const [messages, setMessages] = useState([]);
-    const [chatData, setChatData] = useState({
-        content: '',
-        createdAt: Date(),
-    });
+    const [chat, setChat] = useState({});
 
     useEffect(() => {
-        const makeRequest = async () => {
+        const fetchData = async () => {
             try {
                 // Fetch the entry analysis data to display
                 const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/analysis`;
@@ -29,42 +22,47 @@ export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
 
                 setFocusedData(entryAnalysisData);
 
+                // Fetch chat data and set it here
+                const chatEntryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat`;
+                const chatResponse = await fetch(chatEntryUrl);
+
+                if (!chatResponse.ok) {
+                    throw new Error("Network response for chat was not ok");
+                }
+
+                const chatData = await chatResponse.json();
+                setChat(chatData);
+
             } catch (error) {
                 console.error("Error:", error);
             }
         };
 
-        makeRequest();
-    }, []);
-
-    const handleUnfocus = () => {
-        setFocusing(false);
-    }
+        fetchData();
+    }, [focusedEntryId]);
 
     return (
         <div>
             <Box>
-                <h2>Thought Analysis</h2>
-                <h3>{focusedData.content}</h3>
-                <p>{focusedData.analysis_content}</p>
-                <div>
-                    <IconButton
-                        aria-label="Unfocus"
-                        color="primary"
-                        onClick={() => handleUnfocus()}>
-                        <UnfocusIcon />
-                    </IconButton>
-                </div>
+                <Typography variant='h2'>Thought Analysis</Typography>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant='body1'>{focusedData.content}</Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant='body2'>{focusedData.analysis_content}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Typography variant='caption'>{focusedData.created_at}</Typography>
+                    </Grid>
+                </Grid>
             </Box>
             <Box>
-                <Messages
-                    messages={messages}
-                />
-                <ChatEntry
-                    messages={messages}
-                    setMessages={setMessages}
-                    chatData={chatData}
-                    setChatData={setChatData}
+                <Chat
+                    journalId={journalId}
+                    focusedEntryId={focusedEntryId}
+                    chat={chat}
+                    setChat={setChat}
                 />
             </Box>
         </div>

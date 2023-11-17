@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles';
-import { Paper, Grid } from '@mui/material';
+import { Paper, Grid, Typography } from '@mui/material';
 
 import { useState, useEffect } from "react";
 
@@ -7,7 +7,7 @@ import Thoughts from './thought/Thoughts';
 import Analysis from './thought/Analysis';
 import Entry from './thought/Entry';
 
-const testJournal = "65545bdc5ed8459132a787c6";
+const testJournal = "6555c8b561fb25d5edb15ea7";
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -21,7 +21,6 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
-    const [focusing, setFocusing] = useState(false);
     const [focusedEntryId, setFocusedEntryId] = useState('');
 
     useEffect(() => {
@@ -37,6 +36,7 @@ export default function Entries() {
                 }
                 const data = await response.json();
                 setEntries([...data.entries]);
+                setFocusedEntryId(data.entries[0]._id)
             } catch (error) {
                 console.error("Error:", error);
             }
@@ -46,39 +46,36 @@ export default function Entries() {
     }, []);
 
     return (
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
-                    <h1>Ryan&apos;s Thought Journal</h1>
+                    <Typography variant="h1">Ryan&apos;s Thought Journal</Typography>
+                </Item>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <Item>
+                    <Analysis
+                        journalId={journalId}
+                        focusedEntryId={focusedEntryId}
+                    />
                 </Item>
             </Grid>
             <Grid item xs={12} md={6}>
                 <Item>
                     <Entry
                         testJournal={testJournal}
-                        entries={entries}
                         setEntries={setEntries}
+                        setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>
-            </Grid>
-            <Grid item xs={12} md={6}>
                 <Item>
-                    {focusing ? (
-                        <Analysis
-                            journalId={journalId}
-                            focusedEntryId={focusedEntryId}
-                            setFocusing={setFocusing}
-                        />
-                    ) : (
-                        <Thoughts
-                            journalId={journalId}
-                            entries={entries}
-                            setEntries={setEntries}
-                            setFocusing={setFocusing}
-                            setFocusedEntryId={setFocusedEntryId}
-                        />
-                    )}
-
+                    <Thoughts
+                        journalId={journalId}
+                        entries={entries}
+                        setEntries={setEntries}
+                        focusedEntryId={focusedEntryId}
+                        setFocusedEntryId={setFocusedEntryId}
+                    />
                 </Item>
             </Grid>
         </Grid>

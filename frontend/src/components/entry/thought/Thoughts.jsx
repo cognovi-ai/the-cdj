@@ -1,9 +1,11 @@
-import { Box, Button, TextField, IconButton } from '@mui/material';
+import { Box, Button, TextField, IconButton, Typography } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
 import { useState } from "react";
 
-export default function Thoughts({ journalId, entries, setEntries, setFocusing, setFocusedEntryId }) {
+import "./Thoughts.css"
+
+export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -15,7 +17,10 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
     const [editedEntryId, setEditedEntryId] = useState('');
 
     const handleFocus = async (entryId) => {
-        setFocusing(true);
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Focus thought analysis view on selected entry
         setFocusedEntryId(entryId);
     }
 
@@ -97,8 +102,13 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
                 throw new Error("Network response was not ok");
             }
 
+            const filteredEntries = entries.filter((entry) => entry._id !== entryId);
+
+            // Ensure a focused entry is still set after deletion
+            setFocusedEntryId(filteredEntries[0]._id);
+
             // Remove the deleted entry from the state
-            setEntries(entries.filter((entry) => entry._id !== entryId));
+            setEntries(filteredEntries);
         } catch (error) {
             console.error("Error:", error);
         }
@@ -107,10 +117,16 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
 
     return (
         <div>
-            <h2>Thoughts</h2>
+            <Typography variant='h2'>Recent Thoughts</Typography>
             {entries.map((entry) => (
-                <div key={entry._id}>
-                    <p>{entry.content}</p>
+                <Box
+                    className={entry._id === focusedEntryId ? "focused" : ""}
+                    sx={{
+                        margin: "0 0 2em",
+                        padding: "8px 12px",
+                    }}
+                    key={entry._id}>
+                    <Typography variant='body1'>{entry.content}</Typography>
                     {editing && editedEntryId === entry._id ? (
                         <div>
                             <TextField
@@ -167,7 +183,7 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
                             </IconButton>
                         </div>
                     )}
-                </div>
+                </Box>
             ))}
         </div>
     )
