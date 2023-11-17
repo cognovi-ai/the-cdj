@@ -1,9 +1,7 @@
-import { Box, IconButton } from '@mui/material';
-import { CancelPresentation as UnfocusIcon } from '@mui/icons-material';
+import { Box } from '@mui/material';
 import { useEffect, useState } from "react";
 
-import ChatEntry from '../../chat/ChatEntry';
-import Messages from '../../chat/Messages';
+import Chat from '../../chat/Chat';
 
 export default function Analysis({ journalId, focusedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
@@ -51,10 +49,7 @@ export default function Analysis({ journalId, focusedEntryId }) {
                 <p>{focusedData.analysis_content}</p>
             </Box>
             <Box>
-                <Messages
-                    chat={chat}
-                />
-                <ChatEntry
+                <Chat
                     journalId={journalId}
                     focusedEntryId={focusedEntryId}
                     chat={chat}

@@ -14,8 +14,7 @@ export const createEntry = async (journalId, entryData) => {
     // TODO: Save a real analysis from CDGPT
     const newAnalysis = new EntryAnalysis({ entry_id: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
 
-    newAnalysis.save();
-
+    await newAnalysis.save();
     return await newEntry.save();
 };
 

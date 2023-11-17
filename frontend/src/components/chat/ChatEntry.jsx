@@ -1,7 +1,7 @@
 import { Box, TextField, IconButton } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) {
     const [newChat, setNewChat] = useState("");
@@ -12,7 +12,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
 
     const handleSendChat = async () => {
         try {
-            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat/${ chat.chat_id ? chat.chat_id : "" }`;
+            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? "/" + chat.chat_id : "" }`;
 
             const response = await fetch(url, {
                 method: chat.messages ? "PUT" : "POST",
@@ -27,21 +27,22 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
             }
 
             // Assuming the server responds with the created entry
-            const chatData = await response.json();
-
-            // Update the chat state by adding the new message
-            setChat((prevChat) => {
-                if (prevChat.messages) {
-                    return {
-                        ...prevChat,
-                        messages: [...chatData.messages],
-                    };
-                } else {
-                    return {
-                        ...chatData,
-                    };
-                }
-            });
+            await response.json()
+                .then((data) => {
+                    // Update the chat state by adding the new message
+                    setChat((prevChat) => {
+                        if (prevChat.messages) {
+                            return {
+                                ...prevChat,
+                                messages: [...data.messages],
+                            };
+                        } else {
+                            return {
+                                ...data,
+                            };
+                        }
+                    });
+                });
 
             // Clear the input field
             setNewChat("");
