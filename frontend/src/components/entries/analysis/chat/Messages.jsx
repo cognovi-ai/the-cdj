@@ -6,7 +6,7 @@ import "./Messages.css";
 export default function Messages({ chat }) {
     return (
         <div>
-            {chat.messages && chat.messages.map((message, index) => (
+            {chat && chat.messages && chat.messages.map((message, index) => (
                 <Grid container margin="0 0 1em" spacing={1} key={index}>
                     <Grid item xs={6} />
                     <Grid item xs={6} style={{ textAlign: 'left' }}>

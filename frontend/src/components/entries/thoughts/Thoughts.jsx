@@ -105,7 +105,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             const filteredEntries = entries.filter((entry) => entry._id !== entryId);
 
             // Ensure a focused entry is still set after deletion
-            setFocusedEntryId(filteredEntries[0]._id);
+            setFocusedEntryId(filteredEntries.length ? filteredEntries[0]._id : "");
 
             // Remove the deleted entry from the state
             setEntries(filteredEntries);

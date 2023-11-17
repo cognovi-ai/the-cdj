@@ -10,6 +10,12 @@ export default function Analysis({ journalId, focusedEntryId }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                if (!focusedEntryId.length) {
+                    setChat();
+                    setFocusedData();
+                    return
+                }
+
                 // Fetch the entry analysis data to display
                 const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/analysis`;
                 const entryAnalysisResponse = await fetch(entryUrl);
@@ -47,13 +53,13 @@ export default function Analysis({ journalId, focusedEntryId }) {
                 <Typography variant='h2'>Thought Analysis</Typography>
                 <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
-                        <Typography variant='body1'>{focusedData.content}</Typography>
+                        <Typography variant='body1'>{focusedData && focusedData.content}</Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                        <Typography variant='body2'>{focusedData.analysis_content}</Typography>
+                        <Typography variant='body2'>{focusedData && focusedData.analysis_content}</Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <Typography variant='caption'>{focusedData.created_at}</Typography>
+                        <Typography variant='caption'>{focusedData && focusedData.created_at}</Typography>
                     </Grid>
                 </Grid>
             </Box>

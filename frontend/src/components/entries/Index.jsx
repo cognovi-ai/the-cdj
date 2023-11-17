@@ -36,7 +36,7 @@ export default function Entries() {
                 }
                 const data = await response.json();
                 setEntries([...data.entries]);
-                setFocusedEntryId(data.entries[0]._id)
+                setFocusedEntryId(data.entries.length ? data.entries[0]._id : "")
             } catch (error) {
                 console.error("Error:", error);
             }
