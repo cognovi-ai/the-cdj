@@ -2,7 +2,7 @@ import { Box, Button, TextField } from '@mui/material';
 
 import { useState } from "react";
 
-export default function Entry({ testJournal, setEntries, setFocusing }) {
+export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
 
     const handleNewEntryChange = (event) => {
@@ -38,12 +38,13 @@ export default function Entry({ testJournal, setEntries, setFocusing }) {
             // Clear the input field and update the entries state if needed
             setNewEntry('');
 
+            // Make the new entry the focused entry on submit
+            setFocusedEntryId(data._id)
+
             // Add new entry to thought list
             setEntries((entries) => (
-                [...entries, data]
+                [data, ...entries]
             ))
-
-            setFocusing(false);
         } catch (error) {
             console.error("Error:", error);
         }

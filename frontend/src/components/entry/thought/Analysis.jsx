@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import ChatEntry from '../../chat/ChatEntry';
 import Messages from '../../chat/Messages';
 
-export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
+export default function Analysis({ journalId, focusedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
     const [chat, setChat] = useState({});
 
@@ -41,11 +41,7 @@ export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
         };
 
         fetchData();
-    }, []);
-
-    const handleUnfocus = () => {
-        setFocusing(false);
-    }
+    }, [focusedEntryId]);
 
     return (
         <div>
@@ -53,14 +49,6 @@ export default function Analysis({ journalId, focusedEntryId, setFocusing }) {
                 <h2>Thought Analysis</h2>
                 <h3>{focusedData.content}</h3>
                 <p>{focusedData.analysis_content}</p>
-                <div>
-                    <IconButton
-                        aria-label="Unfocus"
-                        color="primary"
-                        onClick={() => handleUnfocus()}>
-                        <UnfocusIcon />
-                    </IconButton>
-                </div>
             </Box>
             <Box>
                 <Messages

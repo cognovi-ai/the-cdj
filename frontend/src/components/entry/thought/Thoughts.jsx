@@ -3,7 +3,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from
 
 import { useState } from "react";
 
-export default function Thoughts({ journalId, entries, setEntries, setFocusing, setFocusedEntryId }) {
+export default function Thoughts({ journalId, entries, setEntries, setFocusedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -15,7 +15,6 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
     const [editedEntryId, setEditedEntryId] = useState('');
 
     const handleFocus = async (entryId) => {
-        setFocusing(true);
         setFocusedEntryId(entryId);
     }
 
@@ -97,8 +96,13 @@ export default function Thoughts({ journalId, entries, setEntries, setFocusing, 
                 throw new Error("Network response was not ok");
             }
 
+            const filteredEntries = entries.filter((entry) => entry._id !== entryId);
+
+            // Ensure a focused entry is still set after deletion
+            setFocusedEntryId(filteredEntries[0]._id);
+
             // Remove the deleted entry from the state
-            setEntries(entries.filter((entry) => entry._id !== entryId));
+            setEntries(filteredEntries);
         } catch (error) {
             console.error("Error:", error);
         }

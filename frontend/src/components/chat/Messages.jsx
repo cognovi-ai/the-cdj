@@ -6,7 +6,7 @@ export default function Messages({ chat }) {
         <div>
             <h2>Chat</h2>
             {chat.messages && chat.messages.map((message, index) => (
-                <Stack container margin="0 0 1em" key={index}>
+                <Stack margin="0 0 1em" key={index}>
                     <Grid item xs={12}>
                         <Typography align="right" variant="body1">
                             {message.message_content}

@@ -21,7 +21,6 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
-    const [focusing, setFocusing] = useState(false);
     const [focusedEntryId, setFocusedEntryId] = useState('');
 
     useEffect(() => {
@@ -37,6 +36,7 @@ export default function Entries() {
                 }
                 const data = await response.json();
                 setEntries([...data.entries]);
+                setFocusedEntryId(data.entries[0]._id)
             } catch (error) {
                 console.error("Error:", error);
             }
@@ -46,7 +46,7 @@ export default function Entries() {
     }, []);
 
     return (
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
                     <h1>Ryan&apos;s Thought Journal</h1>
@@ -54,31 +54,27 @@ export default function Entries() {
             </Grid>
             <Grid item xs={12} md={6}>
                 <Item>
-                    <Entry
-                        testJournal={testJournal}
-                        setEntries={setEntries}
-                        setFocusing={setFocusing}
+                    <Analysis
+                        journalId={journalId}
+                        focusedEntryId={focusedEntryId}
                     />
                 </Item>
             </Grid>
             <Grid item xs={12} md={6}>
                 <Item>
-                    {focusing ? (
-                        <Analysis
-                            journalId={journalId}
-                            focusedEntryId={focusedEntryId}
-                            setFocusing={setFocusing}
-                        />
-                    ) : (
-                        <Thoughts
-                            journalId={journalId}
-                            entries={entries}
-                            setEntries={setEntries}
-                            setFocusing={setFocusing}
-                            setFocusedEntryId={setFocusedEntryId}
-                        />
-                    )}
-
+                    <Entry
+                        testJournal={testJournal}
+                        setEntries={setEntries}
+                        setFocusedEntryId={setFocusedEntryId}
+                    />
+                </Item>
+                <Item>
+                    <Thoughts
+                        journalId={journalId}
+                        entries={entries}
+                        setEntries={setEntries}
+                        setFocusedEntryId={setFocusedEntryId}
+                    />
                 </Item>
             </Grid>
         </Grid>
