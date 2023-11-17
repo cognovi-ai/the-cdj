@@ -5,9 +5,11 @@ import { useState } from "react";
 
 export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) {
     const [newChat, setNewChat] = useState("");
+    const [validationError, setValidationError] = useState("");
 
     const handleNewChatChange = (event) => {
         setNewChat(event.target.value);
+        setValidationError(""); // Clear validation error when input changes
     };
 
     const handleEnterKeyPress = (event) => {
@@ -17,7 +19,15 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         }
     };
 
-    const handleSendChat = async () => {
+    const handleSendChat = async (event) => {
+        event.preventDefault(); // Prevent form submission
+
+        // Validate the input
+        if (newChat.trim() === "") {
+            setValidationError("This field is required.");
+            return; // Exit early if validation fails
+        }
+
         try {
             const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? "/" + chat.chat_id : "" }`;
 
@@ -51,8 +61,9 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     });
                 });
 
-            // Clear the input field
+            // Clear the input field and validation error
             setNewChat("");
+            setValidationError("");
         } catch (error) {
             console.error("Error:", error);
         }
@@ -72,6 +83,8 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     value={newChat}
                     onChange={handleNewChatChange}
                     onKeyDown={handleEnterKeyPress}
+                    error={Boolean(validationError)}
+                    helperText={validationError}
                 />
                 <Box
                     display="flex"
@@ -81,7 +94,8 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     <IconButton
                         aria-label="Send Chat"
                         color="primary"
-                        onClick={() => handleSendChat()}
+                        onClick={handleSendChat}
+                        disabled={Boolean(validationError)}
                     >
                         <SendIcon />
                     </IconButton>
