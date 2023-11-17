@@ -1,0 +1,15 @@
+.message-bubble {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 15px;
+}
+
+.blue-bg {
+    background-color: #4fc3f7;
+    color: white;
+}
+
+.gray-bg {
+    background-color: #282828;
+    color: white;
+}

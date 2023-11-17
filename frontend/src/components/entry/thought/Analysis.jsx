@@ -46,11 +46,11 @@ export default function Analysis({ journalId, focusedEntryId }) {
             <Box>
                 <Typography variant='h2'>Thought Analysis</Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                        <Typography variant='body1'>{focusedData.analysis_content}</Typography>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant='body1'>{focusedData.content}</Typography>
                     </Grid>
-                    <Grid item xs={6}>
-                        <Typography variant='body2'>{focusedData.content}</Typography>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant='body2'>{focusedData.analysis_content}</Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant='caption'>{focusedData.created_at}</Typography>
