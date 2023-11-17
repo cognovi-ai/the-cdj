@@ -74,7 +74,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
             <form onSubmit={handleSendChat}>
                 <TextField
                     id="new-message"
-                    label="Dive deeper."
+                    label="Send a message."
                     variant="filled"
                     fullWidth
                     multiline
