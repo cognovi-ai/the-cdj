@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import Chat from './chat/Chat';
 
-export default function Analysis({ journalId, focusedEntryId }) {
+export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
     const [chat, setChat] = useState({});
 
@@ -45,7 +45,7 @@ export default function Analysis({ journalId, focusedEntryId }) {
         };
 
         fetchData();
-    }, [focusedEntryId]);
+    }, [focusedEntryId, editedEntryId]);
 
     return (
         <div>

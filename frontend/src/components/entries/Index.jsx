@@ -22,6 +22,7 @@ export default function Entries() {
     const [entries, setEntries] = useState([]);
     const [journalId, setJournalId] = useState('');
     const [focusedEntryId, setFocusedEntryId] = useState('');
+    const [editedEntryId, setEditedEntryId] = useState('');
 
     useEffect(() => {
         const makeRequest = async () => {
@@ -57,6 +58,7 @@ export default function Entries() {
                     <Analysis
                         journalId={journalId}
                         focusedEntryId={focusedEntryId}
+                        editedEntryId={editedEntryId}
                     />
                 </Item>
             </Grid>
@@ -75,6 +77,8 @@ export default function Entries() {
                         setEntries={setEntries}
                         focusedEntryId={focusedEntryId}
                         setFocusedEntryId={setFocusedEntryId}
+                        editedEntryId={editedEntryId}
+                        setEditedEntryId={setEditedEntryId}
                     />
                 </Item>
             </Grid>

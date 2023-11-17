@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import "./Thoughts.css"
 
-export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId }) {
+export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -14,7 +14,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         tags: [],
         privacy_settings: {},
     });
-    const [editedEntryId, setEditedEntryId] = useState('');
+    const [validationError, setValidationError] = useState('');
 
     const handleFocus = async (entryId) => {
         // Scroll to top of page
@@ -22,6 +22,18 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
 
         // Focus thought analysis view on selected entry
         setFocusedEntryId(entryId);
+    }
+
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line
+            handleSaveEdit();
+        }
+    };
+
+    const handleEditing = (event) => {
+        setEditedData({ ...editedData, content: event.target.value });
+        setValidationError(''); // Clear validation error when input changes
     }
 
     const handleEdit = async (entryId) => {
@@ -51,13 +63,20 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
     };
 
     const handleCancelEdit = () => {
-        // Clear the editing state
+        // Clear the editing state and validation error
         setEditing(false);
         setEditedData({});
         setEditedEntryId('');
+        setValidationError('');
     };
 
     const handleSaveEdit = async () => {
+        // Validate the input
+        if (editedData.content.trim() === '') {
+            setValidationError('This field is required.');
+            return; // Exit early if validation fails
+        }
+
         // Construct the URL with the specific entry ID
         const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ editedEntryId }`;
 
@@ -81,10 +100,11 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                 )
             );
 
-            // Clear the editing state
+            // Clear the editing state and validation error
             setEditing(false);
             setEditedData({});
             setEditedEntryId('');
+            setValidationError('');
         } catch (error) {
             console.error("Error:", error);
         }
@@ -134,18 +154,21 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                                 variant="filled"
                                 fullWidth
                                 multiline
+                                autoFocus
                                 minRows={3}
                                 maxRows={6}
                                 value={editedData.content}
-                                onChange={(e) =>
-                                    setEditedData({ ...editedData, content: e.target.value })
-                                }
+                                onChange={handleEditing}
+                                onKeyDown={handleEnterKeyPress}
+                                error={Boolean(validationError)}
+                                helperText={validationError}
                             />
                             <Box display="flex" justifyContent="flex-end" marginTop={2}>
                                 <Button
                                     variant="contained"
                                     color="primary"
                                     onClick={handleSaveEdit}
+                                    disabled={Boolean(validationError)}
                                 >
                                     Save
                                 </Button>
@@ -186,5 +209,5 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                 </Box>
             ))}
         </div>
-    )
+    );
 }
