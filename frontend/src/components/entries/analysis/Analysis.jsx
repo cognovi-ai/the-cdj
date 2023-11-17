@@ -1,7 +1,7 @@
 import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from "react";
 
-import Chat from '../../chat/Chat';
+import Chat from './chat/Chat';
 
 export default function Analysis({ journalId, focusedEntryId }) {
     const [focusedData, setFocusedData] = useState({});

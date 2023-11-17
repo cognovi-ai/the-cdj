@@ -4,9 +4,9 @@ import Container from '@mui/material/Container';
 
 import TitleUnstacked from './TitleUnstacked';
 import TitleStacked from './TitleStacked';
-import NavMenuStacked from './NavMenuStacked';
-import NavMenuUnstacked from './NavMenuUnstacked';
-import UserMenu from './UserMenu';
+import NavMenuStacked from './menus/NavMenuStacked';
+import NavMenuUnstacked from './menus/NavMenuUnstacked';
+import UserMenu from './menus/UserMenu';
 
 import { useState } from 'react';
 

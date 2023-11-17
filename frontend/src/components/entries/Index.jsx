@@ -3,9 +3,9 @@ import { Paper, Grid, Typography } from '@mui/material';
 
 import { useState, useEffect } from "react";
 
-import Thoughts from './thought/Thoughts';
-import Analysis from './thought/Analysis';
-import Entry from './thought/Entry';
+import Thoughts from './thoughts/Thoughts';
+import Analysis from './analysis/Analysis';
+import Entry from './thoughts/Entry';
 
 const testJournal = "6555c8b561fb25d5edb15ea7";
 

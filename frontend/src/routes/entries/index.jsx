@@ -1,4 +1,4 @@
-import Entries from '../../components/entry/Entries'
+import Entries from '../../components/entries'
 
 export default function Index() {
     return (
