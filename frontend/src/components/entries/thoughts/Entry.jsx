@@ -1,12 +1,14 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, TextField, InputLabel, Typography } from '@mui/material';
 
 import { useState } from "react";
 
 export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
+    const [validationError, setValidationError] = useState('');
 
     const handleNewEntryChange = (event) => {
         setNewEntry(event.target.value);
+        setValidationError(''); // Clear validation error when input changes
     };
 
     const handleEnterKeyPress = (event) => {
@@ -18,6 +20,12 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        // Validate the input
+        if (newEntry.trim() === '') {
+            setValidationError('This field is required.');
+            return; // Exit early if validation fails
+        }
 
         // Construct the URL with the specific journal ID
         const journalId = testJournal;
@@ -42,16 +50,17 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
             // Assuming the server responds with the created entry
             const data = await response.json();
 
-            // Clear the input field and update the entries state if needed
+            // Clear the input field and validation error
             setNewEntry('');
+            setValidationError('');
 
             // Make the new entry the focused entry on submit
-            setFocusedEntryId(data._id)
+            setFocusedEntryId(data._id);
 
             // Add new entry to thought list
             setEntries((entries) => (
                 [data, ...entries]
-            ))
+            ));
         } catch (error) {
             console.error("Error:", error);
         }
@@ -59,11 +68,13 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
 
     return (
         <div>
-            <Typography variant="h2">Thought Entry</Typography>
+            <InputLabel sx={{ color: "inherit" }} htmlFor="new-entry">
+                <Typography variant="h2">Thought Entry</Typography>
+            </InputLabel>
             <form onSubmit={handleSubmit}>
                 <TextField
                     id="new-entry"
-                    label="Place your thoughts here."
+                    label="Enter your thought."
                     variant="outlined"
                     fullWidth
                     multiline
@@ -72,6 +83,8 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                     value={newEntry}
                     onChange={handleNewEntryChange}
                     onKeyDown={handleEnterKeyPress}
+                    error={Boolean(validationError)}
+                    helperText={validationError}
                 />
                 <Box
                     display="flex"
@@ -82,11 +95,12 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                         type="submit"
                         variant="contained"
                         color="primary"
+                        disabled={Boolean(validationError)}
                     >
                         Submit
                     </Button>
                 </Box>
             </form>
         </div>
-    )
+    );
 }
