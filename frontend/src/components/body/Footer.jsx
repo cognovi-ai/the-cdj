@@ -1,6 +1,4 @@
-import Box from '@mui/material/Box';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
+import { AppBar, Box, Toolbar } from '@mui/material';
 
 export default function Footer() {
     return (
@@ -10,7 +8,7 @@ export default function Footer() {
             width: '100%',
             minHeight: '100%',
         }}>
-            <AppBar position="static" color="primary">
+            <AppBar color="primary" position="static">
                 <Toolbar>
                     <h5>
                         © 2023 The Cognitive Distortion Journal

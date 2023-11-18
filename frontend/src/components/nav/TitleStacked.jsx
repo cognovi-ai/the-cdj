@@ -1,14 +1,13 @@
-import Typography from '@mui/material/Typography';
-import AltRouteIcon from '@mui/icons-material/AltRoute';
+import { AltRoute as AltRouteIcon } from '@mui/icons-material';
+import { Typography } from '@mui/material';
 
 export default function TitleStacked() {
     return (
         <>
             <AltRouteIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
             <Typography
-                variant="h5"
-                noWrap
                 component="a"
+                noWrap
                 sx={{
                     mr: 2,
                     display: { xs: 'flex', md: 'none' },
@@ -19,6 +18,7 @@ export default function TitleStacked() {
                     color: 'inherit',
                     textDecoration: 'none',
                 }}
+                variant="h5"
             >
                 The CDJ
             </Typography>

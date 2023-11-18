@@ -1,11 +1,11 @@
-import { Box, Button, TextField, IconButton, Typography } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
+import './Thoughts.css'
 
-import { useState } from "react";
+import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
+import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
-import "./Thoughts.css"
+import { useState } from 'react';
 
-export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId }) {
+export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -14,7 +14,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         tags: [],
         privacy_settings: {},
     });
-    const [editedEntryId, setEditedEntryId] = useState('');
+    const [validationError, setValidationError] = useState('');
 
     const handleFocus = async (entryId) => {
         // Scroll to top of page
@@ -24,6 +24,18 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         setFocusedEntryId(entryId);
     }
 
+    const handleEnterKeyPress = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line
+            handleSaveEdit();
+        }
+    };
+
+    const handleEditing = (event) => {
+        setEditedData({ ...editedData, content: event.target.value });
+        setValidationError(''); // Clear validation error when input changes
+    }
+
     const handleEdit = async (entryId) => {
         try {
             // Fetch the entry data for editing
@@ -31,7 +43,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             const entryResponse = await fetch(entryUrl);
 
             if (!entryResponse.ok) {
-                throw new Error("Network response was not ok");
+                throw new Error('Network response was not ok');
             }
 
             const entryData = await entryResponse.json();
@@ -46,18 +58,25 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             });
             setEditedEntryId(entryId);
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error:', error);
         }
     };
 
     const handleCancelEdit = () => {
-        // Clear the editing state
+        // Clear the editing state and validation error
         setEditing(false);
         setEditedData({});
         setEditedEntryId('');
+        setValidationError('');
     };
 
     const handleSaveEdit = async () => {
+        // Validate the input
+        if (editedData.content.trim() === '') {
+            setValidationError('This field is required.');
+            return; // Exit early if validation fails
+        }
+
         // Construct the URL with the specific entry ID
         const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ editedEntryId }`;
 
@@ -71,7 +90,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             });
 
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                throw new Error('Network response was not ok');
             }
 
             // Update the entries state with the edited data
@@ -81,12 +100,13 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                 )
             );
 
-            // Clear the editing state
+            // Clear the editing state and validation error
             setEditing(false);
             setEditedData({});
             setEditedEntryId('');
+            setValidationError('');
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error:', error);
         }
     };
 
@@ -99,61 +119,64 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             });
 
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                throw new Error('Network response was not ok');
             }
 
             const filteredEntries = entries.filter((entry) => entry._id !== entryId);
 
             // Ensure a focused entry is still set after deletion
-            setFocusedEntryId(filteredEntries[0]._id);
+            setFocusedEntryId(filteredEntries.length ? filteredEntries[0]._id : '');
 
             // Remove the deleted entry from the state
             setEntries(filteredEntries);
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error:', error);
         }
     };
 
 
     return (
         <div>
-            <Typography variant='h2'>Recent Thoughts</Typography>
+            <Typography variant="h2">Recent Thoughts</Typography>
             {entries.map((entry) => (
                 <Box
-                    className={entry._id === focusedEntryId ? "focused" : ""}
+                    className={entry._id === focusedEntryId ? 'focused' : ''}
+                    key={entry._id}
                     sx={{
-                        margin: "0 0 2em",
-                        padding: "8px 12px",
-                    }}
-                    key={entry._id}>
-                    <Typography variant='body1'>{entry.content}</Typography>
+                        margin: '0 0 2em',
+                        padding: '8px 12px',
+                    }}>
+                    <Typography variant="body1">{entry.content}</Typography>
                     {editing && editedEntryId === entry._id ? (
                         <div>
                             <TextField
-                                label="Edit your thought."
-                                variant="filled"
+                                autoFocus
+                                error={Boolean(validationError)}
                                 fullWidth
-                                multiline
-                                minRows={3}
+                                helperText={validationError}
+                                label="Edit your thought."
                                 maxRows={6}
+                                minRows={3}
+                                multiline
+                                onChange={handleEditing}
+                                onKeyDown={handleEnterKeyPress}
                                 value={editedData.content}
-                                onChange={(e) =>
-                                    setEditedData({ ...editedData, content: e.target.value })
-                                }
+                                variant="filled"
                             />
                             <Box display="flex" justifyContent="flex-end" marginTop={2}>
                                 <Button
-                                    variant="contained"
                                     color="primary"
+                                    disabled={Boolean(validationError)}
                                     onClick={handleSaveEdit}
+                                    variant="contained"
                                 >
                                     Save
                                 </Button>
                                 <Button
-                                    variant="contained"
                                     color="cancel"
                                     onClick={handleCancelEdit}
                                     style={{ marginLeft: 8 }}
+                                    variant="contained"
                                 >
                                     Cancel
                                 </Button>
@@ -186,5 +209,5 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                 </Box>
             ))}
         </div>
-    )
+    );
 }

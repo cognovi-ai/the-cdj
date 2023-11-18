@@ -1,13 +1,15 @@
-import { Box, TextField, IconButton } from '@mui/material';
+import { Box, IconButton, TextField } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) {
-    const [newChat, setNewChat] = useState("");
+    const [newChat, setNewChat] = useState('');
+    const [validationError, setValidationError] = useState('');
 
     const handleNewChatChange = (event) => {
         setNewChat(event.target.value);
+        setValidationError(''); // Clear validation error when input changes
     };
 
     const handleEnterKeyPress = (event) => {
@@ -17,12 +19,20 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         }
     };
 
-    const handleSendChat = async () => {
+    const handleSendChat = async (event) => {
+        event.preventDefault(); // Prevent form submission
+
+        // Validate the input
+        if (newChat.trim() === '') {
+            setValidationError('This field is required.');
+            return; // Exit early if validation fails
+        }
+
         try {
-            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? "/" + chat.chat_id : "" }`;
+            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? '/' + chat.chat_id : '' }`;
 
             const response = await fetch(url, {
-                method: chat.messages ? "PUT" : "POST",
+                method: chat.messages ? 'PUT' : 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -30,7 +40,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
             });
 
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                throw new Error('Network response was not ok');
             }
 
             // Assuming the server responds with the created entry
@@ -51,10 +61,11 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     });
                 });
 
-            // Clear the input field
-            setNewChat("");
+            // Clear the input field and validation error
+            setNewChat('');
+            setValidationError('');
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error:', error);
         }
     }
 
@@ -62,16 +73,19 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         <div>
             <form onSubmit={handleSendChat}>
                 <TextField
-                    id="new-message"
-                    label="Dive deeper."
-                    variant="filled"
+                    disabled={chat === undefined}
+                    error={Boolean(validationError)}
                     fullWidth
-                    multiline
-                    minRows={3}
+                    helperText={validationError}
+                    id="new-message"
+                    label="Send a message."
                     maxRows={6}
-                    value={newChat}
+                    minRows={3}
+                    multiline
                     onChange={handleNewChatChange}
                     onKeyDown={handleEnterKeyPress}
+                    value={newChat}
+                    variant="filled"
                 />
                 <Box
                     display="flex"
@@ -81,7 +95,8 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     <IconButton
                         aria-label="Send Chat"
                         color="primary"
-                        onClick={() => handleSendChat()}
+                        disabled={chat === undefined || Boolean(validationError)}
+                        onClick={handleSendChat}
                     >
                         <SendIcon />
                     </IconButton>

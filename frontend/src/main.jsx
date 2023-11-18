@@ -1,20 +1,16 @@
+import './index.css'
+
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+
+import ErrorPage from './components/utils/ErrorPage'
+import Index from './routes/entries';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from 'react-router-dom';
-
 import Root from './routes/root';
-import Index from './routes/entries';
 
-import ErrorPage from './components/ErrorPage.jsx'
-
-import './index.css'
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <Root />,
     errorElement: <ErrorPage />,
     children: [
