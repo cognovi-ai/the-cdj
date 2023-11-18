@@ -1,5 +1,5 @@
 import { Box, Grid, Typography } from '@mui/material';
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 import Chat from './chat/Chat';
 
@@ -21,7 +21,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                 const entryAnalysisResponse = await fetch(entryUrl);
 
                 if (!entryAnalysisResponse.ok) {
-                    throw new Error("Network response was not ok");
+                    throw new Error('Network response was not ok');
                 }
 
                 const entryAnalysisData = await entryAnalysisResponse.json();
@@ -33,14 +33,14 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                 const chatResponse = await fetch(chatEntryUrl);
 
                 if (!chatResponse.ok) {
-                    throw new Error("Network response for chat was not ok");
+                    throw new Error('Network response for chat was not ok');
                 }
 
                 const chatData = await chatResponse.json();
                 setChat(chatData);
 
             } catch (error) {
-                console.error("Error:", error);
+                console.error('Error:', error);
             }
         };
 
@@ -50,24 +50,24 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
     return (
         <div>
             <Box>
-                <Typography variant='h2'>Thought Analysis</Typography>
+                <Typography variant="h2">Thought Analysis</Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                        <Typography variant='body1'>{focusedData && focusedData.content}</Typography>
+                    <Grid item md={6} xs={12}>
+                        <Typography variant="body1">{focusedData && focusedData.content}</Typography>
                     </Grid>
-                    <Grid item xs={12} md={6}>
-                        <Typography variant='body2'>{focusedData && focusedData.analysis_content}</Typography>
+                    <Grid item md={6} xs={12}>
+                        <Typography variant="body2">{focusedData && focusedData.analysis_content}</Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <Typography variant='caption'>{focusedData && focusedData.created_at}</Typography>
+                        <Typography variant="caption">{focusedData && focusedData.created_at}</Typography>
                     </Grid>
                 </Grid>
             </Box>
             <Box>
                 <Chat
-                    journalId={journalId}
-                    focusedEntryId={focusedEntryId}
                     chat={chat}
+                    focusedEntryId={focusedEntryId}
+                    journalId={journalId}
                     setChat={setChat}
                 />
             </Box>

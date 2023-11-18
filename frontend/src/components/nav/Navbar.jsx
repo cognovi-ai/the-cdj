@@ -1,11 +1,9 @@
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Container from '@mui/material/Container';
+import { AppBar, Container, Toolbar } from '@mui/material';
 
-import TitleUnstacked from './TitleUnstacked';
-import TitleStacked from './TitleStacked';
 import NavMenuStacked from './menus/NavMenuStacked';
 import NavMenuUnstacked from './menus/NavMenuUnstacked';
+import TitleStacked from './TitleStacked';
+import TitleUnstacked from './TitleUnstacked';
 import UserMenu from './menus/UserMenu';
 
 import { useState } from 'react';
@@ -24,7 +22,7 @@ export default function Navbar() {
         setAnchorElUser(event.currentTarget);
     };
 
-    const handleCloseNavMenu = (event) => {
+    const handleCloseNavMenu = () => {
         setAnchorElNav(null);
     };
 
@@ -37,19 +35,19 @@ export default function Navbar() {
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <TitleUnstacked />
-                    <NavMenuUnstacked pages={pages}
-                        handleCloseNavMenu={handleCloseNavMenu} />
+                    <NavMenuUnstacked handleCloseNavMenu={handleCloseNavMenu}
+                        pages={pages} />
 
-                    <NavMenuStacked pages={pages}
-                        handleOpenNavMenu={handleOpenNavMenu}
+                    <NavMenuStacked anchorElNav={anchorElNav}
                         handleCloseNavMenu={handleCloseNavMenu}
-                        anchorElNav={anchorElNav} />
+                        handleOpenNavMenu={handleOpenNavMenu}
+                        pages={pages} />
                     <TitleStacked />
 
-                    <UserMenu settings={settings}
-                        handleOpenUserMenu={handleOpenUserMenu}
+                    <UserMenu anchorElUser={anchorElUser}
                         handleCloseUserMenu={handleCloseUserMenu}
-                        anchorElUser={anchorElUser} />
+                        handleOpenUserMenu={handleOpenUserMenu}
+                        settings={settings} />
                 </Toolbar>
             </Container>
         </AppBar>

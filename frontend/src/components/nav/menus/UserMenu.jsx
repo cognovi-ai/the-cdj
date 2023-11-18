@@ -1,10 +1,5 @@
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
-import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
-import MenuItem from '@mui/material/MenuItem';
+import { Avatar, Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
+
 import MenuLink from './MenuLink';
 
 export default function UserMenu({
@@ -20,20 +15,20 @@ export default function UserMenu({
                 </IconButton>
             </Tooltip>
             <Menu
-                sx={{ mt: '45px' }}
-                id="menu-appbar"
                 anchorEl={anchorElUser}
                 anchorOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
                 }}
+                id="menu-appbar"
                 keepMounted
+                onClose={handleCloseUserMenu}
+                open={Boolean(anchorElUser)}
+                sx={{ mt: '45px' }}
                 transformOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
                 }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
             >
                 {settings.map((setting) => (
                     <MenuItem key={setting} onClick={handleCloseUserMenu}>

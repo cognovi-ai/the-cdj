@@ -1,6 +1,6 @@
-import { Box, Button, TextField, InputLabel, Typography } from '@mui/material';
+import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
@@ -44,7 +44,7 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
             });
 
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                throw new Error('Network response was not ok');
             }
 
             // Assuming the server responds with the created entry
@@ -62,29 +62,29 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                 [data, ...entries]
             ));
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error:', error);
         }
     };
 
     return (
         <div>
-            <InputLabel sx={{ color: "inherit" }} htmlFor="new-entry">
+            <InputLabel htmlFor="new-entry" sx={{ color: 'inherit' }}>
                 <Typography variant="h2">Thought Entry</Typography>
             </InputLabel>
             <form onSubmit={handleSubmit}>
                 <TextField
+                    error={Boolean(validationError)}
+                    fullWidth
+                    helperText={validationError}
                     id="new-entry"
                     label="Enter your thought."
-                    variant="outlined"
-                    fullWidth
-                    multiline
-                    minRows={3}
                     maxRows={6}
-                    value={newEntry}
+                    minRows={3}
+                    multiline
                     onChange={handleNewEntryChange}
                     onKeyDown={handleEnterKeyPress}
-                    error={Boolean(validationError)}
-                    helperText={validationError}
+                    value={newEntry}
+                    variant="outlined"
                 />
                 <Box
                     display="flex"
@@ -92,10 +92,10 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                     marginTop={2}
                 >
                     <Button
-                        type="submit"
-                        variant="contained"
                         color="primary"
                         disabled={Boolean(validationError)}
+                        type="submit"
+                        variant="contained"
                     >
                         Submit
                     </Button>

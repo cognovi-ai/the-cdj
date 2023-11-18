@@ -1,13 +1,13 @@
-import { styled } from '@mui/material/styles';
-import { Paper, Grid, Typography } from '@mui/material';
+import { Grid, Paper, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 
-import { useState, useEffect } from "react";
-
-import Thoughts from './thoughts/Thoughts';
 import Analysis from './analysis/Analysis';
 import Entry from './thoughts/Entry';
+import Thoughts from './thoughts/Thoughts';
 
-const testJournal = "6555c8b561fb25d5edb15ea7";
+import { styled } from '@mui/material/styles';
+
+const testJournal = '6555c8b561fb25d5edb15ea7';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -33,13 +33,13 @@ export default function Entries() {
 
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error("Network response was not ok");
+                    throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
                 setEntries([...data.entries]);
-                setFocusedEntryId(data.entries.length ? data.entries[0]._id : "")
+                setFocusedEntryId(data.entries.length ? data.entries[0]._id : '')
             } catch (error) {
-                console.error("Error:", error);
+                console.error('Error:', error);
             }
         };
 
@@ -53,32 +53,32 @@ export default function Entries() {
                     <Typography variant="h1">Ryan&apos;s Thought Journal</Typography>
                 </Item>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item md={6} xs={12}>
                 <Item>
                     <Analysis
-                        journalId={journalId}
-                        focusedEntryId={focusedEntryId}
                         editedEntryId={editedEntryId}
+                        focusedEntryId={focusedEntryId}
+                        journalId={journalId}
                     />
                 </Item>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item md={6} xs={12}>
                 <Item>
                     <Entry
-                        testJournal={testJournal}
                         setEntries={setEntries}
                         setFocusedEntryId={setFocusedEntryId}
+                        testJournal={testJournal}
                     />
                 </Item>
                 <Item>
                     <Thoughts
-                        journalId={journalId}
-                        entries={entries}
-                        setEntries={setEntries}
-                        focusedEntryId={focusedEntryId}
-                        setFocusedEntryId={setFocusedEntryId}
                         editedEntryId={editedEntryId}
+                        entries={entries}
+                        focusedEntryId={focusedEntryId}
+                        journalId={journalId}
                         setEditedEntryId={setEditedEntryId}
+                        setEntries={setEntries}
+                        setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>
             </Grid>
