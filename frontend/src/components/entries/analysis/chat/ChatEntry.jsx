@@ -73,6 +73,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         <div>
             <form onSubmit={handleSendChat}>
                 <TextField
+                    disabled={chat === undefined}
                     error={Boolean(validationError)}
                     fullWidth
                     helperText={validationError}
@@ -94,7 +95,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     <IconButton
                         aria-label="Send Chat"
                         color="primary"
-                        disabled={Boolean(validationError)}
+                        disabled={chat === undefined || Boolean(validationError)}
                         onClick={handleSendChat}
                     >
                         <SendIcon />
