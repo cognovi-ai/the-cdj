@@ -35,7 +35,7 @@ const seedDatabase = async () => {
             user = await user.save();
 
             let journal = new Journal({
-                user_id: user._id,
+                user: user._id,
                 title: `Journal of ${ user.username }`
             });
 
@@ -43,7 +43,7 @@ const seedDatabase = async () => {
 
             for (let j = 1; j <= 3; j++) {
                 let entry = new Entry({
-                    journal_id: journal._id,
+                    journal: journal._id,
                     title: `Entry ${ j }`,
                     content: `Content for entry ${ j }`,
                     mood: j % 2 === 0 ? 'Happy' : 'Reflective',
@@ -53,14 +53,14 @@ const seedDatabase = async () => {
                 entry = await entry.save();
 
                 let analysis = new EntryAnalysis({
-                    entry_id: entry._id,
+                    entry: entry._id,
                     analysis_content: `Analysis for entry ${ j }`
                 });
 
                 analysis = await analysis.save();
 
                 let conversation = new EntryConversation({
-                    entry_id: entry._id,
+                    entry: entry._id,
                     messages: [
                         {
                             message_content: `User comment on entry ${ j }`,

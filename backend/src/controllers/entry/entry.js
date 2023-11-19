@@ -9,7 +9,7 @@ import ExpressError from '../../utils/ExpressError.js';
 export const getAllEntries = async (req, res) => {
     const { journalId } = req.params;
 
-    const entries = await Entry.find({ journal_id: journalId });
+    const entries = await Entry.find({ journal: journalId });
 
     res.status(200).json({ entries: entries });
 };
@@ -25,8 +25,8 @@ export const createEntry = async (req, res) => {
 
     const entryData = req.body;
 
-    const newEntry = new Entry({ journal_id: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({ entry_id: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
+    const newEntry = new Entry({ journal: journalId, ...entryData });
+    const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
 
     await newAnalysis.save();
 
@@ -71,8 +71,8 @@ export const deleteEntry = async (req, res) => {
         await Entry.findByIdAndDelete(entryId, { session });
 
         // Delete associated documents
-        await EntryConversation.deleteMany({ entry_id: entryId }, { session });
-        await EntryAnalysis.deleteMany({ entry_id: entryId }, { session });
+        await EntryConversation.deleteMany({ entry: entryId }, { session });
+        await EntryAnalysis.deleteMany({ entry: entryId }, { session });
 
         // Commit the transaction
         await session.commitTransaction();
@@ -94,19 +94,13 @@ export const deleteEntry = async (req, res) => {
 export const getEntryAnalysis = async (req, res, next) => {
     const { entryId } = req.params;
 
-    const entry = await Entry.findById(entryId);
+    const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
 
-    if (!entry) {
-        return next(new ExpressError("Entry not found", 404));
+    if (!entryAnalysis) {
+        return next(new ExpressError('Entry analysis not found', 404));
     }
 
-    const analysis = await EntryAnalysis.find({ entry_id: entryId });
-
-    if (!analysis) {
-        return next(new ExpressError("Analysis not found", 404));
-    }
-
-    res.status(200).json({ ...entry._doc, ...analysis._doc });
+    res.status(200).json(entryAnalysis._doc);
 }
 
 /**
@@ -115,8 +109,8 @@ export const getEntryAnalysis = async (req, res, next) => {
 export const getEntryConversation = async (req, res) => {
     const { entryId } = req.params;
 
-    const response = await EntryConversation.findOne({ entry_id: entryId });
-    const entryConversation = response ? { ...response._doc, chat_id: response._id } : {};
+    const response = await EntryConversation.findOne({ entry: entryId });
+    const entryConversation = response ? { ...response._doc, chatId: response._id } : {};
 
     res.status(200).json(entryConversation);
 }
@@ -129,7 +123,7 @@ export const createEntryConversation = async (req, res) => {
     const messageData = req.body;
 
     const newConversation = new EntryConversation({
-        entry_id: entryId,
+        entry: entryId,
         messages: [{
             message_content: messageData.message_content,
             llm_response: `Response from LLM to entry ${ entryId }`,
@@ -138,8 +132,8 @@ export const createEntryConversation = async (req, res) => {
 
     await newConversation.save();
 
-    const response = await EntryConversation.findOne({ entry_id: entryId });
-    const entryConversation = response ? { ...response._doc, chat_id: response._id } : {};
+    const response = await EntryConversation.findOne({ entry: entryId });
+    const entryConversation = response ? response._doc : {};
 
     res.status(201).json(entryConversation);
 };
