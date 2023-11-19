@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
+import ExpressError from '../../utils/ExpressError.js';
 
 /**
  * Get all entries in a specific journal.
@@ -88,15 +89,24 @@ export const deleteEntry = async (req, res) => {
 };
 
 /**
- * Get an entry and its analysis by ID.
+ * Get an entry and its analysis by ID. 
  */
-export const getEntryAnalysis = async (req, res) => {
+export const getEntryAnalysis = async (req, res, next) => {
     const { entryId } = req.params;
 
     const entry = await Entry.findById(entryId);
+
+    if (!entry) {
+        return next(new ExpressError("Entry not found", 404));
+    }
+
     const analysis = await EntryAnalysis.find({ entry_id: entryId });
 
-    res.status(200).json({ ...entry._doc, ...analysis[0]._doc });
+    if (!analysis) {
+        return next(new ExpressError("Analysis not found", 404));
+    }
+
+    res.status(200).json({ ...entry._doc, ...analysis._doc });
 }
 
 /**
@@ -138,7 +148,7 @@ export const createEntryConversation = async (req, res) => {
  * Update a conversation for a specific entry.
  */
 export const updateEntryConversation = async (req, res) => {
-    const { chatId } = req.params;
+    const { chatId, entryId } = req.params;
     const messageData = req.body;
 
     const response = await EntryConversation.findOneAndUpdate(
@@ -147,7 +157,7 @@ export const updateEntryConversation = async (req, res) => {
             $push: {
                 messages: [{
                     message_content: messageData.message_content,
-                    llm_response: `Response from LLM to entry ${ chatId }`,
+                    llm_response: `Response from LLM to entry ${ entryId }`,
                 }]
             }
         },

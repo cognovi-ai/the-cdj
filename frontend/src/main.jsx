@@ -16,7 +16,21 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/entries',
-        element: <Index />
+        element: <Index />,
+        children: [
+          {
+            path: ':entryId',
+            element: <Index />
+          },
+          {
+            path: ':entryId/analysis',
+            element: <Index />
+          },
+          {
+            path: ':entryId/chat',
+            element: <Index />
+          },
+        ],
       },
       {
         path: '/account',
