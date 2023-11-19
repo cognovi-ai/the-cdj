@@ -1,116 +1,37 @@
 import { Router } from 'express';
-const router = Router();
-import { entryController } from '../../controllers/index.js';
+import { entryController as controller } from '../../controllers/index.js';
 
-router.get("/journals/:journalId/entries", async (req, res) => {
-    try {
-        const entries = await entryController.getAllEntries(req.params.journalId);
-        res.status(200).json({ entries: entries });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
+import catchAsync from '../../utils/catchAsync.js';
 
-router.post('/journals/:journalId/entries', async (req, res) => {
-    try {
-        const savedEntry = await entryController.createEntry(req.params.journalId, req.body);
-        res.status(201).json(savedEntry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+// root path: /journals/:journalId/entries
+const router = Router({ mergeParams: true });
 
-router.get('/journals/:journalId/entries/:entryId', async (req, res) => {
-    try {
-        const entry = await entryController.getAnEntry(req.params.entryId);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+/**
+ * Entry routes.
+ */
+router.route("/")
+    .get(catchAsync(controller.getAllEntries))
+    .post(catchAsync(controller.createEntry));
 
-router.put('/journals/:journalId/entries/:entryId', async (req, res) => {
-    try {
-        const updatedEntry = await entryController.updateEntry(req.params.entryId, req.body);
-        if (!updatedEntry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(updatedEntry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+router.route('/:entryId')
+    .get(catchAsync(controller.getAnEntry))
+    .put(catchAsync(controller.updateEntry))
+    .delete(catchAsync(controller.deleteEntry));
 
-router.delete('/journals/:journalId/entries/:entryId', async (req, res) => {
-    try {
-        const deletedEntry = await entryController.deleteEntry(req.params.entryId);
-        if (!deletedEntry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(204).send();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+/**
+ * Entry analysis routes.
+ */
+router.route('/:entryId/analysis')
+    .get(catchAsync(controller.getEntryAnalysis));
 
-router.get('/journals/:journalId/entries/:entryId/analysis', async (req, res) => {
-    try {
-        const entry = await entryController.getEntryAnalysis(req.params.entryId);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+/**
+ * Entry conversation routes.
+ */
+router.route('/:entryId/chat')
+    .get(catchAsync(controller.getEntryConversation))
+    .post(catchAsync(controller.createEntryConversation));
 
-router.get('/journals/:journalId/entries/:entryId/chat', async (req, res) => {
-    try {
-        const entry = await entryController.getEntryConversation(req.params.entryId);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.post('/journals/:journalId/entries/:entryId/chat', async (req, res) => {
-    try {
-        const entry = await entryController.createEntryConversation(req.params.entryId, req.body);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-router.put('/journals/:journalId/entries/:entryId/chat/:chatId', async (req, res) => {
-    try {
-        const entry = await entryController.updateEntryConversation(req.params.chatId, req.body);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+router.route('/:entryId/chat/:chatId')
+    .put(catchAsync(controller.updateEntryConversation));
 
 export default router;

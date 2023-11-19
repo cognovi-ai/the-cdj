@@ -2,34 +2,65 @@ import mongoose from 'mongoose';
 
 import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
 
-// Get all entries for a specific journal
-export const getAllEntries = async (journalId) => {
-    return await Entry.find({ journal_id: journalId });
+/**
+ * Get all entries in a specific journal.
+ */
+export const getAllEntries = async (req, res) => {
+    const { journalId } = req.params;
+
+    const entries = await Entry.find({ journal_id: journalId });
+
+    res.status(200).json({ entries: entries });
 };
 
-// Create a new entry in a specific journal
-export const createEntry = async (journalId, entryData) => {
-    const newEntry = new Entry({ journal_id: journalId, ...entryData });
+/**
+ * Create a new entry and analysis in a specific journal.
+ */
+export const createEntry = async (req, res) => {
+    /*
+    TODO: ChatGPT should create the title for the entry, entry analysis, tags, and any additional data. The user should only provide the entry content.
+    */
+    const { journalId } = req.params;
 
-    // TODO: Save a real analysis from CDGPT
+    const entryData = req.body;
+
+    const newEntry = new Entry({ journal_id: journalId, ...entryData });
     const newAnalysis = new EntryAnalysis({ entry_id: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
 
     await newAnalysis.save();
-    return await newEntry.save();
+
+    res.status(201).json(await newEntry.save());
 };
 
-// Get an entry
-export const getAnEntry = async (entryId) => {
-    return await Entry.findById(entryId);
+/**
+ * Get an entry by ID.
+ */
+export const getAnEntry = async (req, res) => {
+    const { entryId } = req.params;
+
+    const entry = await Entry.findById(entryId);
+
+    res.status(200).json(entry);
 };
 
-// Update an entry by ID
-export const updateEntry = async (entryId, entryData) => {
-    return await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
+/**
+ * Update an entry by ID.
+ */
+export const updateEntry = async (req, res) => {
+    const { entryId } = req.params;
+
+    const entryData = req.body;
+    const updatedEntry = await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
+
+    res.status(200).json(updatedEntry);
 };
 
-// Delete an entry by ID and associated documents
-export const deleteEntry = async (entryId) => {
+/**
+ * Delete an entry by ID and all associated documents.
+ */
+export const deleteEntry = async (req, res) => {
+    const { entryId } = req.params;
+
     // Start a session and transaction for atomicity
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -53,28 +84,41 @@ export const deleteEntry = async (entryId) => {
         session.endSession();
     }
 
-    return {}
+    res.status(200).json({ message: `Successfully deleted entry ${ entryId }` });
 };
 
-// Get an entry and the analysis
-export const getEntryAnalysis = async (entryId) => {
-    const entry = await getAnEntry(entryId);
+/**
+ * Get an entry and its analysis by ID.
+ */
+export const getEntryAnalysis = async (req, res) => {
+    const { entryId } = req.params;
+
+    const entry = await Entry.findById(entryId);
     const analysis = await EntryAnalysis.find({ entry_id: entryId });
 
-    return { ...entry._doc, ...analysis[0]._doc };
+    res.status(200).json({ ...entry._doc, ...analysis[0]._doc });
 }
 
-// Get conversation associated with an entry
-export const getEntryConversation = async (entryId) => {
+/**
+ * Get a conversation for a specific entry.
+ */
+export const getEntryConversation = async (req, res) => {
+    const { entryId } = req.params;
+
     const response = await EntryConversation.findOne({ entry_id: entryId });
     const entryConversation = response ? { ...response._doc, chat_id: response._id } : {};
 
-    return entryConversation;
+    res.status(200).json(entryConversation);
 }
 
-// Create a new conversation for a specific entry
-export const createEntryConversation = async (entryId, messageData) => {
-    const response = new EntryConversation({
+/**
+ * Create a conversation for a specific entry.
+ */
+export const createEntryConversation = async (req, res) => {
+    const { entryId } = req.params;
+    const messageData = req.body;
+
+    const newConversation = new EntryConversation({
         entry_id: entryId,
         messages: [{
             message_content: messageData.message_content,
@@ -82,12 +126,21 @@ export const createEntryConversation = async (entryId, messageData) => {
         }]
     });
 
-    response.save();
-    return await getEntryConversation(entryId);
+    await newConversation.save();
+
+    const response = await EntryConversation.findOne({ entry_id: entryId });
+    const entryConversation = response ? { ...response._doc, chat_id: response._id } : {};
+
+    res.status(201).json(entryConversation);
 };
 
-// Update a conversation for a specific entry
-export const updateEntryConversation = async (chatId, messageData) => {
+/**
+ * Update a conversation for a specific entry.
+ */
+export const updateEntryConversation = async (req, res) => {
+    const { chatId } = req.params;
+    const messageData = req.body;
+
     const response = await EntryConversation.findOneAndUpdate(
         { _id: chatId },
         {
@@ -101,5 +154,5 @@ export const updateEntryConversation = async (chatId, messageData) => {
         { new: true }
     )
 
-    return response;
+    res.status(200).json(response);
 };
