@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 const entrySchema = new Schema({
-    journal_id: { type: Schema.Types.ObjectId, ref: 'Journal', required: true },
+    journal: { type: Schema.Types.ObjectId, ref: 'Journal', required: true },
     title: { type: String, required: true },
     content: { type: String, required: true },
     mood: { type: String },
@@ -15,7 +15,7 @@ const entrySchema = new Schema({
 });
 
 // For retrieving entries in a journal, sorted by the creation date.
-entrySchema.index({ journal_id: 1, created_at: -1 });
+entrySchema.index({ journal: 1, created_at: -1 });
 // If entries are frequently retrieved or searched by tags.
 entrySchema.index({ tags: 1 });
 // For quickly filtering public or private entries.

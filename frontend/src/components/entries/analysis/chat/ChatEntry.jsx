@@ -29,7 +29,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         }
 
         try {
-            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat.chat_id ? '/' + chat.chat_id : '' }`;
+            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat._id ? '/' + chat._id : '' }`;
 
             const response = await fetch(url, {
                 method: chat.messages ? 'PUT' : 'POST',

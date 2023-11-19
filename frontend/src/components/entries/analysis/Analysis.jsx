@@ -25,7 +25,6 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                 }
 
                 const entryAnalysisData = await entryAnalysisResponse.json();
-
                 setFocusedData(entryAnalysisData);
 
                 // Fetch chat data and set it here
@@ -53,7 +52,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                 <Typography variant="h2">Thought Analysis</Typography>
                 <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
-                        <Typography variant="body1">{focusedData && focusedData.content}</Typography>
+                        <Typography variant="body1">{focusedData && focusedData.entry && focusedData.entry.content}</Typography>
                     </Grid>
                     <Grid item md={6} xs={12}>
                         <Typography variant="body2">{focusedData && focusedData.analysis_content}</Typography>
