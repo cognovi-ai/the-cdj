@@ -1,9 +1,13 @@
 import mongoose from 'mongoose';
 import { User, Journal, Entry, EntryAnalysis, EntryConversation } from '../src/models/index.js';
+import users from './userData.js';
+import journalTitles from './journalData.js';
+import entries from './entryData.js';
+import analyses from './analysisData.js';
+import conversations from './conversationData.js';
 
 // Utility function to create a hashed password
 const createHashedPassword = (password) => {
-    // In reality, you'd use bcrypt with a salt to hash the password
     return `hashed_${ password }`;
 };
 
@@ -21,56 +25,31 @@ const seedDatabase = async () => {
             EntryConversation.deleteMany({})
         ]);
 
-        // Create seed data
-        for (let i = 1; i <= 5; i++) {
-            let user = new User({
-                fname: `User${ i }`,
-                lname: `Test`,
-                dob: new Date(`199${ i }-01-01`),
-                username: `user${ i }test`,
-                password_hash: createHashedPassword(`password${ i }`),
-                password_salt: `salt${ i }`
-            });
-
+        for (const userData of users) {
+            userData.password_hash = createHashedPassword(userData.password_hash);
+            let user = new User(userData);
             user = await user.save();
 
-            let journal = new Journal({
-                user: user._id,
-                title: `Journal of ${ user.username }`
-            });
-
+            let journal = new Journal({ user: user._id, title: journalTitles.shift() });
             journal = await journal.save();
 
-            for (let j = 1; j <= 3; j++) {
-                let entry = new Entry({
-                    journal: journal._id,
-                    title: `Entry ${ j }`,
-                    content: `Content for entry ${ j }`,
-                    mood: j % 2 === 0 ? 'Happy' : 'Reflective',
-                    tags: [`tag${ j }`, `tag${ j + 1 }`]
-                });
-
+            for (const entryData of entries) {
+                let entry = new Entry({ journal: journal._id, ...entryData });
                 entry = await entry.save();
 
-                let analysis = new EntryAnalysis({
-                    entry: entry._id,
-                    analysis_content: `Analysis for entry ${ j }`
-                });
+                let analysisContent = analyses.shift() || 'Default analysis content for this entry.';
+                let analysis = new EntryAnalysis({ entry: entry._id, analysis_content: analysisContent });
+                await analysis.save();
 
-                analysis = await analysis.save();
+                let messages = [];
+                for (let i = 0; i < 3; i++) {
+                    let conversationData = conversations.shift() || { userMessage: 'Default user message', llmResponse: 'Default LLM response' };
+                    messages.push({ message_content: conversationData.userMessage, llm_response: conversationData.llmResponse });
+                }
 
                 let conversation = new EntryConversation({
                     entry: entry._id,
-                    messages: [
-                        {
-                            message_content: `User comment on entry ${ j }`,
-                            llm_response: `LLM response on entry ${ j }`,
-                        },
-                        {
-                            message_content: `Another user comment on entry ${ j }`,
-                            llm_response: `Another LLM response on entry ${ j }`,
-                        }
-                    ]
+                    messages: messages,
                 });
 
                 await conversation.save();
