@@ -5,23 +5,34 @@ import morgan from "morgan";
 import connectDB from "./db.js";
 
 import entry from "./routes/entry/entry.js";
+import ExpressError from "./utils/ExpressError.js";
 
 const app = express();
+
+// connect to database
 connectDB("cdj").catch(err => console.log(err));
 
 // use cors middleware
 app.use(cors());
 
-// only parse json
+// use json middleware
 app.use(express.json());
 
+// log requests
 app.use(morgan("dev"));
 
-// use the entry router path '/journal/:journalId/'
-app.use('/', entry);
+// routes
+app.use("/journals/:journalId/entries", entry);
 
+// 404 handler
 app.use("*", (req, res) => {
-    res.json({ message: "Page not found" });
+    next(new ExpressError("Page Not Found", 404));
+});
+
+// error handler
+app.use((err, req, res, next) => {
+    const { statusCode = 500, message = "Something went wrong" } = err;
+    res.status(statusCode).json({ message: message });
 });
 
 export default app;
