@@ -1,10 +1,13 @@
 import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
+
+    const navigate = useNavigate();
 
     const handleNewEntryChange = (event) => {
         setNewEntry(event.target.value);
@@ -56,6 +59,7 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
 
             // Make the new entry the focused entry on submit
             setFocusedEntryId(data._id);
+            navigate(`/entries/${ data._id }`);
 
             // Add new entry to thought list
             setEntries((entries) => (

@@ -3,6 +3,7 @@ import './Thoughts.css'
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
@@ -15,6 +16,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         privacy_settings: {},
     });
     const [validationError, setValidationError] = useState('');
+    const navigate = useNavigate();
 
     const handleFocus = async (entryId) => {
         // Scroll to top of page
@@ -22,6 +24,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
 
         // Focus thought analysis view on selected entry
         setFocusedEntryId(entryId);
+        navigate(`/entries/${ entryId }`);
     }
 
     const handleEnterKeyPress = (event) => {
@@ -129,11 +132,11 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
 
             // Remove the deleted entry from the state
             setEntries(filteredEntries);
+            navigate(`/entries/${ entryId }`);
         } catch (error) {
             console.error('Error:', error);
         }
     };
-
 
     return (
         <div>

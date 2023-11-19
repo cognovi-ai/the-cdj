@@ -6,8 +6,9 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
+import { useParams } from 'react-router-dom';
 
-const testJournal = '6555c8b561fb25d5edb15ea7';
+const testJournal = '65593317c6e03734e710a80c';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -24,6 +25,8 @@ export default function Entries() {
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
 
+    const { entryId } = useParams();
+
     useEffect(() => {
         const makeRequest = async () => {
             try {
@@ -37,7 +40,14 @@ export default function Entries() {
                 }
                 const data = await response.json();
                 setEntries([...data.entries]);
-                setFocusedEntryId(data.entries.length ? data.entries[0]._id : '')
+
+                // If the URL has a specific entry ID, set that as the focused entry
+                if (entryId) {
+                    setFocusedEntryId(entryId);
+                } else {
+                    setFocusedEntryId(data.entries.length ? data.entries[0]._id : '');
+                }
+
             } catch (error) {
                 console.error('Error:', error);
             }
