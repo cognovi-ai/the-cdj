@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/hiyaryan/the-cdj#readme",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "jsdoc": "^4.0.2"
   }
 }
