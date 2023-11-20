@@ -2,7 +2,7 @@ import { Box, Button } from '@mui/material';
 
 import MenuLink from './MenuLink';
 
-export default function AccessMenuUnstacked({ access = [], handleCloseNavMenu }) {
+export default function AccessMenuUnstacked({ navItems = {}, handleCloseNavMenu }) {
     return (
         <Box
             sx={{
@@ -10,7 +10,7 @@ export default function AccessMenuUnstacked({ access = [], handleCloseNavMenu })
                 display: { xs: 'none', md: 'flex' }
             }}
         >
-            {access.map((page) => (
+            {navItems.pages.map((page) => (
                 <Button
                     key={page}
                     onClick={handleCloseNavMenu}

@@ -9,9 +9,11 @@ import UserMenu from './menus/UserMenu';
 
 import { useState } from 'react';
 
-const access = ['Login', 'Register'];
-const pages = ['Home', 'Entries'];
-const settings = ['Account', 'Logout'];
+const navItems = {
+    navMenu: { pages: ['Home', 'Entries'] },
+    accessMenu: { pages: ['Login', 'Register'] },
+    userMenu: { pages: ['Account', 'Logout'] },
+}
 
 export default function Navbar() {
     const [anchorElNav, setAnchorElNav] = useState(null);
@@ -37,24 +39,33 @@ export default function Navbar() {
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <TitleUnstacked />
-                    <NavMenuUnstacked handleCloseNavMenu={handleCloseNavMenu}
-                        pages={pages} />
+                    <NavMenuUnstacked
+                        handleCloseNavMenu={handleCloseNavMenu}
+                        navItems={navItems.navMenu}
+                    />
 
-                    <NavMenuStacked anchorElNav={anchorElNav}
+                    <NavMenuStacked
+                        anchorElNav={anchorElNav}
                         handleCloseNavMenu={handleCloseNavMenu}
                         handleOpenNavMenu={handleOpenNavMenu}
-                        pages={[...pages, ...access]} />
+                        navItems={{
+                            pages:
+                                [...navItems.navMenu.pages,
+                                ...navItems.accessMenu.pages]
+                        }}
+                    />
                     <TitleStacked />
 
                     <AccessMenuUnstacked
-                        access={access}
                         handleCloseNavMenu={handleCloseNavMenu}
+                        navItems={navItems.accessMenu}
                     />
                     <UserMenu
                         anchorElUser={anchorElUser}
                         handleCloseUserMenu={handleCloseUserMenu}
                         handleOpenUserMenu={handleOpenUserMenu}
-                        settings={settings} />
+                        navItems={navItems.userMenu}
+                    />
                 </Toolbar>
             </Container>
         </AppBar>
