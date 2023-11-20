@@ -1,5 +1,6 @@
 import './index.css'
 
+import { Account, ForgotPassword, Login, Logout, Register } from './routes/access';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import ErrorPage from './components/utils/ErrorPage'
@@ -38,19 +39,23 @@ const router = createBrowserRouter([
       },
       {
         path: '/account',
-        element: <h1>Account</h1>,
+        element: <Account />,
       },
       {
         path: '/logout',
-        element: <h1>Logged out</h1>,
+        element: <Logout />,
       },
       {
         path: '/login',
-        element: <h1>Login</h1>,
+        element: <Login />,
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPassword />
       },
       {
         path: '/register',
-        element: <h1>Register</h1>,
+        element: <Register />,
       },
     ],
   },
