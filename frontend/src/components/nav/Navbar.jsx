@@ -1,5 +1,6 @@
 import { AppBar, Container, Toolbar } from '@mui/material';
 
+import AccessMenuUnstacked from './menus/AccessMenuUnstacked';
 import NavMenuStacked from './menus/NavMenuStacked';
 import NavMenuUnstacked from './menus/NavMenuUnstacked';
 import TitleStacked from './TitleStacked';
@@ -8,6 +9,7 @@ import UserMenu from './menus/UserMenu';
 
 import { useState } from 'react';
 
+const access = ['Login', 'Register'];
 const pages = ['Home', 'Entries'];
 const settings = ['Account', 'Logout'];
 
@@ -41,10 +43,15 @@ export default function Navbar() {
                     <NavMenuStacked anchorElNav={anchorElNav}
                         handleCloseNavMenu={handleCloseNavMenu}
                         handleOpenNavMenu={handleOpenNavMenu}
-                        pages={pages} />
+                        pages={[...pages, ...access]} />
                     <TitleStacked />
 
-                    <UserMenu anchorElUser={anchorElUser}
+                    <AccessMenuUnstacked
+                        access={access}
+                        handleCloseNavMenu={handleCloseNavMenu}
+                    />
+                    <UserMenu
+                        anchorElUser={anchorElUser}
                         handleCloseUserMenu={handleCloseUserMenu}
                         handleOpenUserMenu={handleOpenUserMenu}
                         settings={settings} />
