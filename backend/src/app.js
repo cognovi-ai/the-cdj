@@ -4,7 +4,7 @@ import morgan from "morgan";
 
 import connectDB from "./db.js";
 
-import entry from "./routes/entry/entry.js";
+import { entry, access } from "./routes/index.js";
 import ExpressError from "./utils/ExpressError.js";
 
 const app = express();
@@ -23,6 +23,7 @@ app.use(morgan("dev"));
 
 // routes
 app.use("/journals/:journalId/entries", entry);
+app.use("/access", access);
 
 // 404 handler
 app.use("*", (req, res) => {
