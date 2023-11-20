@@ -1,4 +1,5 @@
 import { AppBar, Container, Toolbar } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import AccessMenuUnstacked from './menus/AccessMenuUnstacked';
 import NavMenuStacked from './menus/NavMenuStacked';
@@ -7,7 +8,7 @@ import TitleStacked from './TitleStacked';
 import TitleUnstacked from './TitleUnstacked';
 import UserMenu from './menus/UserMenu';
 
-import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 
 const navItems = {
     navMenu: { pages: ['Home', 'Entries'] },
@@ -18,6 +19,24 @@ const navItems = {
 export default function Navbar() {
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
+
+    const theme = useTheme();
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            // Clean up the event listener
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    const handleResize = () => {
+        // Close the hamburger menu when screen size is md or greater
+        if (window.innerWidth >= theme.breakpoints.values.md) {
+            setAnchorElNav(null);
+        }
+    };
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
