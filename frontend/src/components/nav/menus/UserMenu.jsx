@@ -3,7 +3,7 @@ import { Avatar, Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@m
 import MenuLink from './MenuLink';
 
 export default function UserMenu({
-    settings,
+    navItems = {},
     handleOpenUserMenu,
     handleCloseUserMenu,
     anchorElUser }) {
@@ -30,10 +30,10 @@ export default function UserMenu({
                     horizontal: 'right',
                 }}
             >
-                {settings.map((setting) => (
-                    <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                {navItems.pages.map((page) => (
+                    <MenuItem key={page} onClick={handleCloseUserMenu}>
                         <Typography textAlign="center">
-                            <MenuLink page={setting} />
+                            <MenuLink page={page} />
                         </Typography>
                     </MenuItem>
                 ))}

@@ -4,7 +4,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import MenuLink from './MenuLink';
 
 export default function NavMenuStacked({
-    pages = [],
+    navItems = {},
     handleOpenNavMenu,
     handleCloseNavMenu,
     anchorElNav }) {
@@ -38,7 +38,7 @@ export default function NavMenuStacked({
                     horizontal: 'left',
                 }}
             >
-                {pages.map((page) => (
+                {navItems.pages.map((page) => (
                     <MenuItem key={page} onClick={handleCloseNavMenu}>
                         <Typography textAlign="center">
                             <MenuLink page={page} />

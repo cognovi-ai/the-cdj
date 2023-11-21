@@ -8,7 +8,7 @@ import Thoughts from './thoughts/Thoughts';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router-dom';
 
-const testJournal = '6559b8ac5e22fdb2fea047da';
+const testJournal = '655c3cb3c19e7cb1f89ff17a';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
