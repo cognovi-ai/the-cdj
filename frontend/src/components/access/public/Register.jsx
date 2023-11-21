@@ -18,13 +18,41 @@ function Copyright(props) {
 }
 
 export default function Register() {
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        });
+        const formData = new FormData(event.currentTarget);
+
+        try {
+            // Construct the URL with the specific journal ID
+            const url = 'http://192.168.50.157:3000/access/register';
+
+            const response = await fetch(url,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fname: formData.get('firstName'),
+                        lname: formData.get('lastName'),
+                        email: formData.get('email'),
+                        password: formData.get('password'),
+                    }),
+                });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log(data);
+
+            // Redirect to the entries page
+            window.location.replace('/entries');
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     return (

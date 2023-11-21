@@ -9,4 +9,7 @@ const router = Router({ mergeParams: true });
 router.route('/login')
     .post(catchAsync(controller.login));
 
+router.route('/register')
+    .post(catchAsync(controller.register));
+
 export default router;

@@ -45,6 +45,9 @@ export default function Login() {
             const data = await response.json();
             console.log(data);
 
+            // Redirect to the entries page
+            window.location.replace('/entries');
+
         } catch (error) {
             console.error('Error:', error);
         }
