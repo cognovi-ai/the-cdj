@@ -6,4 +6,7 @@ import catchAsync from '../../utils/catchAsync.js';
 // root path: /access
 const router = Router({ mergeParams: true });
 
+router.route('/login')
+    .post(catchAsync(controller.login));
+
 export default router;
