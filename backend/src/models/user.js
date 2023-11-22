@@ -1,10 +1,9 @@
 import { Schema, model } from 'mongoose';
+import passportLocalMongoose from 'passport-local-mongoose';
 
 const userSchema = new Schema({
     fname: { type: String, required: true },
     lname: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });
@@ -14,5 +13,10 @@ userSchema.index({ email: 1 }, { unique: true, background: true });
 
 // Useful if searching by full name is common.
 userSchema.index({ fname: 1, lname: 1 });
+
+// Add passport-local-mongoose to User schema.
+userSchema.plugin(passportLocalMongoose, {
+    usernameField: 'email',
+});
 
 export default model('User', userSchema);

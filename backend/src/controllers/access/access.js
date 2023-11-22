@@ -1,26 +1,27 @@
 import { User, Journal } from '../../models/index.js';
 import ExpressError from '../../utils/ExpressError.js';
-import bcrypt from 'bcrypt';
+
+import passport from 'passport';
 
 /**
  * Login a user.
  */
 export const login = async (req, res, next) => {
-    const { email, password } = req.body;
-    const foundUser = await User.findOne({ email });
+    passport.authenticate('local', (err, user, info) => {
+        if (err) { return next(err); }
 
-    if (!foundUser) {
-        return next(new ExpressError('Invalid email/password', 401));
-    }
+        if (!user) {
+            console.log('Invalid email/password');
+            // Handle login failure
+            return res.status(401).json({ message: 'Invalid email/password' });
+        }
 
-    // compare password with hashed password
-    const match = await bcrypt.compare(password, foundUser.password);
-    if (!match) {
-        console.log('Invalid password');
-        return next(new ExpressError('Invalid email/password', 401));
-    }
-
-    res.status(200).json({ user: foundUser });
+        req.logIn(user, (err) => {
+            if (err) { return next(err); }
+            // Handle successful login
+            return res.status(200).json({ user: user });
+        });
+    })(req, res, next);
 };
 
 /**
@@ -29,24 +30,21 @@ export const login = async (req, res, next) => {
 export const register = async (req, res, next) => {
     const { fname, lname, email, password } = req.body;
 
-    // hash password
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
-
-    // create new user
-    const newUser = new User({ fname, lname, email, password: hash });
     try {
-        await newUser.save();
+        const newUser = await User.register(new User({ email: email, fname, lname, }), password);
+
+        const newJournal = new Journal({ user: newUser._id });
+        await newJournal.save();
+
+        req.login(newUser, err => {
+            if (err) return next(err);
+            res.status(201).json({ user: newUser });
+        });
     } catch (err) {
         if (err.code === 11000) {
             return next(new ExpressError('Email already in use', 400));
+        } else {
+            return next(err);
         }
-        return next(err);
     }
-
-    // Create a journal for the new user.
-    const newJournal = new Journal({ user: newUser._id });
-    await newJournal.save();
-
-    res.status(201).json({ user: newUser, journal: newJournal });
-}
+};
