@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
+import { Journal, Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
 import ExpressError from '../../utils/ExpressError.js';
 
 /**
@@ -17,11 +17,17 @@ export const getAllEntries = async (req, res) => {
 /**
  * Create a new entry and analysis in a specific journal.
  */
-export const createEntry = async (req, res) => {
+export const createEntry = async (req, res, next) => {
     /*
     TODO: ChatGPT should create the title for the entry, entry analysis, tags, and any additional data. The user should only provide the entry content.
     */
     const { journalId } = req.params;
+
+    // ensure that the journal exists
+    const journal = await Journal.findById(journalId);
+    if (!journal) {
+        return next(new ExpressError('Journal not found', 404));
+    }
 
     const entryData = req.body;
 
