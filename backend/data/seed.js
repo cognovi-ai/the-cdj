@@ -5,10 +5,15 @@ import journalTitles from './journalData.js';
 import entries from './entryData.js';
 import analyses from './analysisData.js';
 import conversations from './conversationData.js';
+import bcrypt from 'bcrypt';
 
 // Utility function to create a hashed password
-const createHashedPassword = (password) => {
-    return `hashed_${ password }`;
+const createHashedPassword = async (password) => {
+    // hash password
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+
+    return hash;
 };
 
 // Seed function
@@ -26,7 +31,7 @@ const seedDatabase = async () => {
         ]);
 
         for (const userData of users) {
-            userData.password_hash = createHashedPassword(userData.password_hash);
+            userData.password = await createHashedPassword(userData.password);
             let user = new User(userData);
             user = await user.save();
 
