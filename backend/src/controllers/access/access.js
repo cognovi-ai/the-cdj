@@ -1,15 +1,22 @@
 import { User, Journal } from '../../models/index.js';
 import ExpressError from '../../utils/ExpressError.js';
+import bcrypt from 'bcrypt';
 
 /**
  * Login a user.
  */
 export const login = async (req, res, next) => {
-    // TODO: Implement password hashing and salting logic.
     const { email, password } = req.body;
-    const foundUser = await User.findOne({ email, password_hash: password });
+    const foundUser = await User.findOne({ email });
 
     if (!foundUser) {
+        return next(new ExpressError('Invalid email/password', 401));
+    }
+
+    // compare password with hashed password
+    const match = await bcrypt.compare(password, foundUser.password);
+    if (!match) {
+        console.log('Invalid password');
         return next(new ExpressError('Invalid email/password', 401));
     }
 
@@ -20,10 +27,14 @@ export const login = async (req, res, next) => {
  * Register a new user.
  */
 export const register = async (req, res, next) => {
-    // TODO: Implement password hashing and salting logic.
     const { fname, lname, email, password } = req.body;
-    const newUser = new User({ fname, lname, email, password_hash: password, password_salt: 'salt' });
 
+    // hash password
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+
+    // create new user
+    const newUser = new User({ fname, lname, email, password: hash });
     try {
         await newUser.save();
     } catch (err) {
