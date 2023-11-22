@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import passport from "passport";
+import session from "express-session";
+import User from "./models/user.js";
 
 import connectDB from "./db.js";
 
@@ -17,6 +20,22 @@ app.use(cors());
 
 // use json middleware
 app.use(express.json());
+
+// use session middleware
+app.use(session({
+    secret: 'secret', // TODO: add to .env
+    resave: false,
+    saveUninitialized: false
+}));
+
+// use passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// passport config
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 // log requests
 app.use(morgan("dev"));

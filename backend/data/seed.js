@@ -6,10 +6,13 @@ import entries from './entryData.js';
 import analyses from './analysisData.js';
 import conversations from './conversationData.js';
 
-// Utility function to create a hashed password
-const createHashedPassword = (password) => {
-    return `hashed_${ password }`;
-};
+async function seedUsers() {
+    for (const userData of users) {
+        await User.register({ email: userData.email, fname: userData.fname, lname: userData.lname }, userData.password);
+    }
+
+    return await User.find({});
+}
 
 // Seed function
 const seedDatabase = async () => {
@@ -25,11 +28,9 @@ const seedDatabase = async () => {
             EntryConversation.deleteMany({})
         ]);
 
-        for (const userData of users) {
-            userData.password_hash = createHashedPassword(userData.password_hash);
-            let user = new User(userData);
-            user = await user.save();
+        const users = await seedUsers();
 
+        for (const user of users) {
             let journal = new Journal({ user: user._id, title: journalTitles.shift() });
             journal = await journal.save();
 
