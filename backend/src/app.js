@@ -3,7 +3,6 @@ import cors from "cors";
 import morgan from "morgan";
 import passport from "passport";
 import session from "express-session";
-import LocalStrategy from "passport-local";
 import User from "./models/user.js";
 
 import connectDB from "./db.js";
