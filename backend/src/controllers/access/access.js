@@ -11,9 +11,8 @@ export const login = async (req, res, next) => {
         if (err) { return next(err); }
 
         if (!user) {
-            console.log('Invalid email/password');
             // Handle login failure
-            return res.status(401).json({ message: 'Invalid email/password' });
+            return next(new ExpressError(info.message, 401));
         }
 
         req.logIn(user, (err) => {

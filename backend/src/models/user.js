@@ -17,6 +17,12 @@ userSchema.index({ fname: 1, lname: 1 });
 // Add passport-local-mongoose to User schema.
 userSchema.plugin(passportLocalMongoose, {
     usernameField: 'email',
+    errorMessages: {
+        IncorrectPasswordError: 'Incorrect login credentials',
+        IncorrectUsernameError: 'Incorrect login credentials',
+        MissingUsernameError: 'No email was given',
+        UserExistsError: 'Email already in use'
+    }
 });
 
 export default model('User', userSchema);
