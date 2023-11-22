@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { entryController as controller } from '../../controllers/index.js';
 
 import catchAsync from '../../utils/catchAsync.js';
+import { validateEntry } from '../../middleware/validation.js';
 
 // root path: /journals/:journalId/entries
 const router = Router({ mergeParams: true });
@@ -11,11 +12,11 @@ const router = Router({ mergeParams: true });
  */
 router.route("/")
     .get(catchAsync(controller.getAllEntries))
-    .post(catchAsync(controller.createEntry));
+    .post(validateEntry, catchAsync(controller.createEntry));
 
 router.route('/:entryId')
     .get(catchAsync(controller.getAnEntry))
-    .put(catchAsync(controller.updateEntry))
+    .put(validateEntry, catchAsync(controller.updateEntry))
     .delete(catchAsync(controller.deleteEntry));
 
 /**

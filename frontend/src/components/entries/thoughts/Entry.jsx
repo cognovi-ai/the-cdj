@@ -41,7 +41,6 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    title: newEntry,
                     content: newEntry,
                 }),
             });

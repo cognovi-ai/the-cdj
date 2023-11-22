@@ -9,7 +9,7 @@ import ExpressError from '../../utils/ExpressError.js';
 export const getAllEntries = async (req, res) => {
     const { journalId } = req.params;
 
-    const entries = await Entry.find({ journal: journalId });
+    const entries = await Entry.db.find({ journal: journalId });
 
     res.status(200).json({ entries: entries });
 };
@@ -25,7 +25,7 @@ export const createEntry = async (req, res) => {
 
     const entryData = req.body;
 
-    const newEntry = new Entry({ journal: journalId, ...entryData });
+    const newEntry = new Entry.db({ journal: journalId, ...entryData });
     const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
 
     await newAnalysis.save();
@@ -39,7 +39,7 @@ export const createEntry = async (req, res) => {
 export const getAnEntry = async (req, res) => {
     const { entryId } = req.params;
 
-    const entry = await Entry.findById(entryId);
+    const entry = await Entry.db.findById(entryId);
 
     res.status(200).json(entry);
 };
@@ -51,7 +51,7 @@ export const updateEntry = async (req, res) => {
     const { entryId } = req.params;
 
     const entryData = req.body;
-    const updatedEntry = await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
+    const updatedEntry = await Entry.db.findByIdAndUpdate(entryId, entryData, { new: true });
 
     res.status(200).json(updatedEntry);
 };
@@ -68,7 +68,7 @@ export const deleteEntry = async (req, res) => {
 
     try {
         // Delete the entry
-        await Entry.findByIdAndDelete(entryId, { session });
+        await Entry.db.findByIdAndDelete(entryId, { session });
 
         // Delete associated documents
         await EntryConversation.deleteMany({ entry: entryId }, { session });

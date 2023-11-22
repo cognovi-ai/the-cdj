@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import Joi from 'joi';
 
 const entrySchema = new Schema({
     journal: { type: Schema.Types.ObjectId, ref: 'Journal', required: true },
@@ -14,11 +15,32 @@ const entrySchema = new Schema({
     }
 });
 
+export const joi = Joi.object({
+    title: Joi.string()
+        .allow('')
+        .max(100)
+        .trim()
+        .empty('')
+        .default('Untitled'),
+    content: Joi.string()
+        .min(4)
+        .max(1000)
+        .required(),
+    mood: Joi.string(),
+    tags: Joi.array().items(Joi.string()),
+    privacy_settings: Joi.object({
+        public: Joi.boolean(),
+        shared_with: Joi.array().items(Joi.string())
+    })
+}).default();  // Apply defaults for the entire object
+
 // For retrieving entries in a journal, sorted by the creation date.
 entrySchema.index({ journal: 1, created_at: -1 });
+
 // If entries are frequently retrieved or searched by tags.
 entrySchema.index({ tags: 1 });
+
 // For quickly filtering public or private entries.
 entrySchema.index({ 'privacy_settings.public': 1 });
 
-export default model('Entry', entrySchema);
+export const db = model('Entry', entrySchema);
