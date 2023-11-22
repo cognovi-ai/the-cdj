@@ -77,7 +77,7 @@ export const deleteEntry = async (req, res) => {
         await Entry.db.findByIdAndDelete(entryId, { session });
 
         // Delete associated documents
-        await EntryConversation.deleteMany({ entry: entryId }, { session });
+        await EntryConversation.db.deleteMany({ entry: entryId }, { session });
         await EntryAnalysis.deleteMany({ entry: entryId }, { session });
 
         // Commit the transaction
@@ -115,7 +115,7 @@ export const getEntryAnalysis = async (req, res, next) => {
 export const getEntryConversation = async (req, res) => {
     const { entryId } = req.params;
 
-    const response = await EntryConversation.findOne({ entry: entryId });
+    const response = await EntryConversation.db.findOne({ entry: entryId });
     const entryConversation = response ? { ...response._doc, chatId: response._id } : {};
 
     res.status(200).json(entryConversation);
@@ -128,17 +128,14 @@ export const createEntryConversation = async (req, res) => {
     const { entryId } = req.params;
     const messageData = req.body;
 
-    const newConversation = new EntryConversation({
+    const newConversation = new EntryConversation.db({
         entry: entryId,
-        messages: [{
-            message_content: messageData.message_content,
-            llm_response: `Response from LLM to entry ${ entryId }`,
-        }]
+        ...messageData,
     });
 
     await newConversation.save();
 
-    const response = await EntryConversation.findOne({ entry: entryId });
+    const response = await EntryConversation.db.findOne({ entry: entryId });
     const entryConversation = response ? response._doc : {};
 
     res.status(201).json(entryConversation);
@@ -148,17 +145,14 @@ export const createEntryConversation = async (req, res) => {
  * Update a conversation for a specific entry.
  */
 export const updateEntryConversation = async (req, res) => {
-    const { chatId, entryId } = req.params;
+    const { chatId } = req.params;
     const messageData = req.body;
 
-    const response = await EntryConversation.findOneAndUpdate(
+    const response = await EntryConversation.db.findOneAndUpdate(
         { _id: chatId },
         {
             $push: {
-                messages: [{
-                    message_content: messageData.message_content,
-                    llm_response: `Response from LLM to entry ${ entryId }`,
-                }]
+                ...messageData
             }
         },
         { new: true }
