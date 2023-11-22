@@ -5,16 +5,14 @@ import journalTitles from './journalData.js';
 import entries from './entryData.js';
 import analyses from './analysisData.js';
 import conversations from './conversationData.js';
-import bcrypt from 'bcrypt';
 
-// Utility function to create a hashed password
-const createHashedPassword = async (password) => {
-    // hash password
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
+async function seedUsers() {
+    for (const userData of users) {
+        await User.register({ email: userData.email, fname: userData.fname, lname: userData.lname }, userData.password);
+    }
 
-    return hash;
-};
+    return await User.find({});
+}
 
 // Seed function
 const seedDatabase = async () => {
@@ -30,11 +28,9 @@ const seedDatabase = async () => {
             EntryConversation.deleteMany({})
         ]);
 
-        for (const userData of users) {
-            userData.password = await createHashedPassword(userData.password);
-            let user = new User(userData);
-            user = await user.save();
+        const users = await seedUsers();
 
+        for (const user of users) {
             let journal = new Journal({ user: user._id, title: journalTitles.shift() });
             journal = await journal.save();
 
