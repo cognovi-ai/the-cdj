@@ -1,5 +1,19 @@
-import { Entry, EntryAnalysis, EntryConversation } from '../models/index.js';
+import { Journal, Entry, EntryAnalysis, EntryConversation } from '../models/index.js';
 import ExpressError from '../utils/ExpressError.js';
+
+export const validateJournal = (req, res, next) => {
+    const { error, value } = Journal.joi.validate(req.body, {
+        allowUnknown: true
+    });
+
+    if (error) {
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        req.body = value;
+        next();
+    }
+}
 
 /**
  * Validate the request body for an entry.
