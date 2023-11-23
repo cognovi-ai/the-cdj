@@ -10,7 +10,7 @@ const entryConversationSchema = new Schema({
     }]
 });
 
-export const joi = Joi.object({
+entryConversationSchema.statics.joi = Joi.object({
     messages: Joi.array().items(Joi.object({
         message_content: Joi.string()
             .min(1)
@@ -32,4 +32,4 @@ entryConversationSchema.index({ entry: 1 });
 // To order messages within a conversation by time.
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
-export const db = model('EntryConversation', entryConversationSchema);
+export default model('EntryConversation', entryConversationSchema);

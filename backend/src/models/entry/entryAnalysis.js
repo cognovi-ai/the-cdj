@@ -8,7 +8,7 @@ const entryAnalysisSchema = new Schema({
     updated_at: { type: Date, default: Date.now }
 });
 
-export const joi = Joi.object({
+entryAnalysisSchema.statics.joi = Joi.object({
     analysis_content: Joi.string()
         .allow('')
         .trim()
@@ -19,4 +19,4 @@ export const joi = Joi.object({
 // As analyses are tied to specific entries, this will speed up retrieval.
 entryAnalysisSchema.index({ entry: 1 });
 
-export const db = model('EntryAnalysis', entryAnalysisSchema);
+export default model('EntryAnalysis', entryAnalysisSchema);

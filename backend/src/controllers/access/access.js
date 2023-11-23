@@ -42,7 +42,7 @@ export const register = async (req, res, next) => {
             if (err) return next(err); // Handle validation errors
 
             // Continue with creating the journal if validation is successful
-            const newJournal = new Journal.db({ user: newUser._id, title: req.body.title });
+            const newJournal = new Journal({ user: newUser._id, title: req.body.title });
             await newJournal.save();
 
             // Continue with the rest of the registration process

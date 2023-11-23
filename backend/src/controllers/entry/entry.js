@@ -10,7 +10,7 @@ import ExpressError from '../../utils/ExpressError.js';
 export const getAllEntries = async (req, res) => {
     const { journalId } = req.params;
 
-    const entries = await Entry.db.find({ journal: journalId });
+    const entries = await Entry.find({ journal: journalId });
 
     res.status(200).json({ entries: entries });
 };
@@ -40,8 +40,8 @@ export const createEntry = async (req, res, next) => {
         // If validation is successful, proceed to create the entry and analysis
         const entryData = req.body;
 
-        const newEntry = new Entry.db({ journal: journalId, ...entryData });
-        const newAnalysis = new EntryAnalysis.db({ entry: newEntry._id, analysis_content: entryData.analysis_content });
+        const newEntry = new Entry({ journal: journalId, ...entryData });
+        const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
 
         await newAnalysis.save();
         res.status(201).json(await newEntry.save());
@@ -55,7 +55,7 @@ export const createEntry = async (req, res, next) => {
 export const getAnEntry = async (req, res) => {
     const { entryId } = req.params;
 
-    const entry = await Entry.db.findById(entryId);
+    const entry = await Entry.findById(entryId);
 
     res.status(200).json(entry);
 };
@@ -67,7 +67,7 @@ export const updateEntry = async (req, res) => {
     const { entryId } = req.params;
 
     const entryData = req.body;
-    const updatedEntry = await Entry.db.findByIdAndUpdate(entryId, entryData, { new: true });
+    const updatedEntry = await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
 
     res.status(200).json(updatedEntry);
 };
@@ -84,11 +84,11 @@ export const deleteEntry = async (req, res) => {
 
     try {
         // Delete the entry
-        await Entry.db.findByIdAndDelete(entryId, { session });
+        await Entry.findByIdAndDelete(entryId, { session });
 
         // Delete associated documents
-        await EntryConversation.db.deleteMany({ entry: entryId }, { session });
-        await EntryAnalysis.db.deleteMany({ entry: entryId }, { session });
+        await EntryConversation.deleteMany({ entry: entryId }, { session });
+        await EntryAnalysis.deleteMany({ entry: entryId }, { session });
 
         // Commit the transaction
         await session.commitTransaction();
@@ -110,7 +110,7 @@ export const deleteEntry = async (req, res) => {
 export const getEntryAnalysis = async (req, res, next) => {
     const { entryId } = req.params;
 
-    const entryAnalysis = await EntryAnalysis.db.findOne({ entry: entryId }).populate('entry');
+    const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
 
     if (!entryAnalysis) {
         return next(new ExpressError('Entry analysis not found', 404));
@@ -125,7 +125,7 @@ export const getEntryAnalysis = async (req, res, next) => {
 export const getEntryConversation = async (req, res) => {
     const { entryId } = req.params;
 
-    const response = await EntryConversation.db.findOne({ entry: entryId });
+    const response = await EntryConversation.findOne({ entry: entryId });
     const entryConversation = response ? { ...response._doc, chatId: response._id } : {};
 
     res.status(200).json(entryConversation);
@@ -138,14 +138,14 @@ export const createEntryConversation = async (req, res) => {
     const { entryId } = req.params;
     const messageData = req.body;
 
-    const newConversation = new EntryConversation.db({
+    const newConversation = new EntryConversation({
         entry: entryId,
         ...messageData,
     });
 
     await newConversation.save();
 
-    const response = await EntryConversation.db.findOne({ entry: entryId });
+    const response = await EntryConversation.findOne({ entry: entryId });
     const entryConversation = response ? response._doc : {};
 
     res.status(201).json(entryConversation);
@@ -158,7 +158,7 @@ export const updateEntryConversation = async (req, res) => {
     const { chatId } = req.params;
     const messageData = req.body;
 
-    const response = await EntryConversation.db.findOneAndUpdate(
+    const response = await EntryConversation.findOneAndUpdate(
         { _id: chatId },
         {
             $push: {

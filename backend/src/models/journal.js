@@ -8,7 +8,7 @@ const journalSchema = new Schema({
     updated_at: { type: Date, default: Date.now }
 });
 
-export const joi = Joi.object({
+journalSchema.statics.joi = Joi.object({
     title: Joi.string()
         .allow('')
         .max(100)
@@ -22,4 +22,4 @@ journalSchema.index({ user: 1 });
 // If journals are listed by creation date.
 journalSchema.index({ created_at: -1 });
 
-export const db = model('Journal', journalSchema);
+export default model('Journal', journalSchema);

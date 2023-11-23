@@ -15,7 +15,7 @@ const entrySchema = new Schema({
     }
 });
 
-export const joi = Joi.object({
+entrySchema.statics.joi = Joi.object({
     title: Joi.string()
         .allow('')
         .max(100)
@@ -43,4 +43,4 @@ entrySchema.index({ tags: 1 });
 // For quickly filtering public or private entries.
 entrySchema.index({ 'privacy_settings.public': 1 });
 
-export const db = model('Entry', entrySchema);
+export default model('Entry', entrySchema);
