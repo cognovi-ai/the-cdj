@@ -149,7 +149,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                         margin: '0 0 2em',
                         padding: '8px 12px',
                     }}>
-                    <Typography variant="body1">{entry.content}</Typography>
+                    <Typography variant="body1">{entry.title}</Typography>
                     {editing && editedEntryId === entry._id ? (
                         <div>
                             <TextField
