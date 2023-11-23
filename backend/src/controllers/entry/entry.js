@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import { Journal, Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
+import { validateEntryAnalysis } from '../../middleware/validation.js';
 import ExpressError from '../../utils/ExpressError.js';
 
 /**
@@ -18,26 +19,35 @@ export const getAllEntries = async (req, res) => {
  * Create a new entry and analysis in a specific journal.
  */
 export const createEntry = async (req, res, next) => {
-    /*
-    TODO: ChatGPT should create the title for the entry, entry analysis, tags, and any additional data. The user should only provide the entry content.
-    */
     const { journalId } = req.params;
 
-    // ensure that the journal exists
+    // Ensure that the journal exists
     const journal = await Journal.findById(journalId);
     if (!journal) {
         return next(new ExpressError('Journal not found', 404));
     }
 
-    const entryData = req.body;
+    // TODO: Have ChatGPT generate title and analysis content and add it to req.body. Probably combine into one function.
+    // req.body.title = generateTitle(req.body.content);
+    // req.body.analysis_content = requestAnalysis(req.body.content);
 
-    const newEntry = new Entry.db({ journal: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
+    // Now call the validateEntryAnalysis with the updated req.body
+    validateEntryAnalysis(req, res, async (err) => {
+        if (err) {
+            return next(err); // Handle any validation errors
+        }
 
-    await newAnalysis.save();
+        // If validation is successful, proceed to create the entry and analysis
+        const entryData = req.body;
 
-    res.status(201).json(await newEntry.save());
+        const newEntry = new Entry.db({ journal: journalId, ...entryData });
+        const newAnalysis = new EntryAnalysis.db({ entry: newEntry._id, analysis_content: entryData.analysis_content });
+
+        await newAnalysis.save();
+        res.status(201).json(await newEntry.save());
+    });
 };
+
 
 /**
  * Get an entry by ID.
@@ -78,7 +88,7 @@ export const deleteEntry = async (req, res) => {
 
         // Delete associated documents
         await EntryConversation.db.deleteMany({ entry: entryId }, { session });
-        await EntryAnalysis.deleteMany({ entry: entryId }, { session });
+        await EntryAnalysis.db.deleteMany({ entry: entryId }, { session });
 
         // Commit the transaction
         await session.commitTransaction();
@@ -100,7 +110,7 @@ export const deleteEntry = async (req, res) => {
 export const getEntryAnalysis = async (req, res, next) => {
     const { entryId } = req.params;
 
-    const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
+    const entryAnalysis = await EntryAnalysis.db.findOne({ entry: entryId }).populate('entry');
 
     if (!entryAnalysis) {
         return next(new ExpressError('Entry analysis not found', 404));
