@@ -1,5 +1,38 @@
-import { Journal, Entry, EntryAnalysis, EntryConversation } from '../models/index.js';
+import { User, Journal, Entry, EntryAnalysis, EntryConversation } from '../models/index.js';
 import ExpressError from '../utils/ExpressError.js';
+
+export const validateLogin = (req, res, next) => {
+    const { error, value } = User.baseJoi.validate(req.body, {
+        allowUnknown: true,
+        stripUnknown: true,
+        abortEarly: false
+    });
+
+    if (error) {
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        req.body = value;
+        next();
+    }
+};
+
+
+export const validateRegistration = (req, res, next) => {
+    const { error, value } = User.registrationJoi.validate(req.body, {
+        allowUnknown: true,
+        stripUnknown: true,
+        abortEarly: false
+    });
+
+    if (error) {
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        req.body = value;
+        next();
+    }
+};
 
 export const validateJournal = (req, res, next) => {
     const { error, value } = Journal.joi.validate(req.body, {
