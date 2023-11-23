@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
-import { Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
+import { Journal, Entry, EntryAnalysis, EntryConversation } from '../../models/index.js';
+import { validateEntryAnalysis } from '../../middleware/validation.js';
 import ExpressError from '../../utils/ExpressError.js';
 
 /**
@@ -17,21 +18,36 @@ export const getAllEntries = async (req, res) => {
 /**
  * Create a new entry and analysis in a specific journal.
  */
-export const createEntry = async (req, res) => {
-    /*
-    TODO: ChatGPT should create the title for the entry, entry analysis, tags, and any additional data. The user should only provide the entry content.
-    */
+export const createEntry = async (req, res, next) => {
     const { journalId } = req.params;
 
-    const entryData = req.body;
+    // Ensure that the journal exists
+    const journal = await Journal.findById(journalId);
+    if (!journal) {
+        return next(new ExpressError('Journal not found', 404));
+    }
 
-    const newEntry = new Entry({ journal: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: `Analysis for entry ${ newEntry._id }` });
+    // TODO: Have ChatGPT generate title and analysis content and add it to req.body. Probably combine into one function.
+    // req.body.title = generateTitle(req.body.content);
+    // req.body.analysis_content = requestAnalysis(req.body.content);
 
-    await newAnalysis.save();
+    // Now call the validateEntryAnalysis with the updated req.body
+    validateEntryAnalysis(req, res, async (err) => {
+        if (err) {
+            return next(err); // Handle any validation errors
+        }
 
-    res.status(201).json(await newEntry.save());
+        // If validation is successful, proceed to create the entry and analysis
+        const entryData = req.body;
+
+        const newEntry = new Entry({ journal: journalId, ...entryData });
+        const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
+
+        await newAnalysis.save();
+        res.status(201).json(await newEntry.save());
+    });
 };
+
 
 /**
  * Get an entry by ID.
@@ -124,10 +140,7 @@ export const createEntryConversation = async (req, res) => {
 
     const newConversation = new EntryConversation({
         entry: entryId,
-        messages: [{
-            message_content: messageData.message_content,
-            llm_response: `Response from LLM to entry ${ entryId }`,
-        }]
+        ...messageData,
     });
 
     await newConversation.save();
@@ -142,17 +155,14 @@ export const createEntryConversation = async (req, res) => {
  * Update a conversation for a specific entry.
  */
 export const updateEntryConversation = async (req, res) => {
-    const { chatId, entryId } = req.params;
+    const { chatId } = req.params;
     const messageData = req.body;
 
     const response = await EntryConversation.findOneAndUpdate(
         { _id: chatId },
         {
             $push: {
-                messages: [{
-                    message_content: messageData.message_content,
-                    llm_response: `Response from LLM to entry ${ entryId }`,
-                }]
+                ...messageData
             }
         },
         { new: true }

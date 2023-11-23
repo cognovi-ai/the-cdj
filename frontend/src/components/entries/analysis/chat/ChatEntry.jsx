@@ -36,7 +36,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message_content: newChat }),
+                body: JSON.stringify({ messages: [{ message_content: newChat }] }),
             });
 
             if (!response.ok) {

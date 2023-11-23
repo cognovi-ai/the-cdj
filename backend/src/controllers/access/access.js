@@ -1,6 +1,8 @@
 import { User, Journal } from '../../models/index.js';
 import ExpressError from '../../utils/ExpressError.js';
 
+import { validateJournal } from '../../middleware/validation.js';
+
 import passport from 'passport';
 
 /**
@@ -30,14 +32,24 @@ export const register = async (req, res, next) => {
     const { fname, lname, email, password } = req.body;
 
     try {
-        const newUser = await User.register(new User({ email: email, fname, lname, }), password);
+        const newUser = await User.register(new User({ email: email, fname, lname }), password);
 
-        const newJournal = new Journal({ user: newUser._id });
-        await newJournal.save();
+        // Prepare data for validateJournal, if necessary
+        // e.g., req.body.journalData = { ... }
 
-        req.login(newUser, err => {
-            if (err) return next(err);
-            res.status(201).json({ user: newUser });
+        // Call validateJournal middleware
+        validateJournal(req, res, async (err) => {
+            if (err) return next(err); // Handle validation errors
+
+            // Continue with creating the journal if validation is successful
+            const newJournal = new Journal({ user: newUser._id, title: req.body.title });
+            await newJournal.save();
+
+            // Continue with the rest of the registration process
+            req.login(newUser, err => {
+                if (err) return next(err);
+                res.status(201).json({ user: newUser });
+            });
         });
     } catch (err) {
         if (err.code === 11000) {

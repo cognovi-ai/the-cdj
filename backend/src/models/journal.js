@@ -1,10 +1,20 @@
 import { Schema, model } from 'mongoose';
+import Joi from 'joi';
 
 const journalSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: false },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
+});
+
+journalSchema.statics.joi = Joi.object({
+    title: Joi.string()
+        .allow('')
+        .max(100)
+        .trim()
+        .empty('')
+        .default('Untitled'),
 });
 
 // Indexing on user as journals will often be queried per user.
