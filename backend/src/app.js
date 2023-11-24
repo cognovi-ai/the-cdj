@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -9,6 +10,11 @@ import connectDB from "./db.js";
 
 import { entry, access } from "./routes/index.js";
 import ExpressError from "./utils/ExpressError.js";
+
+// load environment variables
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config();
+}
 
 const app = express();
 
@@ -26,7 +32,7 @@ app.use(express.json());
 
 // use session middleware
 app.use(session({
-    secret: 'secret', // TODO: add to .env
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
