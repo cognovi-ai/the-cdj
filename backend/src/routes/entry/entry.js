@@ -3,6 +3,7 @@ import { entryController as controller } from '../../controllers/index.js';
 
 import catchAsync from '../../utils/catchAsync.js';
 import { validateEntry, validateEntryConversation } from '../../middleware/validation.js';
+import { isAuthenticated } from '../../middleware/access.js';
 
 // root path: /journals/:journalId/entries
 const router = Router({ mergeParams: true });
@@ -11,7 +12,7 @@ const router = Router({ mergeParams: true });
  * Entry routes.
  */
 router.route("/")
-    .get(catchAsync(controller.getAllEntries))
+    .get(isAuthenticated, catchAsync(controller.getAllEntries))
     .post(validateEntry, catchAsync(controller.createEntry));
 
 router.route('/:entryId')

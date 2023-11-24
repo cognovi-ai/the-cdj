@@ -26,6 +26,16 @@ export const login = async (req, res, next) => {
 };
 
 /**
+ * Logout a user.
+ */
+export const logout = (req, res) => {
+    req.logout((err) => {
+        if (err) return next(err);
+    });
+    res.status(200).json({ message: "Logged out successfully." });
+}
+
+/**
  * Register a new user.
  */
 export const register = async (req, res, next) => {

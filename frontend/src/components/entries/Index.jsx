@@ -8,7 +8,7 @@ import Thoughts from './thoughts/Thoughts';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router-dom';
 
-const testJournal = '655dbd259a81c573c0c66b81';
+const testJournal = '655eb9b3e2067616343bd423';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -34,7 +34,9 @@ export default function Entries() {
                 setJournalId(testJournal);
                 const url = `http://192.168.50.157:3000/journals/${ testJournal }/entries`;
 
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
