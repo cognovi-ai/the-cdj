@@ -6,9 +6,8 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
+import { useJournal } from '../../context/JournalContext';
 import { useParams } from 'react-router-dom';
-
-const testJournal = '655eb9b3e2067616343bd423';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -20,19 +19,17 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export default function Entries() {
+    const { journalId, journalTitle } = useJournal();
     const [entries, setEntries] = useState([]);
-    const [journalId, setJournalId] = useState('');
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
-
     const { entryId } = useParams();
 
     useEffect(() => {
         const makeRequest = async () => {
             try {
                 // Construct the URL with the specific journal ID
-                setJournalId(testJournal);
-                const url = `http://192.168.50.157:3000/journals/${ testJournal }/entries`;
+                const url = `http://192.168.50.157:3000/journals/${ journalId }/entries`;
 
                 const response = await fetch(url, {
                     credentials: 'include'
@@ -62,7 +59,9 @@ export default function Entries() {
         <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
-                    <Typography variant="h1">Ryan&apos;s Thought Journal</Typography>
+                    <Typography variant="h1">
+                        {journalTitle}
+                    </Typography>
                 </Item>
             </Grid>
             <Grid item md={6} xs={12}>
@@ -77,9 +76,9 @@ export default function Entries() {
             <Grid item md={6} xs={12}>
                 <Item>
                     <Entry
+                        journalId={journalId}
                         setEntries={setEntries}
                         setFocusedEntryId={setFocusedEntryId}
-                        testJournal={testJournal}
                     />
                 </Item>
                 <Item>

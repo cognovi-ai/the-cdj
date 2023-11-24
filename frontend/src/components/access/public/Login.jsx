@@ -6,6 +6,7 @@ import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import { useJournal } from '../../../context/JournalContext';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -20,6 +21,7 @@ function Copyright(props) {
 }
 
 export default function Login() {
+    const { setJournalId, setJournalTitle } = useJournal();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
@@ -48,7 +50,10 @@ export default function Login() {
             }
 
             const data = await response.json();
-            console.log(data);
+
+            // Set the journal ID and title in the context
+            setJournalId(data.journalId);
+            setJournalTitle(data.journalTitle);
 
             // Redirect to the entries page
             navigate('/entries', { replace: true });

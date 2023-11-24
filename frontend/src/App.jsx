@@ -6,6 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Footer from './components/body/Footer';
 import Header from './components/body/Header';
 
+import { JournalProvider } from './context/JournalContext.jsx';
 import { Outlet } from 'react-router-dom';
 
 const theme = createTheme({
@@ -69,7 +70,9 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <Header />
         <Box sx={{ minHeight: '100vh' }}>
-          <Outlet />
+          <JournalProvider>
+            <Outlet />
+          </JournalProvider>
         </Box>
         <Footer />
       </ThemeProvider>

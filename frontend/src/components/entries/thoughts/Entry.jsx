@@ -3,7 +3,7 @@ import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
+export default function Entry({ journalId, setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
 
@@ -31,7 +31,6 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
         }
 
         // Construct the URL with the specific journal ID
-        const journalId = testJournal;
         const url = `http://192.168.50.157:3000/journals/${ journalId }/entries`;
 
         try {

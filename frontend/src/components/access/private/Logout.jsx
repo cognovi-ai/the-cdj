@@ -5,6 +5,7 @@ import { AltRoute } from '@mui/icons-material';
 
 import MenuLink from '../../../components/nav/menus/MenuLink';
 
+import { useJournal } from '../../../context/JournalContext';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -19,6 +20,7 @@ function Copyright(props) {
 }
 
 export default function Logout() {
+    const { setJournalId, setJournalTitle } = useJournal();
     const [isLoggingOut, setIsLoggingOut] = useState(true);
     const navigate = useNavigate();
 
@@ -28,8 +30,16 @@ export default function Logout() {
                 await fetch('http://192.168.50.157:3000/access/logout', {
                     credentials: 'include'
                 });
+
                 // Logout successful
-                setTimeout(() => setIsLoggingOut(false), 1000); // 2000 milliseconds delay
+                setTimeout(() => {
+                    setIsLoggingOut(false);
+
+                    // Clear the journal ID and title in the context
+                    setJournalId('');
+                    setJournalTitle('');
+                }, 1000); // 2000 milliseconds delay    
+
                 setTimeout(() => navigate('/login', { replace: true }), 2000); // 2000 milliseconds delay
             } catch (error) {
                 console.error('Logout failed:', error);
