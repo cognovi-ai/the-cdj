@@ -6,6 +6,8 @@ import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import { useNavigate } from 'react-router-dom';
+
 function Copyright(props) {
     return (
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
@@ -18,6 +20,8 @@ function Copyright(props) {
 }
 
 export default function Register() {
+    const navigate = useNavigate();
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -49,7 +53,7 @@ export default function Register() {
             console.log(data);
 
             // Redirect to the entries page
-            window.location.replace('/entries');
+            navigate('/entries', { replace: true });
 
         } catch (error) {
             console.error('Error:', error);
