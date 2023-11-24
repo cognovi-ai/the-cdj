@@ -5,7 +5,7 @@ import { AltRoute } from '@mui/icons-material';
 
 import MenuLink from '../../../components/nav/menus/MenuLink';
 
-import { useJournal } from '../../../context/JournalContext';
+import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -13,8 +13,11 @@ function Copyright(props) {
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
             {'© 2023 '}
             <MenuLink
-                label={'The Cognitive Distortion Journal'}
-                page="" />
+                page={{
+                    label: 'The Cognitive Distortion Journal',
+                    name: '',
+                    visibility: ''
+                }} />
         </Typography>
     );
 }

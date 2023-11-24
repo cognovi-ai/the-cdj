@@ -6,7 +6,7 @@ import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import { useJournal } from '../../../context/JournalContext';
+import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -14,8 +14,11 @@ function Copyright(props) {
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
             {'© 2023 '}
             <MenuLink
-                label={'The Cognitive Distortion Journal'}
-                page="" />
+                page={{
+                    label: 'The Cognitive Distortion Journal',
+                    name: '',
+                    visibility: ''
+                }} />
         </Typography>
     );
 }
@@ -115,13 +118,19 @@ export default function Login() {
                     <Grid container>
                         <Grid item xs>
                             <MenuLink
-                                label={'Forgot password?'}
-                                page="forgot-password" />
+                                page={{
+                                    label: 'Forgot password?',
+                                    name: 'forgot-password',
+                                    visibility: 'public'
+                                }} />
                         </Grid>
                         <Grid item>
                             <MenuLink
-                                label={'Don\'t have an account? Sign Up'}
-                                page="register" />
+                                page={{
+                                    label: 'Don\'t have an account? Sign Up',
+                                    name: 'register',
+                                    visibility: 'public'
+                                }} />
                         </Grid>
                     </Grid>
                 </Box>

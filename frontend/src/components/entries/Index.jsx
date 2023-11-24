@@ -6,7 +6,7 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
-import { useJournal } from '../../context/JournalContext';
+import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
 
 const Item = styled(Paper)(({ theme }) => ({

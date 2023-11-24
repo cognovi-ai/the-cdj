@@ -8,17 +8,32 @@ import TitleStacked from './TitleStacked';
 import TitleUnstacked from './TitleUnstacked';
 import UserMenu from './menus/UserMenu';
 
+import { useJournal } from '../../context/useJournal';
 import { useTheme } from '@mui/material/styles';
 
 const navItems = {
-    navMenu: { pages: ['Home', 'Entries'] },
-    accessMenu: { pages: ['Login', 'Register'] },
-    userMenu: { pages: ['Account', 'Logout'] },
+    navMenu: {
+        pages: [
+            { name: 'Home', visibility: '' },
+            { name: 'Entries', visibility: 'private' }]
+    },
+    accessMenu: {
+        pages: [
+            { name: 'Login', visibility: 'public' },
+            { name: 'Register', visibility: 'public' }]
+    },
+    userMenu: {
+        pages: [
+            { name: 'Account', visibility: 'private' },
+            { name: 'Logout', visibility: 'private' }]
+    },
 }
 
 export default function Navbar() {
+    const { journalId } = useJournal();
     const [anchorElNav, setAnchorElNav] = useState(null);
     const [anchorElUser, setAnchorElUser] = useState(null);
+    const [visibleLinks, setVisibleLinks] = useState({});
 
     const theme = useTheme();
 
@@ -53,6 +68,10 @@ export default function Navbar() {
         setAnchorElUser(null);
     };
 
+    const handleVisibilityChange = (pageName, isVisible) => {
+        setVisibleLinks(prev => ({ ...prev, [pageName]: isVisible }));
+    };
+
     return (
         <AppBar position="sticky" >
             <Container maxWidth="xl">
@@ -61,6 +80,8 @@ export default function Navbar() {
                     <NavMenuUnstacked
                         handleCloseNavMenu={handleCloseNavMenu}
                         navItems={navItems.navMenu}
+                        onVisibilityChange={handleVisibilityChange}
+                        visibleLinks={visibleLinks}
                     />
 
                     <NavMenuStacked
@@ -79,12 +100,14 @@ export default function Navbar() {
                         handleCloseNavMenu={handleCloseNavMenu}
                         navItems={navItems.accessMenu}
                     />
-                    <UserMenu
-                        anchorElUser={anchorElUser}
-                        handleCloseUserMenu={handleCloseUserMenu}
-                        handleOpenUserMenu={handleOpenUserMenu}
-                        navItems={navItems.userMenu}
-                    />
+                    {journalId && (
+                        <UserMenu
+                            anchorElUser={anchorElUser}
+                            handleCloseUserMenu={handleCloseUserMenu}
+                            handleOpenUserMenu={handleOpenUserMenu}
+                            navItems={navItems.userMenu}
+                        />
+                    )}
                 </Toolbar>
             </Container>
         </AppBar>
