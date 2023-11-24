@@ -36,6 +36,7 @@ export default function Login() {
                         email: formData.get('email'),
                         password: formData.get('password'),
                     }),
+                    credentials: 'include',
                 });
 
             if (!response.ok) {

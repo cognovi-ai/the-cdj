@@ -16,7 +16,10 @@ const app = express();
 connectDB("cdj").catch(err => console.log(err));
 
 // use cors middleware
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:5173", "http://192.168.50.157:5173"],
+    credentials: true
+}));
 
 // use json middleware
 app.use(express.json());
@@ -25,12 +28,20 @@ app.use(express.json());
 app.use(session({
     secret: 'secret', // TODO: add to .env
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: "none",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+    }
 }));
 
 // use passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(passport.authenticate("session"));
 
 // passport config
 passport.use(User.createStrategy());
@@ -45,7 +56,7 @@ app.use("/journals/:journalId/entries", entry);
 app.use("/access", access);
 
 // 404 handler
-app.use("*", (req, res) => {
+app.use("*", (req, res, next) => {
     next(new ExpressError("Page Not Found", 404));
 });
 

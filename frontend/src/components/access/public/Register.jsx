@@ -38,6 +38,7 @@ export default function Register() {
                         email: formData.get('email'),
                         password: formData.get('password'),
                     }),
+                    credentials: 'include',
                 });
 
             if (!response.ok) {
