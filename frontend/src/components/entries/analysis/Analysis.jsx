@@ -18,7 +18,9 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
 
                 // Fetch the entry analysis data to display
                 const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/analysis`;
-                const entryAnalysisResponse = await fetch(entryUrl);
+                const entryAnalysisResponse = await fetch(entryUrl, {
+                    credentials: 'include',
+                });
 
                 if (!entryAnalysisResponse.ok) {
                     throw new Error('Network response was not ok');
@@ -29,7 +31,9 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
 
                 // Fetch chat data and set it here
                 const chatEntryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat`;
-                const chatResponse = await fetch(chatEntryUrl);
+                const chatResponse = await fetch(chatEntryUrl, {
+                    credentials: 'include',
+                });
 
                 if (!chatResponse.ok) {
                     throw new Error('Network response for chat was not ok');

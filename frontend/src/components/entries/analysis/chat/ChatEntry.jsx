@@ -37,6 +37,7 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ messages: [{ message_content: newChat }] }),
+                credentials: 'include',
             });
 
             if (!response.ok) {

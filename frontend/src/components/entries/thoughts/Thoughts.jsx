@@ -43,7 +43,9 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         try {
             // Fetch the entry data for editing
             const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
-            const entryResponse = await fetch(entryUrl);
+            const entryResponse = await fetch(entryUrl, {
+                credentials: 'include',
+            });
 
             if (!entryResponse.ok) {
                 throw new Error('Network response was not ok');
@@ -90,6 +92,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(editedData),
+                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -119,6 +122,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         try {
             const response = await fetch(url, {
                 method: 'DELETE',
+                credentials: 'include',
             });
 
             if (!response.ok) {

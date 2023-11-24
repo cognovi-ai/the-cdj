@@ -43,6 +43,7 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                 body: JSON.stringify({
                     content: newEntry,
                 }),
+                credentials: 'include',
             });
 
             if (!response.ok) {

@@ -8,11 +8,14 @@ import { isAuthenticated } from '../../middleware/access.js';
 // root path: /journals/:journalId/entries
 const router = Router({ mergeParams: true });
 
+// Apply isAuthenticated middleware to all routes in this router
+router.use(isAuthenticated);
+
 /**
  * Entry routes.
  */
 router.route("/")
-    .get(isAuthenticated, catchAsync(controller.getAllEntries))
+    .get(catchAsync(controller.getAllEntries))
     .post(validateEntry, catchAsync(controller.createEntry));
 
 router.route('/:entryId')
