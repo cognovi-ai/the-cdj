@@ -3,10 +3,11 @@ import './Thoughts.css'
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
+import { useEntriesApi } from '../../../hooks/useEntriesApi';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Thoughts({ journalId, entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
+export default function Thoughts({ entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -16,6 +17,8 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
         privacy_settings: {},
     });
     const [validationError, setValidationError] = useState('');
+
+    const fetchData = useEntriesApi();
     const navigate = useNavigate();
 
     const handleFocus = async (entryId) => {
@@ -42,16 +45,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
     const handleEdit = async (entryId) => {
         try {
             // Fetch the entry data for editing
-            const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
-            const entryResponse = await fetch(entryUrl, {
-                credentials: 'include',
-            });
-
-            if (!entryResponse.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const entryData = await entryResponse.json();
+            const entryData = await fetchData(`/${ entryId }`, 'GET');
 
             setEditing(true);
             setEditedData({
@@ -63,7 +57,7 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             });
             setEditedEntryId(entryId);
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     };
 
@@ -82,22 +76,14 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             return; // Exit early if validation fails
         }
 
-        // Construct the URL with the specific entry ID
-        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ editedEntryId }`;
-
         try {
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editedData),
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            // Update the entry on the server
+            await fetchData(
+                `/${ editedEntryId }`,
+                'PUT',
+                { 'Content-Type': 'application/json' },
+                editedData
+            );
 
             // Update the entries state with the edited data
             setEntries((prevEntries) =>
@@ -112,33 +98,40 @@ export default function Thoughts({ journalId, entries, setEntries, focusedEntryI
             setEditedEntryId('');
             setValidationError('');
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     };
 
     const handleDelete = async (entryId) => {
-        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ entryId }`;
-
         try {
-            const response = await fetch(url, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            // Delete the entry on the server
+            await fetchData(`/${ entryId }`, 'DELETE');
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            const filteredEntries = entries.filter((entry) =>
+                entry._id !== entryId
+            );
+
+            // If the deleted entry was the focused entry
+            if (focusedEntryId === entryId) {
+                // Set the focused entry to the first entry in the list
+                setFocusedEntryId(
+                    filteredEntries.length ? filteredEntries[0]._id : ''
+                );
             }
-
-            const filteredEntries = entries.filter((entry) => entry._id !== entryId);
-
-            // Ensure a focused entry is still set after deletion
-            setFocusedEntryId(filteredEntries.length ? filteredEntries[0]._id : '');
 
             // Remove the deleted entry from the state
             setEntries(filteredEntries);
-            navigate(`/entries/${ entryId }`);
+
+            // If deleted entry was edited entry 
+            if (focusedEntryId === entryId) {
+                // Navigate to the next entry if filteredEntries is not empty
+                navigate(`/entries/${ filteredEntries.length ? filteredEntries[0]._id : '' }`);
+            } else {
+                // Stay on the focused entry if filteredEntries is not empty
+                navigate(`/entries/${ filteredEntries.length ? focusedEntryId : '' }`);
+            }
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     };
 

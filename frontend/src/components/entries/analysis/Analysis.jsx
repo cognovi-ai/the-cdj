@@ -2,13 +2,16 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Chat from './chat/Chat';
+import { useEntriesApi } from '../../../hooks/useEntriesApi';
 
 export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
     const [chat, setChat] = useState({});
 
+    const fetchData = useEntriesApi();
+
     useEffect(() => {
-        const fetchData = async () => {
+        const makeRequest = async () => {
             try {
                 if (!focusedEntryId.length) {
                     setChat();
@@ -16,38 +19,20 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                     return
                 }
 
-                // Fetch the entry analysis data to display
-                const entryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/analysis`;
-                const entryAnalysisResponse = await fetch(entryUrl, {
-                    credentials: 'include',
-                });
+                const entryAnalysisData = await fetchData(`/${ focusedEntryId }/analysis`, 'GET');
 
-                if (!entryAnalysisResponse.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const entryAnalysisData = await entryAnalysisResponse.json();
                 setFocusedData(entryAnalysisData);
 
-                // Fetch chat data and set it here
-                const chatEntryUrl = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat`;
-                const chatResponse = await fetch(chatEntryUrl, {
-                    credentials: 'include',
-                });
+                const chatData = await fetchData(`/${ focusedEntryId }/chat`, 'GET');
 
-                if (!chatResponse.ok) {
-                    throw new Error('Network response for chat was not ok');
-                }
-
-                const chatData = await chatResponse.json();
                 setChat(chatData);
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error(error);
             }
         };
 
-        fetchData();
+        makeRequest();
     }, [focusedEntryId, editedEntryId]);
 
     return (

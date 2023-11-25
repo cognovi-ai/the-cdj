@@ -5,10 +5,10 @@ const BASE_URL = 'http://192.168.50.157:3000/journals/';
 export function useEntriesApi() {
     const { journalId } = useJournal();
 
-    const fetchData = async (api, method, headers = {}, body = {}) => {
+    const fetchData = async (endpoint, method, headers = {}, body = {}) => {
         try {
             // Construct the URL with the specific journal ID
-            const url = BASE_URL + journalId + api;
+            const url = BASE_URL + journalId + '/entries' + endpoint;
 
             // Prepare the options for the fetch request
             const options = {

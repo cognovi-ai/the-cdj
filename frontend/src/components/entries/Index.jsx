@@ -21,18 +21,19 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Entries() {
     const { journalId, journalTitle } = useJournal();
-    const fetchData = useEntriesApi();
-    const { entryId } = useParams();
 
     const [entries, setEntries] = useState([]);
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
 
+    const fetchData = useEntriesApi();
+    const { entryId } = useParams();
+
     useEffect(() => {
         const makeRequest = async () => {
             try {
                 // Get all the entries for the journal
-                const data = await fetchData('/entries', 'GET');
+                const data = await fetchData('/', 'GET');
 
                 setEntries([...data.entries]);
 

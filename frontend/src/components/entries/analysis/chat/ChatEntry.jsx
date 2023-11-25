@@ -1,11 +1,14 @@
 import { Box, IconButton, TextField } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
+import { useEntriesApi } from '../../../../hooks/useEntriesApi';
 import { useState } from 'react';
 
-export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) {
+export default function ChatEntry({ focusedEntryId, chat, setChat }) {
     const [newChat, setNewChat] = useState('');
     const [validationError, setValidationError] = useState('');
+
+    const fetchData = useEntriesApi();
 
     const handleNewChatChange = (event) => {
         setNewChat(event.target.value);
@@ -29,44 +32,33 @@ export default function ChatEntry({ journalId, focusedEntryId, chat, setChat }) 
         }
 
         try {
-            const url = `http://192.168.50.157:3000/journals/${ journalId }/entries/${ focusedEntryId }/chat${ chat._id ? '/' + chat._id : '' }`;
+            // Send the new message to the server
+            const data = await fetchData(
+                `/${ focusedEntryId }/chat${ chat._id ? '/' + chat._id : '' }`,
+                chat.messages ? 'PUT' : 'POST',
+                { 'Content-Type': 'application/json' },
+                { messages: [{ message_content: newChat }] }
+            );
 
-            const response = await fetch(url, {
-                method: chat.messages ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ messages: [{ message_content: newChat }] }),
-                credentials: 'include',
+            // Update the chat state by adding the new message
+            setChat((prevChat) => {
+                if (prevChat.messages) {
+                    return {
+                        ...prevChat,
+                        messages: [...data.messages],
+                    };
+                } else {
+                    return {
+                        ...data,
+                    };
+                }
             });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            // Assuming the server responds with the created entry
-            await response.json()
-                .then((data) => {
-                    // Update the chat state by adding the new message
-                    setChat((prevChat) => {
-                        if (prevChat.messages) {
-                            return {
-                                ...prevChat,
-                                messages: [...data.messages],
-                            };
-                        } else {
-                            return {
-                                ...data,
-                            };
-                        }
-                    });
-                });
 
             // Clear the input field and validation error
             setNewChat('');
             setValidationError('');
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     }
 
