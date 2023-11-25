@@ -2,13 +2,13 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Chat from './chat/Chat';
-import { useEntriesApi } from '../../../hooks/useEntriesApi';
+import { useEntries } from '../../../hooks/useEntries';
 
 export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
     const [focusedData, setFocusedData] = useState({});
     const [chat, setChat] = useState({});
 
-    const fetchData = useEntriesApi();
+    const entries = useEntries();
 
     useEffect(() => {
         const makeRequest = async () => {
@@ -19,11 +19,11 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                     return
                 }
 
-                const entryAnalysisData = await fetchData(`/${ focusedEntryId }/analysis`, 'GET');
+                const entryAnalysisData = await entries(`/${ focusedEntryId }/analysis`, 'GET');
 
                 setFocusedData(entryAnalysisData);
 
-                const chatData = await fetchData(`/${ focusedEntryId }/chat`, 'GET');
+                const chatData = await entries(`/${ focusedEntryId }/chat`, 'GET');
 
                 setChat(chatData);
 

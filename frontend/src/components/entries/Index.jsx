@@ -6,7 +6,7 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
-import { useEntriesApi } from '../../hooks/useEntriesApi';
+import { useEntries } from '../../hooks/useEntries';
 import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
 
@@ -22,20 +22,20 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function Entries() {
     const { journalId, journalTitle } = useJournal();
 
-    const [entries, setEntries] = useState([]);
+    const [allEntries, setAllEntries] = useState([]);
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
 
-    const fetchData = useEntriesApi();
+    const entries = useEntries();
     const { entryId } = useParams();
 
     useEffect(() => {
         const makeRequest = async () => {
             try {
                 // Get all the entries for the journal
-                const data = await fetchData('/', 'GET');
+                const data = await entries('/', 'GET');
 
-                setEntries([...data.entries]);
+                setAllEntries([...data.entries]);
 
                 // If the URL has an entryId
                 if (entryId) {
@@ -79,18 +79,18 @@ export default function Entries() {
                 <Item>
                     <Entry
                         journalId={journalId}
-                        setEntries={setEntries}
+                        setEntries={setAllEntries}
                         setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>
                 <Item>
                     <Thoughts
+                        allEntries={allEntries}
                         editedEntryId={editedEntryId}
-                        entries={entries}
                         focusedEntryId={focusedEntryId}
                         journalId={journalId}
+                        setAllEntries={setAllEntries}
                         setEditedEntryId={setEditedEntryId}
-                        setEntries={setEntries}
                         setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>

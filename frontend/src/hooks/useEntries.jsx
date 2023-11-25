@@ -2,10 +2,10 @@ import { useJournal } from '../context/useJournal';
 
 const BASE_URL = 'http://192.168.50.157:3000/journals/';
 
-export function useEntriesApi() {
+export function useEntries() {
     const { journalId } = useJournal();
 
-    const fetchData = async (endpoint, method, headers = {}, body = {}) => {
+    const response = async (endpoint, method, headers = {}, body = {}) => {
         try {
             // Construct the URL with the specific journal ID
             const url = BASE_URL + journalId + '/entries' + endpoint;
@@ -35,5 +35,5 @@ export function useEntriesApi() {
         }
     }
 
-    return fetchData;
+    return response;
 }

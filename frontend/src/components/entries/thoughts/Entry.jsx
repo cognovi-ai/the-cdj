@@ -1,6 +1,6 @@
 import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 
-import { useEntriesApi } from '../../../hooks/useEntriesApi';
+import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -8,7 +8,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
 
-    const fetchData = useEntriesApi();
+    const entries = useEntries();
     const navigate = useNavigate();
 
     const handleNewEntryChange = (event) => {
@@ -34,7 +34,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
 
         try {
             // Send the new entry to the server
-            const data = await fetchData(
+            const data = await entries(
                 '/',
                 'POST',
                 { 'Content-Type': 'application/json' },

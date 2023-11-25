@@ -3,11 +3,11 @@ import './Thoughts.css'
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
-import { useEntriesApi } from '../../../hooks/useEntriesApi';
+import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Thoughts({ entries, setEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
+export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -18,7 +18,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
     });
     const [validationError, setValidationError] = useState('');
 
-    const fetchData = useEntriesApi();
+    const entries = useEntries();
     const navigate = useNavigate();
 
     const handleFocus = async (entryId) => {
@@ -45,7 +45,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
     const handleEdit = async (entryId) => {
         try {
             // Fetch the entry data for editing
-            const entryData = await fetchData(`/${ entryId }`, 'GET');
+            const entryData = await entries(`/${ entryId }`, 'GET');
 
             setEditing(true);
             setEditedData({
@@ -78,7 +78,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
 
         try {
             // Update the entry on the server
-            await fetchData(
+            await entries(
                 `/${ editedEntryId }`,
                 'PUT',
                 { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
             );
 
             // Update the entries state with the edited data
-            setEntries((prevEntries) =>
+            setAllEntries((prevEntries) =>
                 prevEntries.map((entry) =>
                     entry._id === editedEntryId ? { ...entry, ...editedData } : entry
                 )
@@ -105,9 +105,9 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
     const handleDelete = async (entryId) => {
         try {
             // Delete the entry on the server
-            await fetchData(`/${ entryId }`, 'DELETE');
+            await entries(`/${ entryId }`, 'DELETE');
 
-            const filteredEntries = entries.filter((entry) =>
+            const filteredEntries = allEntries.filter((entry) =>
                 entry._id !== entryId
             );
 
@@ -120,7 +120,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
             }
 
             // Remove the deleted entry from the state
-            setEntries(filteredEntries);
+            setAllEntries(filteredEntries);
 
             // If deleted entry was edited entry 
             if (focusedEntryId === entryId) {
@@ -138,7 +138,7 @@ export default function Thoughts({ entries, setEntries, focusedEntryId, setFocus
     return (
         <div>
             <Typography variant="h2">Recent Thoughts</Typography>
-            {entries.map((entry) => (
+            {allEntries.map((entry) => (
                 <Box
                     className={entry._id === focusedEntryId ? 'focused' : ''}
                     key={entry._id}

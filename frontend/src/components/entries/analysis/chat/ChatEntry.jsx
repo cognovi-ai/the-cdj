@@ -1,14 +1,14 @@
 import { Box, IconButton, TextField } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
-import { useEntriesApi } from '../../../../hooks/useEntriesApi';
+import { useEntries } from '../../../../hooks/useEntries';
 import { useState } from 'react';
 
 export default function ChatEntry({ focusedEntryId, chat, setChat }) {
     const [newChat, setNewChat] = useState('');
     const [validationError, setValidationError] = useState('');
 
-    const fetchData = useEntriesApi();
+    const entries = useEntries();
 
     const handleNewChatChange = (event) => {
         setNewChat(event.target.value);
@@ -33,7 +33,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
 
         try {
             // Send the new message to the server
-            const data = await fetchData(
+            const data = await entries(
                 `/${ focusedEntryId }/chat${ chat._id ? '/' + chat._id : '' }`,
                 chat.messages ? 'PUT' : 'POST',
                 { 'Content-Type': 'application/json' },
