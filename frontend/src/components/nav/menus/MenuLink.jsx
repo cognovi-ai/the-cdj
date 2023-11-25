@@ -1,15 +1,15 @@
-import './MenuLink.css'
+import './MenuLink.css';
 
 import { Link } from 'react-router-dom';
 
-export default function MenuLink({ page, label }) {
+export default function MenuLink({ page }) {
     const directTo = (page) => {
-        return page === 'Home' ? '/' : `/${ page.toLowerCase() }`
+        return page.name === 'Home' ? '/' : `/${ page.name.toLowerCase() }`
     }
 
     return (
-        <>
-            <Link className="MenuLink" to={directTo(page)}>{label ? label : page}</Link>
-        </>
-    )
+        <Link className="MenuLink" to={directTo(page)}>
+            {page.label || page.name}
+        </Link>
+    );
 }

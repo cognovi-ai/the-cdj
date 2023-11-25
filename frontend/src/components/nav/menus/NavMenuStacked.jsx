@@ -1,13 +1,34 @@
 import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import { Menu as MenuIcon } from '@mui/icons-material';
+
 import MenuLink from './MenuLink';
+
+import { useJournal } from '../../../context/useJournal';
 
 export default function NavMenuStacked({
     navItems = {},
     handleOpenNavMenu,
     handleCloseNavMenu,
     anchorElNav }) {
+    const { journalId } = useJournal();
+    const [visibleLinks, setVisibleLinks] = useState({});
+
+    useEffect(() => {
+        const updatedVisibility = {};
+
+        navItems.pages.forEach(page => {
+            if (!page.visibility) {
+                updatedVisibility[page.name] = true;
+            } else {
+                updatedVisibility[page.name] = page.visibility === 'private' ? !!journalId : !journalId;
+            }
+        });
+
+        setVisibleLinks(updatedVisibility);
+    }, [journalId, navItems.pages]);
+
     return (
         <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
@@ -39,13 +60,15 @@ export default function NavMenuStacked({
                 }}
             >
                 {navItems.pages.map((page) => (
-                    <MenuItem key={page} onClick={handleCloseNavMenu}>
-                        <Typography textAlign="center">
-                            <MenuLink page={page} />
-                        </Typography>
-                    </MenuItem>
+                    visibleLinks[page.name] && (
+                        <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                            <Typography textAlign="center">
+                                <MenuLink page={page} />
+                            </Typography>
+                        </MenuItem>
+                    )
                 ))}
             </Menu>
         </Box>
-    )
+    );
 }

@@ -6,9 +6,9 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
+import { useEntries } from '../../hooks/useEntries';
+import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
-
-const testJournal = '655eb9b3e2067616343bd423';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
@@ -20,38 +20,37 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export default function Entries() {
-    const [entries, setEntries] = useState([]);
-    const [journalId, setJournalId] = useState('');
+    const { journalId, journalTitle } = useJournal();
+
+    const [allEntries, setAllEntries] = useState([]);
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
 
+    const entries = useEntries();
     const { entryId } = useParams();
 
     useEffect(() => {
         const makeRequest = async () => {
             try {
-                // Construct the URL with the specific journal ID
-                setJournalId(testJournal);
-                const url = `http://192.168.50.157:3000/journals/${ testJournal }/entries`;
+                // Get all the entries for the journal
+                const data = await entries('/', 'GET');
 
-                const response = await fetch(url, {
-                    credentials: 'include'
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const data = await response.json();
-                setEntries([...data.entries]);
+                setAllEntries([...data.entries]);
 
-                // If the URL has a specific entry ID, set that as the focused entry
+                // If the URL has an entryId
                 if (entryId) {
+                    // Set the focused entry to the entryId in the URL
                     setFocusedEntryId(entryId);
+
                 } else {
-                    setFocusedEntryId(data.entries.length ? data.entries[0]._id : '');
+                    // Or to the first entry in the journal
+                    setFocusedEntryId(
+                        data.entries.length ? data.entries[0]._id : ''
+                    );
                 }
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error(error);
             }
         };
 
@@ -62,7 +61,9 @@ export default function Entries() {
         <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
-                    <Typography variant="h1">Ryan&apos;s Thought Journal</Typography>
+                    <Typography variant="h1">
+                        {journalTitle}
+                    </Typography>
                 </Item>
             </Grid>
             <Grid item md={6} xs={12}>
@@ -77,19 +78,19 @@ export default function Entries() {
             <Grid item md={6} xs={12}>
                 <Item>
                     <Entry
-                        setEntries={setEntries}
+                        journalId={journalId}
+                        setEntries={setAllEntries}
                         setFocusedEntryId={setFocusedEntryId}
-                        testJournal={testJournal}
                     />
                 </Item>
                 <Item>
                     <Thoughts
+                        allEntries={allEntries}
                         editedEntryId={editedEntryId}
-                        entries={entries}
                         focusedEntryId={focusedEntryId}
                         journalId={journalId}
+                        setAllEntries={setAllEntries}
                         setEditedEntryId={setEditedEntryId}
-                        setEntries={setEntries}
                         setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>

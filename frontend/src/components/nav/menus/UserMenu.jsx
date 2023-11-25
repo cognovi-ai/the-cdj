@@ -31,7 +31,7 @@ export default function UserMenu({
                 }}
             >
                 {navItems.pages.map((page) => (
-                    <MenuItem key={page} onClick={handleCloseUserMenu}>
+                    <MenuItem key={page.name} onClick={handleCloseUserMenu}>
                         <Typography textAlign="center">
                             <MenuLink page={page} />
                         </Typography>

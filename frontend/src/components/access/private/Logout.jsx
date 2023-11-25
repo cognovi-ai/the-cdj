@@ -5,6 +5,8 @@ import { AltRoute } from '@mui/icons-material';
 
 import MenuLink from '../../../components/nav/menus/MenuLink';
 
+import { useAccess } from '../../../hooks/useAccess';
+import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -12,28 +14,44 @@ function Copyright(props) {
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
             {'© 2023 '}
             <MenuLink
-                label={'The Cognitive Distortion Journal'}
-                page="" />
+                page={{
+                    label: 'The Cognitive Distortion Journal',
+                    name: '',
+                    visibility: ''
+                }} />
         </Typography>
     );
 }
 
 export default function Logout() {
+    const { setJournalId, setJournalTitle } = useJournal();
     const [isLoggingOut, setIsLoggingOut] = useState(true);
+
+    const access = useAccess();
     const navigate = useNavigate();
 
     useEffect(() => {
         const handleLogout = async () => {
             try {
-                await fetch('http://192.168.50.157:3000/access/logout', {
-                    credentials: 'include'
-                });
-                // Logout successful
-                setTimeout(() => setIsLoggingOut(false), 1000); // 2000 milliseconds delay
-                setTimeout(() => navigate('/login', { replace: true }), 2000); // 2000 milliseconds delay
+                await access(
+                    '/logout',
+                    'GET',
+                );
+
+                // Logout sequence
+                setTimeout(() => {
+                    setIsLoggingOut(false);
+                }, 1000);
+
+                setTimeout(() => {
+                    // Reset journal context
+                    setJournalId('');
+                    setJournalTitle('');
+
+                    navigate('/login', { replace: true })
+                }, 2000);
             } catch (error) {
-                console.error('Logout failed:', error);
-                // Handle logout error here
+                console.error(error);
             }
         };
 

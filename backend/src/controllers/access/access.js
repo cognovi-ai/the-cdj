@@ -17,10 +17,24 @@ export const login = async (req, res, next) => {
             return next(new ExpressError(info.message, 401));
         }
 
-        req.logIn(user, (err) => {
+        req.logIn(user, async (err) => {
             if (err) { return next(err); }
             // Handle successful login
-            return res.status(200).json({ user: user });
+
+            // retrieve the user's journal
+            const journal = await Journal.findOne({ user: user._id });
+
+            // if user has no journal, create one
+            if (!journal) {
+                console.log(`Creating a new journal for user ${ user._id }...`);
+                const newJournal = new Journal({
+                    user: user._id,
+                });
+                await newJournal.save();
+            }
+
+            // return the journal id and title
+            res.status(200).json({ journalId: journal._id, journalTitle: journal.title });
         });
     })(req, res, next);
 };
@@ -58,7 +72,7 @@ export const register = async (req, res, next) => {
             // Continue with the rest of the registration process
             req.login(newUser, err => {
                 if (err) return next(err);
-                res.status(201).json({ user: newUser });
+                res.status(200).json({ journalId: newJournal._id, journalTitle: newJournal.title });
             });
         });
     } catch (err) {

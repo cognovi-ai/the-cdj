@@ -6,6 +6,8 @@ import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
+import { useAccess } from '../../../hooks/useAccess';
+import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
@@ -13,13 +15,19 @@ function Copyright(props) {
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
             {'© 2023 '}
             <MenuLink
-                label={'The Cognitive Distortion Journal'}
-                page="" />
+                page={{
+                    label: 'The Cognitive Distortion Journal',
+                    name: '',
+                    visibility: ''
+                }} />
         </Typography>
     );
 }
 
 export default function Login() {
+    const { setJournalId, setJournalTitle } = useJournal();
+
+    const access = useAccess();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
@@ -27,34 +35,24 @@ export default function Login() {
         const formData = new FormData(event.currentTarget);
 
         try {
-            // Construct the URL with the specific journal ID
-            const url = 'http://192.168.50.157:3000/access/login';
-
-            const response = await fetch(url,
+            const data = await access(
+                '/login',
+                'POST',
+                { 'Content-Type': 'application/json' },
                 {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: formData.get('email'),
-                        password: formData.get('password'),
-                    }),
-                    credentials: 'include',
+                    email: formData.get('email'),
+                    password: formData.get('password'),
                 });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const data = await response.json();
-            console.log(data);
+            // Set the journal ID and title in the context
+            setJournalId(data.journalId);
+            setJournalTitle(data.journalTitle);
 
             // Redirect to the entries page
             navigate('/entries', { replace: true });
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     };
 
@@ -110,13 +108,19 @@ export default function Login() {
                     <Grid container>
                         <Grid item xs>
                             <MenuLink
-                                label={'Forgot password?'}
-                                page="forgot-password" />
+                                page={{
+                                    label: 'Forgot password?',
+                                    name: 'forgot-password',
+                                    visibility: 'public'
+                                }} />
                         </Grid>
                         <Grid item>
                             <MenuLink
-                                label={'Don\'t have an account? Sign Up'}
-                                page="register" />
+                                page={{
+                                    label: 'Don\'t have an account? Sign Up',
+                                    name: 'register',
+                                    visibility: 'public'
+                                }} />
                         </Grid>
                     </Grid>
                 </Box>

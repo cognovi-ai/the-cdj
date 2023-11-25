@@ -1,12 +1,14 @@
 import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 
+import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
+export default function Entry({ setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
 
+    const entries = useEntries();
     const navigate = useNavigate();
 
     const handleNewEntryChange = (event) => {
@@ -30,27 +32,14 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
             return; // Exit early if validation fails
         }
 
-        // Construct the URL with the specific journal ID
-        const journalId = testJournal;
-        const url = `http://192.168.50.157:3000/journals/${ journalId }/entries`;
-
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: newEntry,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            // Assuming the server responds with the created entry
-            const data = await response.json();
+            // Send the new entry to the server
+            const data = await entries(
+                '/',
+                'POST',
+                { 'Content-Type': 'application/json' },
+                { content: newEntry }
+            );
 
             // Clear the input field and validation error
             setNewEntry('');
@@ -65,7 +54,7 @@ export default function Entry({ testJournal, setEntries, setFocusedEntryId }) {
                 [data, ...entries]
             ));
         } catch (error) {
-            console.error('Error:', error);
+            console.error(error);
         }
     };
 
