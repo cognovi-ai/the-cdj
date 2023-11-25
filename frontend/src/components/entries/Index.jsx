@@ -6,6 +6,7 @@ import Entry from './thoughts/Entry';
 import Thoughts from './thoughts/Thoughts';
 
 import { styled } from '@mui/material/styles';
+import { useEntriesApi } from '../../hooks/useEntriesApi';
 import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
 
@@ -20,35 +21,35 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Entries() {
     const { journalId, journalTitle } = useJournal();
+    const fetchData = useEntriesApi();
+    const { entryId } = useParams();
+
     const [entries, setEntries] = useState([]);
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
-    const { entryId } = useParams();
 
     useEffect(() => {
         const makeRequest = async () => {
             try {
-                // Construct the URL with the specific journal ID
-                const url = `http://192.168.50.157:3000/journals/${ journalId }/entries`;
+                // Get all the entries for the journal
+                const data = await fetchData('/entries', 'GET');
 
-                const response = await fetch(url, {
-                    credentials: 'include'
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const data = await response.json();
                 setEntries([...data.entries]);
 
-                // If the URL has a specific entry ID, set that as the focused entry
+                // If the URL has an entryId
                 if (entryId) {
+                    // Set the focused entry to the entryId in the URL
                     setFocusedEntryId(entryId);
+
                 } else {
-                    setFocusedEntryId(data.entries.length ? data.entries[0]._id : '');
+                    // Or to the first entry in the journal
+                    setFocusedEntryId(
+                        data.entries.length ? data.entries[0]._id : ''
+                    );
                 }
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error(error);
             }
         };
 
