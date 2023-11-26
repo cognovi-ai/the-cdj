@@ -18,8 +18,10 @@ if (process.env.NODE_ENV !== "production") {
 
 const app = express();
 
-// connect to database
-connectDB("cdj").catch(err => console.log(err));
+// connect to database if not testing
+if (process.env.NODE_ENV !== 'test') {
+    connectDB("cdj").catch(err => console.log(err));
+}
 
 // use cors middleware
 app.use(cors({
