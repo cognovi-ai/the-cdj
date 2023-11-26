@@ -58,9 +58,6 @@ export const register = async (req, res, next) => {
     try {
         const newUser = await User.register(new User({ email: email, fname, lname }), password);
 
-        // Prepare data for validateJournal, if necessary
-        // e.g., req.body.journalData = { ... }
-
         // Call validateJournal middleware
         validateJournal(req, res, async (err) => {
             if (err) return next(err); // Handle validation errors
@@ -76,10 +73,6 @@ export const register = async (req, res, next) => {
             });
         });
     } catch (err) {
-        if (err.code === 11000) {
-            return next(new ExpressError('Email already in use', 400));
-        } else {
-            return next(err);
-        }
+        return next(new ExpressError('Email already in use', 409));
     }
 };
