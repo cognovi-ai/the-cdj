@@ -15,9 +15,15 @@ async function seedUsers() {
 }
 
 // Seed function
-const seedDatabase = async () => {
+export async function seedDatabase() {
     try {
-        await mongoose.connect('mongodb://localhost:27017/cdj');
+        // only connect if not testing otherwise connect to test db
+        if (process.env.NODE_ENV !== 'test') {
+            await mongoose.connect('mongodb://localhost:27017/cdj');
+
+        } else {
+            await mongoose.connect('mongodb://localhost:27017/cdj-test');
+        }
 
         // Remove existing data
         await Promise.all([
@@ -65,4 +71,23 @@ const seedDatabase = async () => {
     }
 };
 
-seedDatabase();
+// Teardown database
+export async function teardownDatabase() {
+    try {
+        // clear contents of database
+        const collections = await mongoose.connection.db.collections();
+
+        for (let collection of collections) {
+            await collection.drop();
+        }
+
+        // close connection
+        await mongoose.disconnect();
+
+        console.log('Database has been torn down successfully.');
+    } catch (error) {
+        console.error('Error during teardown:', error);
+    }
+}
+
+if (process.env.NODE_ENV !== 'test') seedDatabase();

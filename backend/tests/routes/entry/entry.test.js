@@ -2,11 +2,10 @@ import request from 'supertest';
 import app from '../../../src/app';
 
 describe('Journal Entry API Tests', () => {
-    const journalId = '65619e89bba77f3e6cff9580';
-    const entryId = '65619e89bba77f3e6cff9582';
+    const journalId = process.env.TEST_JOURNAL_ID;
+    const entryId = process.env.TEST_ENTRY_ID;
 
     it('should deny access to unauthenticated user', async () => {
-        const journalId = '6562df0888f144b9ba3bd8e8'; // seed journal id
         const response = await request(app).get(`/journals/${ journalId }/entries`);
         expect(response.statusCode).toBe(401);
     });
