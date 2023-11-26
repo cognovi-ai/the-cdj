@@ -9,6 +9,6 @@ const analyses = [
   'This entry demonstrates the ability to learn from mistakes, showing maturity and a forward-thinking attitude.',
   'The feeling of gratitude towards friends underlines the importance of supportive social networks and emotional connections.',
   'The determination to overcome obstacles is clear, depicting resilience and a strong inner strength in the face of challenges.'
-]
+];
 
-export default analyses
+export default analyses;

@@ -27,6 +27,6 @@ const conversations = [
   { userMessage: 'This month has been tough', llmResponse: 'Challenges can be difficult, but they also lead to growth.' },
   { userMessage: 'But I\'m staying positive and strong', llmResponse: 'Your resilience and optimism are admirable qualities.' },
   { userMessage: 'I believe I can get through this', llmResponse: 'Believing in yourself is powerful. You\'ve got this!' }
-]
+];
 
-export default conversations
+export default conversations;

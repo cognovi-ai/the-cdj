@@ -23,6 +23,7 @@ module.exports = {
   },
   rules: {
     quotes: ['error', 'single'],
+    semi: ['error', 'always'],
     'sort-imports': ['error', {
       ignoreCase: false,
       ignoreDeclarationSort: false,
@@ -37,4 +38,4 @@ module.exports = {
     'template-curly-spacing': ['error', 'always'],
     'no-undef': 'off'
   }
-}
+};

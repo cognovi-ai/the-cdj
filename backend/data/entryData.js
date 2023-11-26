@@ -9,6 +9,6 @@ const entries = [
   { title: 'Learning from Mistakes', content: 'A mistake at work taught me that...', mood: 'Reflective', tags: ['learning', 'growth', 'resilience'] },
   { title: 'Gratitude for Friends', content: 'Tonight, I feel grateful for my friends who...', mood: 'Grateful', tags: ['friends', 'support', 'thankfulness'] },
   { title: 'Overcoming Obstacles', content: 'This month has been challenging, yet...', mood: 'Determined', tags: ['challenges', 'determination', 'strength'] }
-]
+];
 
-export default entries
+export default entries;

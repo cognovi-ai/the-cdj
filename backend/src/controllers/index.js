@@ -1,2 +1,2 @@
-export * as entryController from './entry/entry.js'
-export * as accessController from './access/access.js'
+export * as entryController from './entry/entry.js';
+export * as accessController from './access/access.js';
