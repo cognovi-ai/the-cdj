@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npm install && nodemon",
-    "test": "NODE_ENV=test jest --detectOpenHandles"
+    "test": "NODE_ENV=test jest --coverage --detectOpenHandles"
   },
   "license": "ISC",
   "dependencies": {
