@@ -13,13 +13,13 @@ module.exports = async () => {
   const journal = await Journal.findOne({});
 
   // Retrieve a test entry ID
-  const entryModule = await import('../src/models/entry/entry.js')
-  const Entry = entryModule.default
-  const entries = await Entry.find({})
+  const entryModule = await import('../src/models/entry/entry.js');
+  const Entry = entryModule.default;
+  const entries = await Entry.find({});
 
   // Set environment variables
   if (journal || entries.length > 0) {
-    process.env.TEST_JOURNAL_ID = journal._id.toString()
-    process.env.TEST_ENTRY_ID = entries[0]._id.toString()
+    process.env.TEST_JOURNAL_ID = journal._id.toString();
+    process.env.TEST_ENTRY_ID = entries[0]._id.toString();
   }
 };
