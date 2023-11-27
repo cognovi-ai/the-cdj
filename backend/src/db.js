@@ -1,5 +1,10 @@
 import { connect } from 'mongoose';
 
 export default async function connectDB(dbName) {
-    await connect(`mongodb://127.0.0.1:27017/${ dbName }`);
+  // only connect if not testing otherwise connect to test db
+  if (process.env.NODE_ENV !== 'test') {
+    await connect(`mongodb://localhost:27017/${ dbName }`);
+  } else {
+    await connect(`mongodb://localhost:27017/${ dbName }-test`);
+  }
 }
