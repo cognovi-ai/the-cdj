@@ -10,34 +10,54 @@ import { validateJournal } from '../../middleware/validation.js';
  * Login a user.
  */
 export const login = async (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) { return next(err); }
+  console.log('Logging in...');
 
-    if (!user) {
-      // Handle login failure
-      return next(new ExpressError(info.message, 401));
-    }
+  try {
+    const user = await new Promise((resolve, reject) => {
+      passport.authenticate('local', (err, user, info) => {
+        console.log('Authenticating...');
+
+        if (err) {
+          console.log(`Authentication error: ${ err }`);
+          return reject(err);
+        }
+
+        if (!user) {
+          console.log(`Login failed: ${ info.message }`);
+          return reject(new ExpressError(info.message, 401));
+        }
+
+        console.log(`User found: ${ user._id }`);
+        resolve(user);
+      })(req, res, next);
+    });
 
     req.logIn(user, async (err) => {
-      if (err) { return next(err); }
-      // Handle successful login
-
-      // retrieve the user's journal
-      const journal = await Journal.findOne({ user: user._id });
-
-      // if user has no journal, create one
-      if (!journal) {
-        console.log(`Creating a new journal for user ${ user._id }...`);
-        const newJournal = new Journal({
-          user: user._id
-        });
-        await newJournal.save();
+      if (err) {
+        console.log(`Error in req.logIn: ${ err }`);
+        return next(err);
       }
 
-      // return the journal id and title
+      console.log(`User logged in: ${ user._id }`);
+
+      // Handle successful login
+      let journal = await Journal.findOne({ user: user._id });
+
+      if (!journal) {
+        console.log(`Creating a new journal for user ${ user._id }...`);
+        journal = new Journal({ user: user._id });
+        await journal.save();
+      } else {
+        console.log(`Journal found for user ${ user._id }: ${ journal._id }`);
+      }
+
+      // Return the journal id and title
       res.status(200).json({ journalId: journal._id, journalTitle: journal.title });
     });
-  })(req, res, next);
+  } catch (error) {
+    console.log(`Error in login process: ${ error }`);
+    next(error);
+  }
 };
 
 /**
