@@ -19,8 +19,8 @@ export const getAccount = async (req, res, next) => {
     const user = await User.findById(journal.user);
     if (!user) return next(new ExpressError('User not found', 404));
 
+    // Journal config is optional
     const config = await Config.findById(journal.config);
-    if (!config) return next(new ExpressError('Config not found', 404));
 
     res.status(200).json({ user, config });
   } catch (err) {

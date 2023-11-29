@@ -50,10 +50,11 @@ export default function Account() {
                 });
 
                 // Set the config data
-                setConfig({
-                    model: data.config.model,
-                    apiKey: data.config.apiKey,
-                });
+                if (data.config)
+                    setConfig({
+                        model: data.config.model,
+                        apiKey: data.config.apiKey,
+                    });
 
             } catch (error) {
                 console.error(error);
