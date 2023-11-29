@@ -10,8 +10,6 @@ import { validateJournal } from '../../middleware/validation.js';
  * Get the user associated with a journal.
  */
 export const getUser = async (req, res, next) => {
-  console.log('Getting user...');
-
   const { journalId } = req.params;
 
   try {
@@ -20,8 +18,6 @@ export const getUser = async (req, res, next) => {
 
     const user = await User.findById(journal.user);
     if (!user) return next(new ExpressError('User not found', 404));
-
-    console.log('User found');
 
     res.status(200).json({ email: user.email, fname: user.fname, lname: user.lname });
   } catch (err) {
