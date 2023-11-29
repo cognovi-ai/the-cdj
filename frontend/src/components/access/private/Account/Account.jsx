@@ -1,17 +1,11 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Connect from './Forms/Connect';
-import Container from '@mui/material/Container';
+import { Box, Button, Container, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import Config from './Forms/Config';
 import MenuLink from '../../../nav/menus/MenuLink';
-import Paper from '@mui/material/Paper';
 import Password from './Forms/Password';
 import Profile from './Forms/Profile';
 import Review from './Forms/Review';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import Stepper from '@mui/material/Stepper';
-import Typography from '@mui/material/Typography';
+
+import { useState } from 'react';
 
 function Copyright(props) {
     return (
@@ -29,24 +23,27 @@ function Copyright(props) {
 
 const steps = ['Profile', 'Password', 'Config'];
 
-function getStepContent(step) {
-    switch (step) {
-        case 0:
-            return <Profile />;
-        case 1:
-            return <Password />;
-        case 2:
-            return <Connect />;
-        case 3:
-            return <Review />;
-        default:
-            throw new Error('Unknown step');
-    }
-}
-
 export default function Account() {
-    const [activeStep, setActiveStep] = React.useState(0);
-    const [updating, setUpdating] = React.useState(false);
+    const [activeStep, setActiveStep] = useState(0);
+    const [updating, setUpdating] = useState(false);
+    const [profile, setProfile] = useState({})
+    const [password, setPassword] = useState({})
+    const [config, setConfig] = useState({})
+
+    function getStepContent(step) {
+        switch (step) {
+            case 0:
+                return <Profile profile={profile} setProfile={setProfile} />;
+            case 1:
+                return <Password password={password} setPassword={setPassword} />;
+            case 2:
+                return <Config config={config} setConfig={setConfig} />;
+            case 3:
+                return <Review account={{ ...profile, ...password, ...config }} />;
+            default:
+                throw new Error('Unknown step');
+        }
+    }
 
     const handleStepClick = (step) => () => {
         setActiveStep(step);
@@ -68,11 +65,14 @@ export default function Account() {
         setActiveStep(steps.length);
     };
 
-    const returnToAccount = () => {
+    const handleUpdate = () => {
+        console.log('Updating account', { ...profile, ...password, ...config });
+
         setUpdating(true);
         setTimeout(() => {
             setActiveStep(0);
             setUpdating(false);
+            setPassword({});
         }, 3000);
     }
 
@@ -124,12 +124,12 @@ export default function Account() {
                                 )}
                             </Box>
                             {activeStep === steps.length ? (
-                                <Button onClick={returnToAccount} sx={{ ml: 1 }} variant="contained">
+                                <Button onClick={handleUpdate} sx={{ ml: 1 }} variant="contained">
                                     Update
                                 </Button>
                             ) :
                                 <Button onClick={handleReview} variant="contained">
-                                    Review
+                                    Finish
                                 </Button>}
                         </Box>
                     </Box>

@@ -3,56 +3,51 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 import { useState } from 'react';
 
-const passwordFields = [
-    { key: 'oldPassword', label: 'Old password' },
-    { key: 'newPassword', label: 'New password' },
+const configFields = [
+    { key: 'model', label: 'LLM model', helperText: 'OpenAI models are currently only supported', type: 'text' },
+    { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
 ];
 
-export default function Password({ password, setPassword }) {
-    const [showPassword, setShowPassword] = useState({ oldPassword: false, newPassword: false });
+export default function Config({ config, setConfig }) {
+    const [showApiKey, setShowApiKey] = useState(false);
 
-    const handlePasswordChange = (event) => {
+    const handleConfigChange = (event) => {
         const { name, value } = event.target;
-        setPassword((prevPassword) => ({
-            ...prevPassword,
-            [name]: value,
-        }));
+        setConfig(prevConfig => ({ ...prevConfig, [name]: value }));
     };
 
-    const togglePasswordVisibility = (key) => {
-        setShowPassword({ ...showPassword, [key]: !showPassword[key] });
-    };
+    const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
 
     return (
         <>
             <Typography gutterBottom variant="h6">
-                Password
+                Config
             </Typography>
             <Grid container spacing={3}>
-                {passwordFields.map(({ key, label }) => (
+                {configFields.map(({ key, label, helperText, type }) => (
                     <Grid item key={key} xs={12}>
                         <TextField
-                            InputProps={{
+                            InputProps={key === 'apiKey' ? {
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
-                                            aria-label={`Toggle ${ label.toLowerCase() } visibility`}
                                             edge="end"
-                                            onClick={() => togglePasswordVisibility(key)}
+                                            onClick={toggleApiKeyVisibility}
                                         >
-                                            {showPassword[key] ? <VisibilityOff /> : <Visibility />}
+                                            {showApiKey ? <VisibilityOff /> : <Visibility />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
-                            }}
+                            } : undefined}
                             fullWidth
+                            helperText={helperText}
                             id={key}
                             label={label}
                             name={key}
-                            onChange={handlePasswordChange}
+                            onChange={handleConfigChange}
                             required
-                            type={showPassword[key] ? 'text' : 'password'}
-                            value={password[key]}
+                            type={key === 'apiKey' && showApiKey ? 'text' : type}
+                            value={config[key]}
                             variant="standard"
                         />
                     </Grid>

@@ -1,27 +1,56 @@
-import * as React from 'react';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
+import { FormControlLabel, Grid, List, ListItem, ListItemText, Switch, Typography } from '@mui/material';
 
-const updated = [
-    { name: 'Model', desc: 'gpt-3.5-turbo' },
-    { name: 'API Key', desc: 'sk-FAKE1wFTtnCV3OKrpHY0T3BlbkFJx3yD1kGvBJUFgkkRzzuR' },
-];
+import { useMemo, useState } from 'react';
 
-export default function Review() {
+const names = {
+    fname: 'First name',
+    lname: 'Last name',
+    email: 'Email',
+    oldPassword: 'Old Password',
+    newPassword: 'New Password',
+    model: 'Model',
+    apiKey: 'API Key',
+};
+
+export default function Review({ account }) {
+    const [showSensitive, setShowSensitive] = useState(false);
+
+    const updated = useMemo(() =>
+        Object.entries(account)
+            .filter(([key, value]) => value && names[key])
+            .map(([key, value]) => {
+                // Hide sensitive data unless toggled to show
+                if ((key === 'oldPassword' || key === 'newPassword' || key === 'apiKey') && !showSensitive) {
+                    return { name: names[key], desc: '******' };
+                }
+                return { name: names[key], desc: value };
+            }),
+        [account, showSensitive]
+    );
+
     return (
-        <React.Fragment>
-            <Typography gutterBottom variant="h6">
-                Update summary
-            </Typography>
+        <>
+            <Grid alignItems="center" container justifyContent="space-between">
+                <Grid item>
+                    <Typography gutterBottom variant="h6">
+                        Review
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <FormControlLabel
+                        control={<Switch checked={showSensitive} onChange={() => setShowSensitive(!showSensitive)} />}
+                        label="Show sensitive data"
+                        labelPlacement="start"
+                    />
+                </Grid>
+            </Grid>
             <List disablePadding>
-                {updated.map((product) => (
-                    <ListItem key={product.name} sx={{ py: 1, px: 0 }}>
-                        <ListItemText primary={product.name} secondary={product.desc} />
+                {updated.map((item) => (
+                    <ListItem key={item.name} sx={{ py: 1, px: 0 }}>
+                        <ListItemText primary={item.name} secondary={item.desc} />
                     </ListItem>
                 ))}
             </List>
-        </React.Fragment>
+        </>
     );
 }

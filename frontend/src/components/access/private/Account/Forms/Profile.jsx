@@ -1,49 +1,42 @@
-import * as React from 'react';
-import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
+import { Grid, TextField, Typography } from '@mui/material';
 
-export default function Profile() {
+const profileFields = [
+    { key: 'fname', label: 'First name', autoComplete: 'first-name', gridSm: 6 },
+    { key: 'lname', label: 'Last name', autoComplete: 'last-name', gridSm: 6 },
+    { key: 'email', label: 'Email', autoComplete: 'email', gridSm: 12 },
+];
+
+export default function Profile({ profile, setProfile }) {
+    const handleProfileChange = (event) => {
+        const { name, value } = event.target;
+        setProfile((prevProfile) => ({
+            ...prevProfile,
+            [name]: value,
+        }));
+    };
+
     return (
-        <React.Fragment>
+        <>
             <Typography gutterBottom variant="h6">
                 Profile
             </Typography>
             <Grid container spacing={3}>
-                <Grid item sm={6} xs={12}>
-                    <TextField
-                        autoComplete="first-name"
-                        fullWidth
-                        id="firstName"
-                        label="First name"
-                        name="firstName"
-                        required
-                        variant="standard"
-                    />
-                </Grid>
-                <Grid item sm={6} xs={12}>
-                    <TextField
-                        autoComplete="last-name"
-                        fullWidth
-                        id="lastName"
-                        label="Last name"
-                        name="lastName"
-                        required
-                        variant="standard"
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        autoComplete="email"
-                        fullWidth
-                        id="email"
-                        label="Email"
-                        name="email"
-                        required
-                        variant="standard"
-                    />
-                </Grid>
+                {profileFields.map(({ key, label, autoComplete, gridSm }) => (
+                    <Grid item key={key} sm={gridSm} xs={12}>
+                        <TextField
+                            autoComplete={autoComplete}
+                            fullWidth
+                            id={key}
+                            label={label}
+                            name={key}
+                            onChange={handleProfileChange}
+                            required
+                            value={profile[key]}
+                            variant="standard"
+                        />
+                    </Grid>
+                ))}
             </Grid>
-        </React.Fragment>
+        </>
     );
 }
