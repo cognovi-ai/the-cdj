@@ -47,7 +47,7 @@ export default function Config({ config, setConfig }) {
                             onChange={handleConfigChange}
                             required
                             type={key === 'apiKey' && showApiKey ? 'text' : type}
-                            value={config[key]}
+                            value={config[key] || ''}
                             variant="standard"
                         />
                     </Grid>

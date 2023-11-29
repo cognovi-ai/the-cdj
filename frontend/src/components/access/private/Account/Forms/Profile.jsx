@@ -31,7 +31,7 @@ export default function Profile({ profile, setProfile }) {
                             name={key}
                             onChange={handleProfileChange}
                             required
-                            value={profile[key]}
+                            value={profile[key] || ''}
                             variant="standard"
                         />
                     </Grid>

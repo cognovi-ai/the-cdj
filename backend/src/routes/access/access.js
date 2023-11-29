@@ -9,6 +9,9 @@ import { accessController as controller } from '../../controllers/index.js';
 // root path: /access
 const router = Router({ mergeParams: true });
 
+router.route('/:journalId/user')
+  .get(catchAsync(controller.getUser));
+
 router.route('/login')
   .post(validateLogin, catchAsync(controller.login));
 

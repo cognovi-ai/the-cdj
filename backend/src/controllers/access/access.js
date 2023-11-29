@@ -7,6 +7,29 @@ import passport from 'passport';
 import { validateJournal } from '../../middleware/validation.js';
 
 /**
+ * Get the user associated with a journal.
+ */
+export const getUser = async (req, res, next) => {
+  console.log('Getting user...');
+
+  const { journalId } = req.params;
+
+  try {
+    const journal = await Journal.findById(journalId);
+    if (!journal) return next(new ExpressError('Journal not found', 404));
+
+    const user = await User.findById(journal.user);
+    if (!user) return next(new ExpressError('User not found', 404));
+
+    console.log('User found');
+
+    res.status(200).json({ email: user.email, fname: user.fname, lname: user.lname });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+/**
  * Login a user.
  */
 export const login = async (req, res, next) => {

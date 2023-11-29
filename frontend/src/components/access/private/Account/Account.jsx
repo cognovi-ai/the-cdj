@@ -1,11 +1,14 @@
 import { Box, Button, Container, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import Config from './Forms/Config';
 import MenuLink from '../../../nav/menus/MenuLink';
 import Password from './Forms/Password';
 import Profile from './Forms/Profile';
 import Review from './Forms/Review';
 
-import { useState } from 'react';
+import { useAccess } from '../../../../hooks/useAccess';
+import { useJournal } from '../../../../context/useJournal';
 
 function Copyright(props) {
     return (
@@ -29,6 +32,31 @@ export default function Account() {
     const [profile, setProfile] = useState({})
     const [password, setPassword] = useState({})
     const [config, setConfig] = useState({})
+
+    const { journalId } = useJournal();
+    const access = useAccess();
+
+    useEffect(() => {
+        const makeRequest = async () => {
+            try {
+                // Get the account data
+                const data = await access(`/${ journalId }/user`, 'GET');
+
+                // Set the profile data
+                setProfile({
+                    fname: data.fname,
+                    lname: data.lname,
+                    email: data.email,
+                });
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        makeRequest();
+    }, []);
+
 
     function getStepContent(step) {
         switch (step) {
