@@ -10,8 +10,11 @@ import { isAuthenticated } from '../../middleware/access.js';
 // root path: /access
 const router = Router({ mergeParams: true });
 
-router.route('/:journalId/user')
-  .get(isAuthenticated, catchAsync(controller.getUser));
+router.route('/:journalId/account')
+  .get(isAuthenticated, catchAsync(controller.getAccount));
+
+router.route('/:journalId/account')
+  .put(isAuthenticated, catchAsync(controller.updateAccount));
 
 router.route('/login')
   .post(validateLogin, catchAsync(controller.login));

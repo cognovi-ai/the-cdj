@@ -1,4 +1,4 @@
-import { Journal, User } from '../../models/index.js';
+import { Config, Journal, User } from '../../models/index.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 
@@ -9,7 +9,7 @@ import { validateJournal } from '../../middleware/validation.js';
 /**
  * Get the user associated with a journal.
  */
-export const getUser = async (req, res, next) => {
+export const getAccount = async (req, res, next) => {
   const { journalId } = req.params;
 
   try {
@@ -19,7 +19,10 @@ export const getUser = async (req, res, next) => {
     const user = await User.findById(journal.user);
     if (!user) return next(new ExpressError('User not found', 404));
 
-    res.status(200).json({ email: user.email, fname: user.fname, lname: user.lname });
+    const config = await Config.findById(journal.config);
+    if (!config) return next(new ExpressError('Config not found', 404));
+
+    res.status(200).json({ user, config });
   } catch (err) {
     return next(err);
   }

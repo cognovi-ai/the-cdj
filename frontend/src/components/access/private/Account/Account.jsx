@@ -40,13 +40,19 @@ export default function Account() {
         const makeRequest = async () => {
             try {
                 // Get the account data
-                const data = await access(`/${ journalId }/user`, 'GET');
+                const data = await access(`/${ journalId }/account`, 'GET');
 
                 // Set the profile data
                 setProfile({
-                    fname: data.fname,
-                    lname: data.lname,
-                    email: data.email,
+                    fname: data.user.fname,
+                    lname: data.user.lname,
+                    email: data.user.email,
+                });
+
+                // Set the config data
+                setConfig({
+                    model: data.config.model,
+                    apiKey: data.config.apiKey,
                 });
 
             } catch (error) {
