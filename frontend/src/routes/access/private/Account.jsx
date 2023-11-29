@@ -1,4 +1,4 @@
-import Account from '../../../components/access/private/Account';
+import Account from '../../../components/access/private/Account/Account';
 
 import { useEffect } from 'react';
 import { useJournal } from '../../../context/useJournal';
