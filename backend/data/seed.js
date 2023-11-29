@@ -1,6 +1,7 @@
-import { Entry, EntryAnalysis, EntryConversation, Journal, User } from '../src/models/index.js';
+import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../src/models/index.js';
 
 import analyses from './analysisData.js';
+import configData from './configData.js';
 import conversations from './conversationData.js';
 import entries from './entryData.js';
 import journalTitles from './journalData.js';
@@ -13,6 +14,12 @@ async function seedUsers() {
   }
 
   return await User.find({});
+}
+
+async function seedConfigs() {
+  await Config.insertMany(configData);
+
+  return await Config.find({});
 }
 
 // Seed function
@@ -28,6 +35,7 @@ export async function seedDatabase() {
     // Remove existing data
     await Promise.all([
       User.deleteMany({}),
+      Config.deleteMany({}),
       Journal.deleteMany({}),
       Entry.deleteMany({}),
       EntryAnalysis.deleteMany({}),
@@ -35,9 +43,15 @@ export async function seedDatabase() {
     ]);
 
     const users = await seedUsers();
+    const configs = await seedConfigs();
 
+    let configIndex = 0;
     for (const user of users) {
-      let journal = new Journal({ user: user._id, title: journalTitles.shift() });
+      let journal = new Journal({
+        user: user._id,
+        config: configs[configIndex]._id, // Assign a config ID to the journal
+        title: journalTitles.shift()
+      });
       journal = await journal.save();
 
       for (const entryData of entries) {
@@ -61,6 +75,8 @@ export async function seedDatabase() {
 
         await conversation.save();
       }
+
+      configIndex = (configIndex + 1) % configs.length;
     }
 
     console.log('Database has been seeded successfully.');
