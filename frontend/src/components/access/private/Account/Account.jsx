@@ -170,7 +170,7 @@ export default function Account() {
                 <Typography align="center" component="h1" variant="h4">
                     Account
                 </Typography>
-                <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
+                <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5, overflowX: 'auto' }}>
                     {steps.map((label, index) => (
                         <Step key={label} onClick={handleStepClick(index)}>
                             <StepLabel>
