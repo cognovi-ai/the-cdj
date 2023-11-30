@@ -47,7 +47,7 @@ export default function Account() {
     const [savedConfig, setSavedConfig] = useState({})
 
     // Contains data to update from each form
-    const { profile, password, config } = useAccount();
+    const { profile, setProfile, password, setPassword, config, setConfig } = useAccount();
 
     const { journalId } = useJournal();
     const access = useAccess();
@@ -78,7 +78,7 @@ export default function Account() {
         };
 
         makeRequest();
-    }, []);
+    }, [updating]);
 
 
     function getStepContent(step) {
@@ -133,6 +133,9 @@ export default function Account() {
                 setUpdating(true);
 
                 setTimeout(() => {
+                    setProfile({});
+                    setPassword({});
+                    setConfig({});
                     setActiveStep(0);
                     setUpdating(false);
                 }, 3000);
