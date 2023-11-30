@@ -2,8 +2,8 @@ import { Schema, model } from 'mongoose';
 import Joi from 'joi';
 
 const configSchema = new Schema({
-  model: { type: String, required: true },
-  apiKey: { type: String, required: true, unique: true }
+  model: { type: String },
+  apiKey: { type: String, unique: true }
 });
 
 configSchema.statics.joi = Joi.object({

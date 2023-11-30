@@ -71,4 +71,21 @@ userSchema.plugin(passportLocalMongoose, {
   }
 });
 
+// Compare passwords for re-authentication
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return new Promise((resolve, reject) => {
+    this.authenticate(candidatePassword, (err, user, passwordError) => {
+      if (err) return reject(err);
+      if (user) return resolve(true);
+      return resolve(false);
+    });
+  });
+};
+
+// Set new updated_at timestamp before saving.
+userSchema.pre('save', function (next) {
+  this.updated_at = new Date();
+  next();
+});
+
 export default model('User', userSchema);

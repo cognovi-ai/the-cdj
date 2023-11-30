@@ -23,7 +23,7 @@ const theme = createTheme({
       contrastText: '#fff',
     },
     danger: {
-      main: '#e57373',
+      main: '#e63939',
     },
   },
   typography: {
