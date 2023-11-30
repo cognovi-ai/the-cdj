@@ -1,4 +1,4 @@
-import { Config, Journal, User } from '../../models/index.js';
+import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../models/index.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 
@@ -103,6 +103,39 @@ export const deleteItem = async (req, res, next) => {
       if (!config) return next(new ExpressError('Config not found', 404));
 
       res.status(200).json({ message: 'Config deleted successfully.' });
+    } catch (err) {
+      return next(err);
+    }
+  } else if (deletionItem === 'account') {
+    try {
+      const journal = await Journal.findById(journalId);
+      if (!journal) return next(new ExpressError('Journal not found', 404));
+
+      // Delete the journal's entries
+      const entries = await Entry.find({ journal: journalId });
+
+      for (const entry of entries) {
+        // Delete the entry's analysis
+        await EntryAnalysis.findByIdAndDelete(entry.analysis);
+
+        // Delete the entry's conversation
+        await EntryConversation.findByIdAndDelete(entry.conversation);
+
+        // Delete the entry
+        await Entry.findByIdAndDelete(entry._id);
+      }
+
+      // Delete the journal's config
+      await Config.findByIdAndDelete(journal.config);
+
+      // Delete the journal's user
+      const user = await User.findByIdAndDelete(journal.user);
+      if (!user) return next(new ExpressError('User not found', 404));
+
+      // Delete the journal
+      await Journal.findByIdAndDelete(journalId);
+
+      res.status(200).json({ message: 'Account deleted successfully.' });
     } catch (err) {
       return next(err);
     }

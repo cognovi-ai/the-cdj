@@ -38,7 +38,10 @@ export default function Config({ savedConfig }) {
 
     const deleteConfig = async () => {
         try {
-            access(`/${ journalId }/account?deletionItem=config`, 'DELETE');
+            await access(
+                `/${ journalId }/account?deletionItem=config`,
+                'DELETE'
+            );
             setConfig({});
 
         } catch (error) {
