@@ -21,7 +21,7 @@ function buildRequestBody(account) {
             .reduce((obj, [subKey, subValue]) => ({ ...obj, [subKey]: subValue }), {});
 
         return Object.keys(subObject).length ? { ...requestBody, [key]: subObject } : requestBody;
-    }, {});
+    }, null);
 }
 
 function Copyright(props) {
@@ -116,15 +116,30 @@ export default function Account() {
         setActiveStep(steps.length);
     };
 
-    const handleUpdate = () => {
-        console.log('Updating account', { ...profile, ...password, ...config });
+    const handleUpdate = async () => {
+        try {
+            // Build body based on accountMapping
+            const body = buildRequestBody({ profile, password, config });
 
-        setUpdating(true);
-        setTimeout(() => {
-            setActiveStep(0);
-            setUpdating(false);
-            setPassword({});
-        }, 3000);
+            // Update the account
+            if (body) {
+                await access(
+                    `/${ journalId }/account`,
+                    'PUT',
+                    { 'Content-Type': 'application/json' },
+                    body
+                );
+
+                setUpdating(true);
+
+                setTimeout(() => {
+                    setActiveStep(0);
+                    setUpdating(false);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     return (
