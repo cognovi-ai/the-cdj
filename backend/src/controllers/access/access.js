@@ -87,6 +87,29 @@ export const updateAccount = async (req, res, next) => {
 };
 
 /**
+ * Delete an item from the account endpoint of a journal.
+ */
+export const deleteItem = async (req, res, next) => {
+  const { journalId } = req.params;
+  const { deletionItem } = req.query;
+
+  if (deletionItem === 'config') {
+    try {
+      const journal = await Journal.findById(journalId);
+      if (!journal) return next(new ExpressError('Journal not found', 404));
+
+      // Delete the journal's config
+      const config = await Config.findByIdAndDelete(journal.config);
+      if (!config) return next(new ExpressError('Config not found', 404));
+
+      res.status(200).json({ message: 'Config deleted successfully.' });
+    } catch (err) {
+      return next(err);
+    }
+  }
+};
+
+/**
   * Login a user.
   */
 export const login = async (req, res, next) => {
