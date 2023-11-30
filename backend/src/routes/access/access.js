@@ -14,9 +14,6 @@ router.route('/:journalId/account')
   .get(isAuthenticated, catchAsync(controller.getAccount))
   .put(isAuthenticated, catchAsync(controller.updateAccount));
 
-router.route('/:journalId/account')
-  .put(isAuthenticated, catchAsync(controller.updateAccount));
-
 router.route('/login')
   .post(validateLogin, catchAsync(controller.login));
 
