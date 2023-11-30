@@ -2,6 +2,8 @@ import { FormControlLabel, Grid, List, ListItem, ListItemText, Switch, Typograph
 
 import { useMemo, useState } from 'react';
 
+import { useAccount } from '../../../../../context/useAccount';
+
 const names = {
     fname: 'First name',
     lname: 'Last name',
@@ -12,8 +14,11 @@ const names = {
     apiKey: 'API Key',
 };
 
-export default function Review({ account }) {
+export default function Review() {
     const [showSensitive, setShowSensitive] = useState(false);
+
+    const { profile, password, config } = useAccount();
+    const account = { ...profile, ...password, ...config };
 
     const updated = useMemo(() =>
         Object.entries(account)

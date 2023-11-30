@@ -1,5 +1,7 @@
 import Account from '../../../components/access/private/Account/Account';
 
+import { AccountProvider } from '../../../context/AccountProvider';
+
 import { useEffect } from 'react';
 import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +20,9 @@ export default function AccountRoute() {
 
     return (
         <> {journalId && (
-            <Account />
+            <AccountProvider>
+                <Account />
+            </AccountProvider>
         )}
         </>
     );

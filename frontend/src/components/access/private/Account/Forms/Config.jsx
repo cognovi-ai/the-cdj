@@ -1,6 +1,8 @@
 import { Grid, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
+import { useAccount } from '../../../../../context/useAccount';
+
 import { useState } from 'react';
 
 const configFields = [
@@ -8,15 +10,23 @@ const configFields = [
     { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
 ];
 
-export default function Config({ config, setConfig }) {
+export default function Config({ savedConfig }) {
     const [showApiKey, setShowApiKey] = useState(false);
+    const { config, setConfig } = useAccount();
 
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
-        setConfig(prevConfig => ({ ...prevConfig, [name]: value }));
+        setConfig((prevConfig) => ({
+            ...prevConfig,
+            [name]: value,
+        }));
     };
 
     const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
+
+    const getConfigValue = (key) => {
+        return config[key] !== undefined ? config[key] : savedConfig[key] || '';
+    };
 
     return (
         <>
@@ -47,7 +57,7 @@ export default function Config({ config, setConfig }) {
                             onChange={handleConfigChange}
                             required
                             type={key === 'apiKey' && showApiKey ? 'text' : type}
-                            value={config[key] || ''}
+                            value={getConfigValue(key)}
                             variant="standard"
                         />
                     </Grid>

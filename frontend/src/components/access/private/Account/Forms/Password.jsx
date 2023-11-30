@@ -1,6 +1,8 @@
 import { Grid, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
+import { useAccount } from '../../../../../context/useAccount';
+
 import { useState } from 'react';
 
 const passwordFields = [
@@ -8,15 +10,25 @@ const passwordFields = [
     { key: 'newPassword', label: 'New password' },
 ];
 
-export default function Password({ password, setPassword }) {
+export default function Password() {
     const [showPassword, setShowPassword] = useState({ oldPassword: false, newPassword: false });
+
+    const { password, setPassword } = useAccount();
 
     const handlePasswordChange = (event) => {
         const { name, value } = event.target;
-        setPassword((prevPassword) => ({
-            ...prevPassword,
-            [name]: value,
-        }));
+
+        if (!value) {
+            setPassword((prevPassword) => {
+                delete prevPassword[name];
+                return { ...prevPassword };
+            });
+        } else {
+            setPassword((prevPassword) => ({
+                ...prevPassword,
+                [name]: value,
+            }));
+        }
     };
 
     const togglePasswordVisibility = (key) => {
@@ -52,7 +64,7 @@ export default function Password({ password, setPassword }) {
                             onChange={handlePasswordChange}
                             required
                             type={showPassword[key] ? 'text' : 'password'}
-                            value={password[key]}
+                            value={password[key] || ''}
                             variant="standard"
                         />
                     </Grid>

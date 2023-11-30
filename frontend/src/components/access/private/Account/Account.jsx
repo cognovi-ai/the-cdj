@@ -8,7 +8,21 @@ import Profile from './Forms/Profile';
 import Review from './Forms/Review';
 
 import { useAccess } from '../../../../hooks/useAccess';
+import { useAccount } from '../../../../context/useAccount';
 import { useJournal } from '../../../../context/useJournal';
+
+const steps = ['Profile', 'Password', 'Config'];
+
+function buildRequestBody(account) {
+    return Object.keys(account).reduce((requestBody, key) => {
+        // Filter out undefined values and empty strings
+        const subObject = Object.entries(account[key])
+            .filter(([, subValue]) => subValue !== undefined && subValue !== '')
+            .reduce((obj, [subKey, subValue]) => ({ ...obj, [subKey]: subValue }), {});
+
+        return Object.keys(subObject).length ? { ...requestBody, [key]: subObject } : requestBody;
+    }, {});
+}
 
 function Copyright(props) {
     return (
@@ -24,14 +38,16 @@ function Copyright(props) {
     );
 }
 
-const steps = ['Profile', 'Password', 'Config'];
-
 export default function Account() {
     const [activeStep, setActiveStep] = useState(0);
     const [updating, setUpdating] = useState(false);
-    const [profile, setProfile] = useState({})
-    const [password, setPassword] = useState({})
-    const [config, setConfig] = useState({})
+
+    // New state for each form
+    const [savedProfile, setSavedProfile] = useState({})
+    const [savedConfig, setSavedConfig] = useState({})
+
+    // Contains data to update from each form
+    const { profile, password, config } = useAccount();
 
     const { journalId } = useJournal();
     const access = useAccess();
@@ -43,7 +59,7 @@ export default function Account() {
                 const data = await access(`/${ journalId }/account`, 'GET');
 
                 // Set the profile data
-                setProfile({
+                setSavedProfile({
                     fname: data.user.fname,
                     lname: data.user.lname,
                     email: data.user.email,
@@ -51,7 +67,7 @@ export default function Account() {
 
                 // Set the config data
                 if (data.config)
-                    setConfig({
+                    setSavedConfig({
                         model: data.config.model,
                         apiKey: data.config.apiKey,
                     });
@@ -68,13 +84,13 @@ export default function Account() {
     function getStepContent(step) {
         switch (step) {
             case 0:
-                return <Profile profile={profile} setProfile={setProfile} />;
+                return <Profile savedProfile={savedProfile} />;
             case 1:
-                return <Password password={password} setPassword={setPassword} />;
+                return <Password />;
             case 2:
-                return <Config config={config} setConfig={setConfig} />;
+                return <Config savedConfig={savedConfig} />;
             case 3:
-                return <Review account={{ ...profile, ...password, ...config }} />;
+                return <Review />;
             default:
                 throw new Error('Unknown step');
         }
