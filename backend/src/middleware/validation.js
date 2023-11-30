@@ -1,6 +1,9 @@
 import { Entry, EntryAnalysis, EntryConversation, Journal, User } from '../models/index.js';
 import ExpressError from '../utils/ExpressError.js';
 
+/**
+ * Validate the request body for login data.
+ */
 export const validateLogin = (req, res, next) => {
   const { error, value } = User.baseJoi.validate(req.body, {
     allowUnknown: true,
@@ -17,6 +20,9 @@ export const validateLogin = (req, res, next) => {
   }
 };
 
+/**
+ * Validate the request body for registration data.
+ */
 export const validateRegistration = (req, res, next) => {
   const { error, value } = User.registrationJoi.validate(req.body, {
     allowUnknown: true,
@@ -33,6 +39,27 @@ export const validateRegistration = (req, res, next) => {
   }
 };
 
+/**
+ * Validate the request body for account data.
+ */
+export const validateAccount = (req, res, next) => {
+  const { profile, password, config } = req.body;
+
+  const { error } = User.accountJoi.validate({ ...profile, ...password, ...config }, {
+    abortEarly: false
+  });
+
+  if (error) {
+    const msg = error.details.map(el => el.message).join(',');
+    throw new ExpressError(msg, 400);
+  } else {
+    next();
+  }
+};
+
+/**
+ * Validate the request body for a journal.
+ */
 export const validateJournal = (req, res, next) => {
   const { error, value } = Journal.joi.validate(req.body, {
     allowUnknown: true

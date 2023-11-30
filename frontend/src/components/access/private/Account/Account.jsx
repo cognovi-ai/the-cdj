@@ -24,6 +24,20 @@ function buildRequestBody(account) {
     }, null);
 }
 
+/**
+ * Used to remove values from Account context if they match pre-filled form 
+ * values retrieved from the server to prevent unnecessary updates.
+ */
+const removeMatchingProperties = (source, reference) => {
+    if (source && reference) {
+        Object.keys(source).forEach(key => {
+            if (source[key] === reference[key]) {
+                delete source[key];
+            }
+        });
+    }
+};
+
 function Copyright(props) {
     return (
         <Typography align="center" color="text.secondary" variant="body2" {...props}>
@@ -47,7 +61,7 @@ export default function Account() {
     const [savedConfig, setSavedConfig] = useState({})
 
     // Contains data to update from each form
-    const { profile, password, config } = useAccount();
+    const { profile, setProfile, password, setPassword, config, setConfig } = useAccount();
 
     const { journalId } = useJournal();
     const access = useAccess();
@@ -78,7 +92,7 @@ export default function Account() {
         };
 
         makeRequest();
-    }, []);
+    }, [updating]);
 
 
     function getStepContent(step) {
@@ -113,6 +127,11 @@ export default function Account() {
     };
 
     const handleReview = () => {
+        // Remove matching properties from account
+        removeMatchingProperties(profile, savedProfile);
+        removeMatchingProperties(config, savedConfig);
+
+        // Go to review step
         setActiveStep(steps.length);
     };
 
@@ -133,6 +152,9 @@ export default function Account() {
                 setUpdating(true);
 
                 setTimeout(() => {
+                    setProfile({});
+                    setPassword({});
+                    setConfig({});
                     setActiveStep(0);
                     setUpdating(false);
                 }, 3000);
