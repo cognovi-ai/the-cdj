@@ -3,6 +3,9 @@ import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '
 import analyses from './analysisData.js';
 import configData from './configData.js';
 import conversations from './conversationData.js';
+
+import { encrypt } from '../src/utils/aes.js';
+
 import entries from './entryData.js';
 import journalTitles from './journalData.js';
 import mongoose from 'mongoose';
@@ -17,6 +20,11 @@ async function seedUsers() {
 }
 
 async function seedConfigs() {
+  // Replace all apiKeys in configData with encrypted version
+  configData.forEach(config => {
+    config.apiKey = encrypt(config.apiKey);
+  });
+
   await Config.insertMany(configData);
 
   return await Config.find({});
