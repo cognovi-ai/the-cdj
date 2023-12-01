@@ -43,4 +43,10 @@ entrySchema.index({ tags: 1 });
 // For quickly filtering public or private entries.
 entrySchema.index({ 'privacy_settings.public': 1 });
 
+// Set new updated_at value on update
+entrySchema.pre('findOneAndUpdate', function (next) {
+  this.set({ updated_at: Date.now() });
+  next();
+});
+
 export default model('Entry', entrySchema);

@@ -23,4 +23,10 @@ journalSchema.index({ user: 1 });
 // If journals are listed by creation date.
 journalSchema.index({ created_at: -1 });
 
+// Set new updated_at value before saving
+journalSchema.pre('save', function (next) {
+  this.updated_at = Date.now();
+  next();
+});
+
 export default model('Journal', journalSchema);
