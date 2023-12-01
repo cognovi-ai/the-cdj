@@ -1,4 +1,4 @@
-import ChatAssistant from '../../src/assistants/ChatAssistant';
+import ChatAssistant from '../../src/assistants/Assistant';
 
 describe('Chat Assistant Tests', () => {
   it('should return data with a list of models', async () => {

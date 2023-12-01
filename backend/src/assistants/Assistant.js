@@ -2,7 +2,6 @@ const baseUrl = 'https://api.openai.com/v1';
 
 export default class ChatAssistant {
   constructor(bearer, model = '', temperature = 0.7) {
-    this.contentType = 'application/json';
     this.bearer = `Bearer ${ bearer }`;
     this.model = model;
     this.temperature = temperature;
