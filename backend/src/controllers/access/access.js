@@ -22,6 +22,11 @@ export const getAccount = async (req, res, next) => {
     // Journal config is optional
     const config = await Config.findById(journal.config);
 
+    // Decrypt the config's apiKey
+    if (config) {
+      config.apiKey = config.decrypt();
+    }
+
     res.status(200).json({ user, config });
   } catch (err) {
     return next(err);
@@ -67,17 +72,22 @@ export const updateAccount = async (req, res, next) => {
 
     // Update the Config model with the config data
     if (config) {
-      // Find and update the config associated with the journal
-      const updatedConfig = await Config.findByIdAndUpdate(journal.config, config);
+      // Find config by journalId
+      let response = await Config.findById(journal.config);
 
       // If the config doesn't exist, create it
-      if (!updatedConfig) {
-        const newConfig = new Config(config);
-        await newConfig.save();
-
-        journal.config = newConfig._id;
+      if (!response) {
+        response = new Config(config);
+        journal.config = response._id;
         await journal.save();
       }
+
+      // Update the optional fields of the config
+      const { model, apiKey } = config;
+      if (model) response.model = config.model;
+      if (apiKey) response.apiKey = response.encrypt(config.apiKey);
+
+      await response.save();
     }
 
     res.status(200).json({ message: 'Account updated successfully.' });
@@ -143,8 +153,8 @@ export const deleteItem = async (req, res, next) => {
 };
 
 /**
-  * Login a user.
-  */
+ * Login a user.
+ */
 export const login = async (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) { return next(err); }
@@ -176,8 +186,8 @@ export const login = async (req, res, next) => {
 };
 
 /**
-  * Logout a user.
-  */
+ * Logout a user.
+ */
 export const logout = (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -186,8 +196,8 @@ export const logout = (req, res) => {
 };
 
 /**
-  * Register a new user.
-  */
+ * Register a new user.
+ */
 export const register = async (req, res, next) => {
   const { fname, lname, email, password } = req.body;
 

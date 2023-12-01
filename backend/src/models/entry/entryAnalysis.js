@@ -19,4 +19,10 @@ entryAnalysisSchema.statics.joi = Joi.object({
 // As analyses are tied to specific entries, this will speed up retrieval.
 entryAnalysisSchema.index({ entry: 1 });
 
+// Set new updated_at value on update
+entryAnalysisSchema.pre('findOneAndUpdate', function (next) {
+  this.updated_at = Date.now();
+  next();
+});
+
 export default model('EntryAnalysis', entryAnalysisSchema);
