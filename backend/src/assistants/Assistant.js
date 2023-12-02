@@ -1,7 +1,6 @@
-const baseUrl = 'https://api.openai.com/v1';
-
-export default class ChatAssistant {
+export default class Assistant {
   constructor(bearer, model = '', temperature = 0.7) {
+    this.baseUrl = 'https://api.openai.com/v1';
     this.bearer = `Bearer ${ bearer }`;
     this.model = model;
     this.temperature = temperature;
@@ -12,7 +11,7 @@ export default class ChatAssistant {
    */
   async testConnection() {
     const response = await fetch(
-      baseUrl + '/models',
+      this.baseUrl + '/models',
       {
         headers: {
           Authorization: this.bearer
