@@ -29,11 +29,6 @@ export const createEntry = async (req, res, next) => {
     return next(new ExpressError('Journal not found', 404));
   }
 
-  // TODO: Have ChatGPT generate title and analysis content and add it to req.body. Probably combine into one function.
-  // req.body.title = generateTitle(req.body.content);
-  // req.body.analysis_content = requestAnalysis(req.body.content);
-
-  // Now call the validateEntryAnalysis with the updated req.body
   validateEntryAnalysis(req, res, async (err) => {
     if (err) {
       return next(err); // Handle any validation errors
@@ -45,6 +40,22 @@ export const createEntry = async (req, res, next) => {
     const newEntry = new Entry({ journal: journalId, ...entryData });
     const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
 
+    // Get the analysis content for the entry
+    const response = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
+
+    // Parse the response
+    const analysis = JSON.parse(response);
+
+    // Complete the entry and analysis with the analysis content if available
+    if (analysis) {
+      newEntry.title = analysis.title;
+      newEntry.mood = analysis.mood;
+      newEntry.tags = analysis.tags;
+
+      newAnalysis.analysis_content = analysis.analysis_content;
+    }
+
+    await newEntry.save();
     await newAnalysis.save();
     res.status(201).json(await newEntry.save());
   });
@@ -109,9 +120,19 @@ export const deleteEntry = async (req, res) => {
  * Get an entry and its analysis by ID.
  */
 export const getEntryAnalysis = async (req, res, next) => {
+  // const { journalId, entryId } = req.params;
   const { entryId } = req.params;
 
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
+
+  // const analysis = entryAnalysis.getAnalysisContent(journalId, entryAnalysis.entry.content);
+  // req.body.title = analysis.title;
+  // req.body.analysis_content = analysis.analysis_content;
+
+  // entryAnalysis.entry.title = analysis.title;
+  // entryAnalysis.analysis_content = analysis.analysis_content;
+
+  // await entryAnalysis.save();
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found', 404));

@@ -1,4 +1,9 @@
 import { Schema, model } from 'mongoose';
+
+import CdGpt from '../../assistants/gpts/CdGpt.js';
+
+import { Config } from '../index.js';
+
 import Joi from 'joi';
 
 const entryAnalysisSchema = new Schema({
@@ -24,5 +29,24 @@ entryAnalysisSchema.pre('findOneAndUpdate', function (next) {
   this.updated_at = Date.now();
   next();
 });
+
+// Get the analysis content for an entry
+entryAnalysisSchema.methods.getAnalysisContent = async function (configId, content) {
+  try {
+    const config = await Config.findById(configId);
+
+    const cdGpt = new CdGpt(config.decrypt(), config.model);
+
+    cdGpt.seedMessages();
+    cdGpt.addUserMessage(content);
+
+    const response = await cdGpt.getChatCompletion();
+
+    return response.choices[0].message.content;
+  } catch (err) {
+    console.error(err);
+    return {};
+  }
+};
 
 export default model('EntryAnalysis', entryAnalysisSchema);
