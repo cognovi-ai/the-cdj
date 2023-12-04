@@ -1,6 +1,6 @@
 import Assistant from '../Assistant.js';
 
-const seed = 'As a therapy assistant, your role involves analyzing a thought for a patient. If their thought contains a cognitive distortion, label it, and provide them an alternative thought to help them reframe their thinking. For thoughts without distortions, give them an affirmation.';
+const analysisSeed = 'As a therapy assistant, your role involves analyzing a thought for a patient. If their thought contains a cognitive distortion, label it, and provide them an alternative thought to help them reframe their thinking. For thoughts without distortions, give them an affirmation.';
 
 const formatInstructions = {
   title: 'Brief Summary of Thought',
@@ -18,7 +18,7 @@ export default class CdGpt extends Assistant {
     this.method = 'POST';
     this.contentType = 'application/json';
     this.persona = persona;
-    this.messages = [];
+    this.analysisMessages = [];
   }
 
   /**
@@ -26,19 +26,19 @@ export default class CdGpt extends Assistant {
    */
   seedMessages(messages = []) {
     // Set the context
-    this.messages.push({ role: 'system', content: seed });
+    this.analysisMessages.push({ role: 'system', content: analysisSeed });
 
     // Add the format instructions
-    this.messages.push({ role: 'system', content: `Format: ${ this.contentType }, Data Structure: ${ JSON.stringify(formatInstructions) }` });
+    this.analysisMessages.push({ role: 'system', content: `Format: ${ this.contentType }, Data Structure: ${ JSON.stringify(formatInstructions) }` });
 
     // Add custom context
     if (this.persona) {
-      this.messages.push({ role: 'system', content: `Persona: ${ this.persona }` });
+      this.analysisMessages.push({ role: 'system', content: `Persona: ${ this.persona }` });
     }
 
     // Add existing messages
     if (messages.length > 0) {
-      this.messages = this.messages.concat(messages);
+      this.analysisMessages = this.analysisMessages.concat(messages);
     }
   }
 
@@ -46,18 +46,18 @@ export default class CdGpt extends Assistant {
    * Add a user message to the messages.
    */
   addUserMessage(prompt) {
-    this.messages.push({ role: 'user', content: prompt });
+    this.analysisMessages.push({ role: 'user', content: prompt });
   }
 
   /**
    * Get the chat completion.
    */
-  async getChatCompletion() {
+  async getAnalysisCompletion() {
     const body = {
       model: this.model,
       response_format: { type: 'json_object' },
       temperature: this.temperature,
-      messages: this.messages
+      messages: this.analysisMessages
     };
 
     const response = await fetch(

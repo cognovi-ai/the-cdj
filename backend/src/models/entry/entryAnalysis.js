@@ -40,7 +40,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
     cdGpt.seedMessages();
     cdGpt.addUserMessage(content);
 
-    const response = await cdGpt.getChatCompletion();
+    const response = await cdGpt.getAnalysisCompletion();
 
     return response.choices[0].message.content;
   } catch (err) {
