@@ -23,11 +23,20 @@ export default function Review() {
     const updated = useMemo(() =>
         Object.entries(account)
             .filter(([key, value]) => value && names[key])
-            .map(([key, value]) => {
+            .flatMap(([key, value]) => {
+                // Handle nested model structure
+                if (key === 'model' && typeof value === 'object') {
+                    return Object.entries(value).map(([subKey, subValue]) => ({
+                        name: `${ names[key] } (${ subKey })`,
+                        desc: subValue,
+                    }));
+                }
+
                 // Hide sensitive data unless toggled to show
                 if ((key === 'oldPassword' || key === 'newPassword' || key === 'apiKey') && !showSensitive) {
                     return { name: names[key], desc: '******' };
                 }
+
                 return { name: names[key], desc: value };
             }),
         [account, showSensitive]

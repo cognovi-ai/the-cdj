@@ -11,11 +11,12 @@ import { useJournal } from '../../../../../context/useJournal';
 import { useState } from 'react';
 
 const configFields = [
-    { key: 'model', label: 'LLM model', helperText: 'OpenAI models are currently only supported', type: 'text' },
+    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'OpenAI models are currently only supported', type: 'text' },
+    { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'OpenAI models are currently only supported', type: 'text' },
     { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
 ];
 
-export default function Config({ savedConfig }) {
+export default function Config({ savedConfig, setSavedConfig }) {
     const [showApiKey, setShowApiKey] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
@@ -26,10 +27,24 @@ export default function Config({ savedConfig }) {
 
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
-        setConfig((prevConfig) => ({
-            ...prevConfig,
-            [name]: value,
-        }));
+
+        setConfig((prevConfig) => {
+            // If the field being updated is part of the model object
+            if (name === 'chat' || name === 'analysis') {
+                return {
+                    ...prevConfig,
+                    model: {
+                        ...prevConfig.model,
+                        [name]: value,
+                    },
+                };
+            }
+            // For other fields like apiKey
+            return {
+                ...prevConfig,
+                [name]: value,
+            };
+        });
     };
 
     const handleDeleting = async () => {
@@ -42,7 +57,9 @@ export default function Config({ savedConfig }) {
                 `/${ journalId }/account?deletionItem=config`,
                 'DELETE'
             );
+
             setConfig({});
+            setSavedConfig({});
 
         } catch (error) {
             console.error(error);
@@ -51,8 +68,12 @@ export default function Config({ savedConfig }) {
 
     const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
 
-    const getConfigValue = (key) => {
-        return config[key] !== undefined ? config[key] : savedConfig[key] || '';
+    const getConfigValue = (key, gpt) => {
+        if (key === 'model') {
+            return (config[key] && config[key][gpt] !== undefined) ? config[key][gpt] : (savedConfig[key] && savedConfig[key][gpt]) || '';
+        } else {
+            return config[key] !== undefined ? config[key] : savedConfig[key] || '';
+        }
     };
 
     return (
@@ -61,8 +82,8 @@ export default function Config({ savedConfig }) {
                 Config
             </Typography>
             <Grid container spacing={3}>
-                {configFields.map(({ key, label, helperText, type }) => (
-                    <Grid item key={key} xs={12}>
+                {configFields.map(({ key, gpt, label, helperText, type }) => (
+                    <Grid item key={gpt ? gpt : key} xs={12}>
                         <TextField
                             InputProps={key === 'apiKey' ? {
                                 endAdornment: (
@@ -78,13 +99,13 @@ export default function Config({ savedConfig }) {
                             } : undefined}
                             fullWidth
                             helperText={helperText}
-                            id={key}
+                            id={gpt ? gpt : key}
                             label={label}
-                            name={key}
+                            name={gpt ? gpt : key}
                             onChange={handleConfigChange}
                             required
                             type={key === 'apiKey' && showApiKey ? 'text' : type}
-                            value={getConfigValue(key)}
+                            value={getConfigValue(key, gpt)}
                             variant="standard"
                         />
                     </Grid>

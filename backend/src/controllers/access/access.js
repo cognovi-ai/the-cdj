@@ -84,8 +84,12 @@ export const updateAccount = async (req, res, next) => {
 
       // Update the optional fields of the config
       const { model, apiKey } = config;
-      if (model) response.model = config.model;
-      if (apiKey) response.apiKey = response.encrypt(config.apiKey);
+      if (model) {
+        // Update chat and analysis fields separately
+        if (model.chat) response.model.chat = model.chat;
+        if (model.analysis) response.model.analysis = model.analysis;
+      }
+      if (apiKey) response.apiKey = response.encrypt(apiKey);
 
       await response.save();
     }
