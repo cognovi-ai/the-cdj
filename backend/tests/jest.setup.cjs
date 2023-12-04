@@ -17,9 +17,15 @@ module.exports = async () => {
   const Entry = entryModule.default;
   const entries = await Entry.find({});
 
+  // Retrieve a test entry analysis ID
+  const entryAnalysisModule = await import('../src/models/entry/entryAnalysis.js');
+  const EntryAnalysis = entryAnalysisModule.default;
+  const entryAnalysis = await EntryAnalysis.findOne({});
+
   // Set environment variables
   if (journal || entries.length > 0) {
     process.env.TEST_JOURNAL_ID = journal._id.toString();
     process.env.TEST_ENTRY_ID = entries[0]._id.toString();
+    process.env.TEST_ENTRY_ANALYSIS_ID = entryAnalysis._id.toString();
   }
 };
