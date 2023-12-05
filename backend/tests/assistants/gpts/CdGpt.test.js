@@ -44,10 +44,10 @@ describe('CdGpt Tests', () => {
     expect(cdGpt.chatMessages.length).toBe(4);
   });
 
-  it('should contain five seed chat messages', async () => {
+  it('should contain six seed chat messages', async () => {
     const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106', 'You respond like a pirate.');
     cdGpt.seedChatMessages({ entry: 'I\'m a total failure.', analysis_content: 'This thought contains the cognitive distortion of...' }, [{ role: 'user', content: 'I think you\'re right.' }]);
-    expect(cdGpt.chatMessages.length).toBe(5);
+    expect(cdGpt.chatMessages.length).toBe(6);
   });
 
   it('should add a user chat message', async () => {
