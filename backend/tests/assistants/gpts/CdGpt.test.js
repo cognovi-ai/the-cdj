@@ -7,28 +7,53 @@ describe('CdGpt Tests', () => {
     expect(cdGpt).toBeInstanceOf(Assistant);
   });
 
-  it('should contain two system seed messages', async () => {
+  it('should contain two system seed analysis messages', async () => {
     const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106');
-    cdGpt.seedMessages();
-    expect(cdGpt.messages.length).toBe(2);
+    cdGpt.seedAnalysisMessages();
+    expect(cdGpt.analysisMessages.length).toBe(2);
   });
 
-  it('should contain three system seed messages', async () => {
+  it('should contain three system seed analysis messages', async () => {
     const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106', 'cd', 'You respond like a pirate.');
-    cdGpt.seedMessages();
-    expect(cdGpt.messages.length).toBe(3);
+    cdGpt.seedAnalysisMessages();
+    expect(cdGpt.analysisMessages.length).toBe(3);
   });
 
-  it('should contain a user message', async () => {
+  it('should contain a user analysis message', async () => {
     const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106');
-    cdGpt.seedMessages([{ role: 'user', content: 'I\'m a total failure.' }]);
-    expect(cdGpt.messages[2]).toHaveProperty('role', 'user');
+    cdGpt.seedAnalysisMessages([{ role: 'user', content: 'I\'m a total failure.' }]);
+    expect(cdGpt.analysisMessages[2]).toHaveProperty('role', 'user');
   });
 
-  it('should add a user message', async () => {
+  it('should add a user analysis message', async () => {
     const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106');
-    cdGpt.seedMessages();
-    cdGpt.addUserMessage('I\'m a total failure.');
-    expect(cdGpt.messages[2]).toHaveProperty('role', 'user');
+    cdGpt.seedAnalysisMessages();
+    cdGpt.addUserMessage({ analysis: 'I\'m a total failure.' });
+    expect(cdGpt.analysisMessages[2]).toHaveProperty('role', 'user');
+  });
+
+  it('should contain three seed chat messages', async () => {
+    const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106');
+    cdGpt.seedChatMessages({ entry: 'I\'m a total failure.', analysis_content: 'This thought contains the cognitive distortion of...' });
+    expect(cdGpt.chatMessages.length).toBe(3);
+  });
+
+  it('should contain four seed chat messages', async () => {
+    const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106', 'cd', 'You respond like a pirate.');
+    cdGpt.seedChatMessages({ entry: 'I\'m a total failure.', analysis_content: 'This thought contains the cognitive distortion of...' });
+    expect(cdGpt.chatMessages.length).toBe(4);
+  });
+
+  it('should contain six seed chat messages', async () => {
+    const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106', 'You respond like a pirate.');
+    cdGpt.seedChatMessages({ entry: 'I\'m a total failure.', analysis_content: 'This thought contains the cognitive distortion of...' }, [{ role: 'user', content: 'I think you\'re right.' }]);
+    expect(cdGpt.chatMessages.length).toBe(6);
+  });
+
+  it('should add a user chat message', async () => {
+    const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, 'gpt-3.5-turbo-1106');
+    cdGpt.seedChatMessages({ entry: 'I\'m a total failure.', analysis_content: 'This thought contains the cognitive distortion of...' });
+    cdGpt.addUserMessage({ chat: 'I think you\'re right.' });
+    expect(cdGpt.chatMessages[3]).toHaveProperty('role', 'user');
   });
 });

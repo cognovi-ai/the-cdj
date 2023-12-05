@@ -31,12 +31,15 @@ function buildRequestBody(account) {
 const removeMatchingProperties = (source, reference) => {
     if (source && reference) {
         Object.keys(source).forEach(key => {
-            if (source[key] === reference[key]) {
+            if (source[key] && reference[key] && typeof source[key] === 'object' && typeof reference[key] === 'object') {
+                removeMatchingProperties(source[key], reference[key]);
+            } else if (source[key] === reference[key]) {
                 delete source[key];
             }
         });
     }
 };
+
 
 function Copyright(props) {
     return (
@@ -102,7 +105,7 @@ export default function Account() {
             case 1:
                 return <Password />;
             case 2:
-                return <Config savedConfig={savedConfig} />;
+                return <Config savedConfig={savedConfig} setSavedConfig={setSavedConfig} />;
             case 3:
                 return <Review />;
             default:

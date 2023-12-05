@@ -35,12 +35,12 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   try {
     const config = await Config.findById(configId);
 
-    const cdGpt = new CdGpt(config.decrypt(), config.model);
+    const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
 
-    cdGpt.seedMessages();
-    cdGpt.addUserMessage(content);
+    cdGpt.seedAnalysisMessages();
+    cdGpt.addUserMessage({ analysis: content });
 
-    const response = await cdGpt.getChatCompletion();
+    const response = await cdGpt.getAnalysisCompletion();
 
     return response.choices[0].message.content;
   } catch (err) {
