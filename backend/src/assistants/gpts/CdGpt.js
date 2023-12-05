@@ -2,7 +2,7 @@ import Assistant from '../Assistant.js';
 
 const analysisSeed = 'As a therapy assistant, your role involves analyzing a thought for a patient. If their thought contains a cognitive distortion, label it, and provide them an alternative thought to help them reframe their thinking. For thoughts without distortions, give them an affirmation.';
 
-const chatSeed = 'As a therapy assistant, your role involves chatting with a patient. Remain focused on the topics of the user entry regarding a thought they are working through and the assistant\'s analysis. Be supportive, compassionate, and gently guide them towards a more positive outlook.';
+const chatSeed = 'As a therapy assistant, your role involves chatting with a patient. Stay focused on the entry topic and the assistant\'s analysis. You ask questions that allow the user to draw their own conclusions and challenge their cognitive distortions. You respond concisely, under 180 characters.';
 
 const formatInstructions = {
   title: 'Brief Summary of Thought',
@@ -68,7 +68,10 @@ export default class CdGpt extends Assistant {
 
     // Add existing messages
     if (messages.length > 0) {
-      this.chatMessages = this.chatMessages.concat(messages);
+      messages.forEach(message => {
+        this.chatMessages.push({ role: 'user', content: message.message_content });
+        this.chatMessages.push({ role: 'assistant', content: message.llm_response });
+      });
     }
   }
 

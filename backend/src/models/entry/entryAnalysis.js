@@ -35,7 +35,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   try {
     const config = await Config.findById(configId);
 
-    const cdGpt = new CdGpt(config.decrypt(), config.model);
+    const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
 
     cdGpt.seedAnalysisMessages();
     cdGpt.addUserMessage({ analysis: content });

@@ -40,19 +40,19 @@ entryConversationSchema.index({ 'messages.created_at': 1 });
 entryConversationSchema.methods.getChatContent = async function (configId, analysisId, content, messages = []) {
   try {
     const config = await Config.findById(configId);
-    const cdGpt = new CdGpt(config.decrypt(), config.model);
+    const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
 
     const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
 
     cdGpt.seedChatMessages(analysis, messages);
     cdGpt.addUserMessage({ chat: content });
 
-    const response = await cdGpt.getAnalysisCompletion();
+    const response = await cdGpt.getChatCompletion();
 
     return response.choices[0].message.content;
   } catch (err) {
     console.error(err);
-    return {};
+    return 'Could not connect to LLM';
   }
 };
 

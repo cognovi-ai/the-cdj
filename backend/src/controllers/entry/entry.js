@@ -125,15 +125,6 @@ export const getEntryAnalysis = async (req, res, next) => {
 
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
 
-  // const analysis = entryAnalysis.getAnalysisContent(journalId, entryAnalysis.entry.content);
-  // req.body.title = analysis.title;
-  // req.body.analysis_content = analysis.analysis_content;
-
-  // entryAnalysis.entry.title = analysis.title;
-  // entryAnalysis.analysis_content = analysis.analysis_content;
-
-  // await entryAnalysis.save();
-
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found', 404));
   }
@@ -157,13 +148,26 @@ export const getEntryConversation = async (req, res) => {
  * Create a conversation for a specific entry.
  */
 export const createEntryConversation = async (req, res) => {
-  const { entryId } = req.params;
+  const { entryId, journalId } = req.params;
   const messageData = req.body;
 
   const newConversation = new EntryConversation({
     entry: entryId,
     ...messageData
   });
+
+  // Get the config from the journal
+  const journal = await Journal.findById(journalId);
+
+  // Get the analysis associated with the entry
+  const analysis = await EntryAnalysis.findOne({ entry: entryId });
+
+  const llmResponse = await newConversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content);
+
+  // If the chat is not empty, update the llm_response
+  if (llmResponse) {
+    newConversation.messages[0].llm_response = llmResponse;
+  }
 
   await newConversation.save();
 
@@ -177,8 +181,24 @@ export const createEntryConversation = async (req, res) => {
  * Update a conversation for a specific entry.
  */
 export const updateEntryConversation = async (req, res) => {
-  const { chatId } = req.params;
+  const { chatId, journalId } = req.params;
   const messageData = req.body;
+
+  // Get the config from the journal
+  const journal = await Journal.findById(journalId);
+
+  // Get the conversation from the database
+  const conversation = await EntryConversation.findById(chatId);
+
+  // Get the analysis associated with the entry
+  const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
+
+  const llmResponse = await conversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content, conversation.messages);
+
+  // If the chat is not empty, update the llm_response
+  if (llmResponse) {
+    messageData.messages[0].llm_response = llmResponse;
+  }
 
   const response = await EntryConversation.findOneAndUpdate(
     { _id: chatId },
