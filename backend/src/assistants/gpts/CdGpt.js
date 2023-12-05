@@ -61,10 +61,10 @@ export default class CdGpt extends Assistant {
     }
 
     // Specify the topic of the conversation using the entry
-    this.chatMessages.push({ role: 'user', content: `Entry Topic: ${ entryAnalysis.entry }` });
+    this.chatMessages.push({ role: 'system', content: `Entry Topic: ${ entryAnalysis.entry.content }` });
 
     // Add the analysis content
-    this.chatMessages.push({ role: 'assistant', content: `Analysis Topic: ${ entryAnalysis.analysis_content }` });
+    this.chatMessages.push({ role: 'system', content: `Analysis Topic: ${ entryAnalysis.analysis_content }` });
 
     // Add existing messages
     if (messages.length > 0) {
