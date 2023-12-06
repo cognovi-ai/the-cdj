@@ -173,7 +173,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
 
   // Email content
   const message = {
-    from: 'cognitive.distortion.journal@gmail.com', // Sender address
+    from: `"The CDJ" <${ process.env.SMTP_USER }>`, // Sender address
     to: this.email, // Recipient address (user's email)
     subject: 'Password Reset Request',
     text: `You are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n`
