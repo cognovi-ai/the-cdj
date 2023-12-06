@@ -18,6 +18,12 @@ router.route('/:journalId/account')
 router.route('/login')
   .post(validateLogin, catchAsync(controller.login));
 
+router.route('/forgot-password')
+  .post(catchAsync(controller.forgotPassword));
+
+router.route('/reset-password')
+  .post(catchAsync(controller.resetPassword));
+
 router.route('/logout')
   .get(isAuthenticated, controller.logout);
 

@@ -190,6 +190,42 @@ export const login = async (req, res, next) => {
 };
 
 /**
+ * Forgot password.
+ */
+export const forgotPassword = async (req, res, next) => {
+  // Search for user by email
+  const { email } = req.body;
+
+  // Search for user by email
+  User.findByUsername(email, async (err, user) => {
+    if (err) return next(err);
+
+    // If user doesn't exist, return error
+    if (!user) return next(new ExpressError('Could not send recovery email', 400));
+
+    // Generate a password reset token
+    const token = await user.generatePasswordResetToken();
+
+    // Send password reset email
+    await user.sendPasswordResetEmail(token);
+
+    res.status(200).json({ message: 'Recovery email sent successfully.' });
+  });
+};
+
+/**
+ * Reset password.
+ */
+export const resetPassword = async (req, res, next) => {
+  const { newPassword, token } = req.body;
+
+  // TODO: Implement password reset
+  console.log(newPassword, token);
+
+  res.status(200).json({ message: 'Password reset successfully.' });
+};
+
+/**
  * Logout a user.
  */
 export const logout = (req, res) => {

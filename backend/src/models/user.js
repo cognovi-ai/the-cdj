@@ -2,7 +2,12 @@ import { Schema, model } from 'mongoose';
 
 import Joi from 'joi';
 
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
 import passportLocalMongoose from 'passport-local-mongoose';
+
+if (process.env.NODE_ENV !== 'production') dotenv.config();
 
 // User schema definition for MongoDB
 const userSchema = new Schema({
@@ -121,6 +126,61 @@ userSchema.methods.comparePassword = function (candidatePassword) {
       return resolve(false);
     });
   });
+};
+
+// Check if there is a user with the given email
+userSchema.statics.checkEmail = function (email) {
+  return new Promise((resolve, reject) => {
+    this.findByUsername(email, (err, user) => {
+      if (err) return reject(err);
+      if (user) return resolve(true);
+      return resolve(false);
+    });
+  });
+};
+
+// Generate a password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+  // Generate a token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash the token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set an expiry time of 10 minutes
+  this.resetPasswordExpires = Date.now() + 600000;
+
+  return resetToken;
+};
+
+userSchema.methods.sendPasswordResetEmail = async function (token) {
+  // Configure your SMTP transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: 587,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+
+  // TODO: Change this to the actual URL of the frontend app when deployed
+  // Construct the password reset URL
+  const resetUrl = `http://192.168.50.157:5173/reset-password?token=${ token }`;
+
+  // Email content
+  const message = {
+    from: 'cognitive.distortion.journal@gmail.com', // Sender address
+    to: this.email, // Recipient address (user's email)
+    subject: 'Password Reset Request',
+    text: `You are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n`
+  };
+
+  // Send the email
+  await transporter.sendMail(message);
 };
 
 // Set new updated_at timestamp before saving.
