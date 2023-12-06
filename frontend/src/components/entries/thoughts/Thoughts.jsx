@@ -78,7 +78,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
 
         try {
             // Update the entry on the server
-            await entries(
+            const edited = await entries(
                 `/${ editedEntryId }`,
                 'PUT',
                 { 'Content-Type': 'application/json' },
@@ -88,7 +88,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             // Update the entries state with the edited data
             setAllEntries((prevEntries) =>
                 prevEntries.map((entry) =>
-                    entry._id === editedEntryId ? { ...entry, ...editedData } : entry
+                    entry._id === editedEntryId ? { ...entry, ...edited } : entry
                 )
             );
 
