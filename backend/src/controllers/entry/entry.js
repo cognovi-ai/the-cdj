@@ -79,13 +79,49 @@ export const getAnEntry = async (req, res) => {
 /**
  * Update an entry by ID.
  */
-export const updateEntry = async (req, res) => {
-  const { entryId } = req.params;
+export const updateEntry = async (req, res, next) => {
+  const { entryId, journalId } = req.params;
 
-  const entryData = req.body;
-  const updatedEntry = await Entry.findByIdAndUpdate(entryId, entryData, { new: true });
+  const journal = await Journal.findById(journalId);
+  if (!journal) {
+    return next(new ExpressError('Journal not found', 404));
+  }
 
-  res.status(200).json(updatedEntry);
+  validateEntryAnalysis(req, res, async (err) => {
+    if (err) {
+      return next(err); // Handle any validation errors
+    }
+
+    const entryData = req.body;
+    const updatedEntry = await Entry.findById(entryId);
+
+    // Update the entry with the new data
+    updatedEntry.content = entryData.content;
+
+    // Update the analysis content for the entry with a new analysis
+    const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
+
+    try {
+      const response = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
+      // Parse the response
+      const analysis = JSON.parse(response);
+
+      if (analysis) {
+        updatedEntry.title = analysis.title;
+        updatedEntry.mood = analysis.mood;
+        updatedEntry.tags = analysis.tags;
+
+        oldAnalysis.analysis_content = analysis.analysis_content;
+      }
+    } catch (err) {
+      res.append('Error', err);
+    } finally {
+      await updatedEntry.save();
+      await oldAnalysis.save();
+    }
+
+    res.status(200).json(updatedEntry);
+  });
 };
 
 /**

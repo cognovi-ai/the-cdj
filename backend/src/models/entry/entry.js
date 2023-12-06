@@ -44,7 +44,7 @@ entrySchema.index({ tags: 1 });
 entrySchema.index({ 'privacy_settings.public': 1 });
 
 // Set new updated_at value on update
-entrySchema.pre('findOneAndUpdate', function (next) {
+entrySchema.pre('save', function (next) {
   this.set({ updated_at: Date.now() });
   next();
 });

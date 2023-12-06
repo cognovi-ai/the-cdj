@@ -25,7 +25,7 @@ entryAnalysisSchema.statics.joi = Joi.object({
 entryAnalysisSchema.index({ entry: 1 });
 
 // Set new updated_at value on update
-entryAnalysisSchema.pre('findOneAndUpdate', function (next) {
+entryAnalysisSchema.pre('save', function (next) {
   this.updated_at = Date.now();
   next();
 });
