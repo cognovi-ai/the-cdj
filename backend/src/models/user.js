@@ -14,7 +14,9 @@ const userSchema = new Schema({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  updated_at: { type: Date, default: Date.now },
+  resetPasswordToken: { type: String, default: undefined },
+  resetPasswordExpires: { type: Date, default: undefined }
 });
 
 // Utility functions
@@ -78,6 +80,11 @@ userSchema.statics.baseJoi = Joi.object({
 userSchema.statics.registrationJoi = userSchema.statics.baseJoi.keys({
   fname: createNameValidation(true),
   lname: createNameValidation(true)
+});
+
+// New password Joi validation schema
+userSchema.statics.passwordJoi = Joi.object({
+  newPassword: createPasswordValidation(true)
 });
 
 // Account Joi validation schema (fields are not required here)
@@ -177,6 +184,29 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
     to: this.email, // Recipient address (user's email)
     subject: 'Password Reset Request',
     text: `You are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n`
+  };
+
+  // Send the email
+  await transporter.sendMail(message);
+};
+
+userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
+  // Configure your SMTP transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: 587,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+
+  // Email content
+  const message = {
+    from: `"The CDJ" <${ process.env.SMTP_USER }>`, // Sender address
+    to: this.email, // Recipient address (user's email)
+    subject: 'Password Reset Confirmation',
+    text: 'Your password has been successfully reset.\n'
   };
 
   // Send the email

@@ -2,6 +2,7 @@ import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '
 
 import ExpressError from '../../utils/ExpressError.js';
 
+import crypto from 'crypto';
 import passport from 'passport';
 
 import { validateJournal } from '../../middleware/validation.js';
@@ -203,13 +204,21 @@ export const forgotPassword = async (req, res, next) => {
     // If user doesn't exist, return error
     if (!user) return next(new ExpressError('Could not send recovery email', 400));
 
-    // Generate a password reset token
-    const token = await user.generatePasswordResetToken();
+    try {
+      // Generate a password reset token
+      const token = await user.generatePasswordResetToken();
 
-    // Send password reset email
-    await user.sendPasswordResetEmail(token);
+      // Send password reset email
+      await user.sendPasswordResetEmail(token);
 
-    res.status(200).json({ message: 'Recovery email sent successfully.' });
+      // Save the user with the new token and expiry
+      await user.save();
+
+      res.status(200).json({ message: 'Recovery email sent successfully.' });
+    } catch (error) {
+      // Handle any errors here
+      return next(new ExpressError('Error during password recovery process', 500));
+    }
   });
 };
 
@@ -219,10 +228,40 @@ export const forgotPassword = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   const { newPassword, token } = req.body;
 
-  // TODO: Implement password reset
-  console.log(newPassword, token);
+  try {
+    // Hash the incoming token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
 
-  res.status(200).json({ message: 'Password reset successfully.' });
+    // Search for user by hashed token and check if token hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // No user found, or token has expired
+      return next(new ExpressError('Password reset token is invalid or has expired', 400));
+    }
+
+    // Reset password
+    await user.setPassword(newPassword);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save the updated user
+    await user.save();
+
+    // Send a confirmation email for the password reset
+    await user.sendPasswordResetConfirmationEmail();
+
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    // Handle any errors here
+    return next(new ExpressError('Error during password reset process', 500));
+  }
 };
 
 /**

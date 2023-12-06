@@ -1,4 +1,4 @@
-import { validateAccount, validateLogin, validateRegistration } from '../../middleware/validation.js';
+import { validateAccount, validateLogin, validateNewPassword, validateRegistration } from '../../middleware/validation.js';
 
 import { Router } from 'express';
 
@@ -22,7 +22,7 @@ router.route('/forgot-password')
   .post(catchAsync(controller.forgotPassword));
 
 router.route('/reset-password')
-  .post(catchAsync(controller.resetPassword));
+  .post(validateNewPassword, catchAsync(controller.resetPassword));
 
 router.route('/logout')
   .get(isAuthenticated, controller.logout);
