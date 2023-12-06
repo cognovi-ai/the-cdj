@@ -21,6 +21,24 @@ export const validateLogin = (req, res, next) => {
 };
 
 /**
+ * Validate new password.
+ */
+export const validateNewPassword = (req, res, next) => {
+  const { error } = User.passwordJoi.validate(req.body, {
+    allowUnknown: true,
+    stripUnknown: true,
+    abortEarly: false
+  });
+
+  if (error) {
+    const msg = error.details.map(el => el.message).join(',');
+    throw new ExpressError(msg, 400);
+  } else {
+    next();
+  }
+};
+
+/**
  * Validate the request body for registration data.
  */
 export const validateRegistration = (req, res, next) => {

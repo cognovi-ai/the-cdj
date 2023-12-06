@@ -1,6 +1,6 @@
 import './index.css'
 
-import { Account, ForgotPassword, Login, Logout, Register } from './routes/access';
+import { Account, ForgotPassword, Login, Logout, Register, ResetPassword } from './routes/access';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import ErrorPage from './components/utils/ErrorPage'
@@ -52,6 +52,10 @@ const router = createBrowserRouter([
       {
         path: '/forgot-password',
         element: <ForgotPassword />
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPassword />
       },
       {
         path: '/register',

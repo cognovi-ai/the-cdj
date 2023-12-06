@@ -2,6 +2,7 @@ import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '
 
 import ExpressError from '../../utils/ExpressError.js';
 
+import crypto from 'crypto';
 import passport from 'passport';
 
 import { validateJournal } from '../../middleware/validation.js';
@@ -187,6 +188,80 @@ export const login = async (req, res, next) => {
       res.status(200).json({ journalId: journal._id, journalTitle: journal.title });
     });
   })(req, res, next);
+};
+
+/**
+ * Forgot password.
+ */
+export const forgotPassword = async (req, res, next) => {
+  // Search for user by email
+  const { email } = req.body;
+
+  // Search for user by email
+  User.findByUsername(email, async (err, user) => {
+    if (err) return next(err);
+
+    // If user doesn't exist, return error
+    if (!user) return next(new ExpressError('Could not send recovery email', 400));
+
+    try {
+      // Generate a password reset token
+      const token = await user.generatePasswordResetToken();
+
+      // Send password reset email
+      await user.sendPasswordResetEmail(token);
+
+      // Save the user with the new token and expiry
+      await user.save();
+
+      res.status(200).json({ message: 'Recovery email sent successfully.' });
+    } catch (error) {
+      // Handle any errors here
+      return next(new ExpressError('Error during password recovery process', 500));
+    }
+  });
+};
+
+/**
+ * Reset password.
+ */
+export const resetPassword = async (req, res, next) => {
+  const { newPassword, token } = req.body;
+
+  try {
+    // Hash the incoming token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Search for user by hashed token and check if token hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // No user found, or token has expired
+      return next(new ExpressError('Password reset token is invalid or has expired', 400));
+    }
+
+    // Reset password
+    await user.setPassword(newPassword);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save the updated user
+    await user.save();
+
+    // Send a confirmation email for the password reset
+    await user.sendPasswordResetConfirmationEmail();
+
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    // Handle any errors here
+    return next(new ExpressError('Error during password reset process', 500));
+  }
 };
 
 /**
