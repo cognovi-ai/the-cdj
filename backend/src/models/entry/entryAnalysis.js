@@ -25,28 +25,27 @@ entryAnalysisSchema.statics.joi = Joi.object({
 entryAnalysisSchema.index({ entry: 1 });
 
 // Set new updated_at value on update
-entryAnalysisSchema.pre('findOneAndUpdate', function (next) {
+entryAnalysisSchema.pre('save', function (next) {
   this.updated_at = Date.now();
   next();
 });
 
 // Get the analysis content for an entry
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId, content) {
-  try {
-    const config = await Config.findById(configId);
+  const config = await Config.findById(configId);
 
-    const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
+  const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
 
-    cdGpt.seedAnalysisMessages();
-    cdGpt.addUserMessage({ analysis: content });
+  cdGpt.seedAnalysisMessages();
+  cdGpt.addUserMessage({ analysis: content });
 
-    const response = await cdGpt.getAnalysisCompletion();
+  const response = await cdGpt.getAnalysisCompletion();
 
-    return response.choices[0].message.content;
-  } catch (err) {
-    console.error(err);
-    return {};
+  if (response.error) {
+    throw response.error.message;
   }
+
+  return response.choices[0].message.content;
 };
 
 export default model('EntryAnalysis', entryAnalysisSchema);

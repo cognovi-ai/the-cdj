@@ -38,22 +38,21 @@ entryConversationSchema.index({ 'messages.created_at': 1 });
 
 // Get the analysis content for an entry
 entryConversationSchema.methods.getChatContent = async function (configId, analysisId, content, messages = []) {
-  try {
-    const config = await Config.findById(configId);
-    const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
+  const config = await Config.findById(configId);
+  const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
 
-    const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
+  const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
 
-    cdGpt.seedChatMessages(analysis, messages);
-    cdGpt.addUserMessage({ chat: content });
+  cdGpt.seedChatMessages(analysis, messages);
+  cdGpt.addUserMessage({ chat: content });
 
-    const response = await cdGpt.getChatCompletion();
+  const response = await cdGpt.getChatCompletion();
 
-    return response.choices[0].message.content;
-  } catch (err) {
-    console.error(err);
-    return 'Could not connect to LLM';
+  if (response.error) {
+    throw response.error.message;
   }
+
+  return response.choices[0].message.content;
 };
 
 export default model('EntryConversation', entryConversationSchema);
