@@ -41,22 +41,26 @@ export const createEntry = async (req, res, next) => {
     const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
 
     // Get the analysis content for the entry
-    const response = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
+    try {
+      const response = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
+      // Parse the response
+      const analysis = JSON.parse(response);
 
-    // Parse the response
-    const analysis = JSON.parse(response);
+      // Complete the entry and analysis with the analysis content if available
+      if (analysis) {
+        newEntry.title = analysis.title;
+        newEntry.mood = analysis.mood;
+        newEntry.tags = analysis.tags;
 
-    // Complete the entry and analysis with the analysis content if available
-    if (analysis) {
-      newEntry.title = analysis.title;
-      newEntry.mood = analysis.mood;
-      newEntry.tags = analysis.tags;
-
-      newAnalysis.analysis_content = analysis.analysis_content;
+        newAnalysis.analysis_content = analysis.analysis_content;
+      }
+    } catch (err) {
+      res.append('Error', err);
+    } finally {
+      await newEntry.save();
+      await newAnalysis.save();
     }
 
-    await newEntry.save();
-    await newAnalysis.save();
     res.status(201).json(await newEntry.save());
   });
 };
@@ -162,14 +166,18 @@ export const createEntryConversation = async (req, res) => {
   // Get the analysis associated with the entry
   const analysis = await EntryAnalysis.findOne({ entry: entryId });
 
-  const llmResponse = await newConversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content);
+  try {
+    const llmResponse = await newConversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content);
 
-  // If the chat is not empty, update the llm_response
-  if (llmResponse) {
-    newConversation.messages[0].llm_response = llmResponse;
+    // If the chat is not empty, update the llm_response
+    if (llmResponse) {
+      newConversation.messages[0].llm_response = llmResponse;
+    }
+  } catch (err) {
+    res.append('Error', err);
+  } finally {
+    await newConversation.save();
   }
-
-  await newConversation.save();
 
   const response = await EntryConversation.findOne({ entry: entryId });
   const entryConversation = response ? response._doc : {};
@@ -193,11 +201,15 @@ export const updateEntryConversation = async (req, res) => {
   // Get the analysis associated with the entry
   const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
 
-  const llmResponse = await conversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content, conversation.messages);
+  try {
+    const llmResponse = await conversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content, conversation.messages);
 
-  // If the chat is not empty, update the llm_response
-  if (llmResponse) {
-    messageData.messages[0].llm_response = llmResponse;
+    // If the chat is not empty, update the llm_response
+    if (llmResponse) {
+      messageData.messages[0].llm_response = llmResponse;
+    }
+  } catch (err) {
+    res.append('Error', err);
   }
 
   const response = await EntryConversation.findOneAndUpdate(
