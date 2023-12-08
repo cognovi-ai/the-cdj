@@ -7,9 +7,24 @@ export default function FlashMessage({ message, severity, onClose }) {
     const [open, setOpen] = useState(true);
 
     useEffect(() => {
+        const time = () => {
+            switch (severity) {
+                case 'error':
+                    return 25000;
+                case 'warning':
+                    return 15000;
+                case 'info':
+                    return 20000;
+                case 'success':
+                    return 5000;
+                default:
+                    return 5000;
+            }
+        }
+
         const timer = setTimeout(() => {
             setOpen(false);
-        }, severity === 'error' ? 25000 : 5000);
+        }, time());
 
         return () => clearTimeout(timer);
     }, [open]);

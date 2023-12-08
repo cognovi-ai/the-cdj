@@ -14,7 +14,13 @@ export const getAllEntries = async (req, res) => {
 
   const entries = await Entry.find({ journal: journalId });
 
-  res.status(200).json({ entries });
+  if (entries.length === 0) {
+    req.flash('info', 'Submit your first entry to get started.');
+  } else {
+    req.flash('success', 'Successfully retrieved entries.');
+  }
+
+  res.status(200).json({ entries, flash: req.flash() });
 };
 
 /**
@@ -55,7 +61,7 @@ export const createEntry = async (req, res, next) => {
         newAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      req.flash('error', err.message);
+      req.flash('info', err.message);
     } finally {
       await newEntry.save();
       await newAnalysis.save();

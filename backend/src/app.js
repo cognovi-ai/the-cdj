@@ -76,7 +76,13 @@ app.use('*', (req, res, next) => {
 app.use((err, req, res, next) => {
   const { statusCode = 500, message = 'Something went wrong' } = err;
 
-  req.flash('error', message);
+  if (statusCode >= 500) {
+    req.flash('error', message);
+  } else if (statusCode === 400 || statusCode === 404) {
+    req.flash('info', message);
+  } else {
+    req.flash('warning', message);
+  }
 
   res.status(statusCode).json({ flash: req.flash() });
 });
