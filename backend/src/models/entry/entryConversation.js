@@ -42,7 +42,7 @@ entryConversationSchema.methods.getChatContent = async function (configId, analy
   const config = await Config.findById(configId);
 
   if (!config) {
-    throw new ExpressError('Config not found.', 404);
+    throw new ExpressError('Configure account settings to chat.', 404);
   }
 
   const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
