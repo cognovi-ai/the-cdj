@@ -32,7 +32,7 @@ export const createEntry = async (req, res, next) => {
   // Ensure that the journal exists
   const journal = await Journal.findById(journalId);
   if (!journal) {
-    return next(new ExpressError('Journal not found', 404));
+    return next(new ExpressError('Journal not found.', 404));
   }
 
   validateEntryAnalysis(req, res, async (err) => {
@@ -91,7 +91,7 @@ export const updateEntry = async (req, res, next) => {
 
   const journal = await Journal.findById(journalId);
   if (!journal) {
-    return next(new ExpressError('Journal not found', 404));
+    return next(new ExpressError('Journal not found.', 404));
   }
 
   validateEntryAnalysis(req, res, async (err) => {
@@ -147,7 +147,7 @@ export const deleteEntry = async (req, res, next) => {
     const response = await Entry.findByIdAndDelete(entryId, { session });
 
     if (!response) {
-      return next(new ExpressError('Entry not found', 404));
+      return next(new ExpressError('Entry not found.', 404));
     }
 
     // Delete associated documents
@@ -179,7 +179,7 @@ export const getEntryAnalysis = async (req, res, next) => {
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
 
   if (!entryAnalysis) {
-    return next(new ExpressError('Entry analysis not found', 404));
+    return next(new ExpressError('Entry analysis not found.', 404));
   }
 
   res.status(200).json(entryAnalysis._doc);

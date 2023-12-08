@@ -69,12 +69,12 @@ app.use('/access', access);
 
 // 404 handler
 app.use('*', (req, res, next) => {
-  next(new ExpressError('Page Not Found', 404));
+  next(new ExpressError('Page Not Found.', 404));
 });
 
 // error handler
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = 'Something went wrong' } = err;
+  const { statusCode = 500, message = 'Something went wrong.' } = err;
 
   if (statusCode >= 500) {
     req.flash('error', message);
