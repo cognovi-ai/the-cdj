@@ -25,11 +25,6 @@ export function useEntries() {
             }
 
             const response = await fetch(url, options);
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
             const data = await response.json();
 
             if (data.flash) {
@@ -41,6 +36,10 @@ export function useEntries() {
                     });
                     return newFlash;
                 });
+            }
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
 
             return data;

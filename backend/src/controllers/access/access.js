@@ -184,8 +184,10 @@ export const login = async (req, res, next) => {
         await newJournal.save();
       }
 
+      req.flash('success', 'Logged in successfully.');
+
       // Return the journal id and title
-      res.status(200).json({ journalId: journal._id, journalTitle: journal.title });
+      res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
     });
   })(req, res, next);
 };
@@ -271,7 +273,10 @@ export const logout = (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
   });
-  res.status(200).json({ message: 'Logged out successfully.' });
+
+  req.flash('success', 'Logged out successfully.');
+
+  res.status(200).json({ message: 'Logged out successfully.', flash: req.flash() });
 };
 
 /**

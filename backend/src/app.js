@@ -75,7 +75,10 @@ app.use('*', (req, res, next) => {
 // error handler
 app.use((err, req, res, next) => {
   const { statusCode = 500, message = 'Something went wrong' } = err;
-  res.status(statusCode).json({ message });
+
+  req.flash('error', message);
+
+  res.status(statusCode).json({ flash: req.flash() });
 });
 
 export default app;
