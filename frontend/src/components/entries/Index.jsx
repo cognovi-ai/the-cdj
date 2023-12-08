@@ -1,30 +1,21 @@
-import { Grid, Paper, Typography } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Analysis from './analysis/Analysis';
 
 import Entry from './thoughts/Entry';
-import FlashMessages from '../utils/FlashMessages';
+
+import { Item } from '../utils/Item';
+
 import Thoughts from './thoughts/Thoughts';
 
-import { styled } from '@mui/material/styles';
 import { useEntries } from '../../hooks/useEntries';
 import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
 
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
-    ...theme.typography.body2,
-    padding: theme.spacing(2),
-    margin: theme.spacing(1),
-    color: theme.palette.text.primary,
-    boxShadow: 'none',
-}));
-
 export default function Entries() {
     const { journalId, journalTitle } = useJournal();
 
-    const [flash, setFlash] = useState([]);
     const [allEntries, setAllEntries] = useState([]);
     const [focusedEntryId, setFocusedEntryId] = useState('');
     const [editedEntryId, setEditedEntryId] = useState('');
@@ -64,11 +55,6 @@ export default function Entries() {
         <Grid container spacing={1}>
             <Grid item xs={12}>
                 <Item>
-                    <FlashMessages flash={flash} setFlash={setFlash} />
-                </Item>
-            </Grid>
-            <Grid item xs={12}>
-                <Item>
                     <Typography variant="h1">
                         {journalTitle}
                     </Typography>
@@ -88,7 +74,6 @@ export default function Entries() {
                     <Entry
                         journalId={journalId}
                         setEntries={setAllEntries}
-                        setFlash={setFlash}
                         setFocusedEntryId={setFocusedEntryId}
                     />
                 </Item>

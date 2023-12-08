@@ -3,11 +3,15 @@ import './App.css'
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
+import FlashMessages from './components/utils/FlashMessages.jsx';
+
 import Footer from './components/body/Footer';
 import Header from './components/body/Header';
 
+import { Item } from './components/utils/Item.jsx';
 import { JournalProvider } from './context/JournalProvider.jsx';
 import { Outlet } from 'react-router-dom';
+import { useFlash } from './context/useFlash.jsx';
 
 const theme = createTheme({
   palette: {
@@ -64,12 +68,17 @@ const theme = createTheme({
 });
 
 export default function App() {
+  const { flash, setFlash } = useFlash();
+
   return (
     <>
       <CssBaseline />
       <ThemeProvider theme={theme}>
         <JournalProvider>
           <Header />
+          <Item>
+            <FlashMessages flash={flash} setFlash={setFlash} />
+          </Item>
           <Box sx={{ minHeight: '100vh' }}>
             <Outlet />
           </Box>

@@ -1,12 +1,15 @@
 import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
 
 import { useEntries } from '../../../hooks/useEntries';
+import { useFlash } from '../../../context/useFlash';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Entry({ setEntries, setFocusedEntryId, setFlash }) {
+export default function Entry({ setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
+
+    const { setFlash } = useFlash();
 
     const entries = useEntries();
     const navigate = useNavigate();
