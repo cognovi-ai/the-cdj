@@ -7,6 +7,7 @@ import connectDB from './db.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import flash from 'connect-flash';
 import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session';
@@ -45,6 +46,9 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }
 }));
+
+// use flash
+app.use(flash());
 
 // use passport middleware
 app.use(passport.initialize());

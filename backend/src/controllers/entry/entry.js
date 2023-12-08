@@ -55,13 +55,14 @@ export const createEntry = async (req, res, next) => {
         newAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      res.append('Error', err);
+      req.flash('error', err);
     } finally {
       await newEntry.save();
       await newAnalysis.save();
+      req.flash('success', 'Successfully created entry.');
     }
 
-    res.status(201).json(await newEntry.save());
+    res.status(201).json({ ...(await newEntry.save())._doc, flash: req.flash() });
   });
 };
 

@@ -4,7 +4,7 @@ import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Entry({ setEntries, setFocusedEntryId }) {
+export default function Entry({ setEntries, setFocusedEntryId, setFlash }) {
     const [newEntry, setNewEntry] = useState('');
     const [validationError, setValidationError] = useState('');
 
@@ -53,6 +53,15 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
             setEntries((entries) => (
                 [data, ...entries]
             ));
+
+            // Append new flash messages
+            setFlash(prevFlash => {
+                const newFlash = { ...prevFlash };
+                Object.keys(data.flash).forEach(key => {
+                    newFlash[key] = newFlash[key] ? [...newFlash[key], ...data.flash[key]] : [...data.flash[key]];
+                });
+                return newFlash;
+            });
         } catch (error) {
             console.error(error);
         }

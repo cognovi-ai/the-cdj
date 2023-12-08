@@ -8,11 +8,11 @@ export const validateLogin = (req, res, next) => {
   const { error, value } = User.baseJoi.validate(req.body, {
     allowUnknown: true,
     stripUnknown: true,
-    abortEarly: false
+    abortEarly: true
   });
 
   if (error) {
-    const msg = error.details.map(el => el.message).join(',');
+    const msg = error.details.map(el => el.message).join(' ');
     throw new ExpressError(msg, 400);
   } else {
     req.body = value;
