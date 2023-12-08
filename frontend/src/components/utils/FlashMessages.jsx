@@ -1,26 +1,31 @@
 import FlashMessage from './FlashMessage';
 
-export default function FlashMessages({ flash, setFlash }) {
-    const handleClose = (severity, index, setFlash) => {
+import { Item } from './Item.jsx';
+
+import { useFlash } from '../../context/useFlash';
+
+export default function FlashMessages() {
+    const { flash, setFlash } = useFlash();
+
+    const handleClose = (severity, messageId) => {
         setFlash(prevFlash => {
-            const newMessages = [...prevFlash[severity]];
-            newMessages.splice(index, 1);
+            const newMessages = prevFlash[severity].filter(message => message.id !== messageId);
             return { ...prevFlash, [severity]: newMessages };
         });
-    }
+    };
 
     return (
-        <>
+        <Item>
             {Object.entries(flash).map(([severity, messages]) =>
-                messages.map((message, index) => (
+                messages.map(message => (
                     <FlashMessage
-                        key={`${ severity }-${ index }`}
-                        message={message}
-                        onClose={() => handleClose(severity, index, setFlash)}
+                        key={message.id}
+                        message={message.text}
+                        onClose={() => handleClose(severity, message.id)}
                         severity={severity}
                     />
                 ))
             )}
-        </>
+        </Item>
     );
 }

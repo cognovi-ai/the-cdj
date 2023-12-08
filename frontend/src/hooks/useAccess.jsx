@@ -1,4 +1,5 @@
 import { useFlash } from '../context/useFlash';
+import { v4 as uuid } from 'uuid';
 
 const BASE_URL = 'http://192.168.50.157:3000/access';
 
@@ -26,18 +27,22 @@ export function useAccess() {
             const data = await response.json();
 
             if (data.flash) {
-                // Append new flash messages
+                // Append new flash messages with UUIDs
                 setFlash(prevFlash => {
                     const newFlash = { ...prevFlash };
-                    Object.keys(data.flash).forEach(key => {
-                        newFlash[key] = newFlash[key] ? [...newFlash[key], ...data.flash[key]] : [...data.flash[key]];
+                    Object.keys(data.flash).forEach(severity => {
+                        const messagesWithIds = data.flash[severity].map(text => ({
+                            id: uuid(),
+                            text
+                        }));
+                        newFlash[severity] = newFlash[severity] ? [...newFlash[severity], ...messagesWithIds] : [...messagesWithIds];
                     });
                     return newFlash;
                 });
             }
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw 'Network response was not ok';
             }
 
             return data;
