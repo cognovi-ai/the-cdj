@@ -96,7 +96,7 @@ export const updateEntry = async (req, res, next) => {
 
   validateEntryAnalysis(req, res, async (err) => {
     if (err) {
-      return next(err); // Handle any validation errors
+      return next(err);
     }
 
     const entryData = req.body;
@@ -121,20 +121,21 @@ export const updateEntry = async (req, res, next) => {
         oldAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      res.append('Error', err);
+      req.flash('info', err.message);
     } finally {
       await updatedEntry.save();
       await oldAnalysis.save();
     }
 
-    res.status(200).json(updatedEntry);
+    req.flash('success', 'Successfully updated entry.');
+    res.status(200).json({ ...(updatedEntry)._doc, flash: req.flash() });
   });
 };
 
 /**
  * Delete an entry by ID and all associated documents.
  */
-export const deleteEntry = async (req, res) => {
+export const deleteEntry = async (req, res, next) => {
   const { entryId } = req.params;
 
   // Start a session and transaction for atomicity
@@ -143,7 +144,11 @@ export const deleteEntry = async (req, res) => {
 
   try {
     // Delete the entry
-    await Entry.findByIdAndDelete(entryId, { session });
+    const response = await Entry.findByIdAndDelete(entryId, { session });
+
+    if (!response) {
+      return next(new ExpressError('Entry not found', 404));
+    }
 
     // Delete associated documents
     await EntryConversation.deleteMany({ entry: entryId }, { session });
@@ -154,13 +159,14 @@ export const deleteEntry = async (req, res) => {
   } catch (error) {
     // If an error occurs, abort the transaction
     await session.abortTransaction();
-    throw error;
+    return next(new ExpressError('An error occurred while attempting to delete the entry.', 500));
   } finally {
     // End the session
     session.endSession();
   }
 
-  res.status(200).json({ message: `Successfully deleted entry ${ entryId }` });
+  req.flash('success', 'Successfully deleted entry.');
+  res.status(200).json({ flash: req.flash() });
 };
 
 /**
