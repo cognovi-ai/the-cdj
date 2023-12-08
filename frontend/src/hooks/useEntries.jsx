@@ -1,9 +1,11 @@
+import { useFlash } from '../context/useFlash';
 import { useJournal } from '../context/useJournal';
 
 const BASE_URL = 'http://192.168.50.157:3000/journals/';
 
 export function useEntries() {
     const { journalId } = useJournal();
+    const { setFlash } = useFlash();
 
     const response = async (endpoint, method, headers = {}, body = {}) => {
         try {
@@ -28,7 +30,20 @@ export function useEntries() {
                 throw new Error('Network response was not ok');
             }
 
-            return await response.json();
+            const data = await response.json();
+
+            if (data.flash) {
+                // Append new flash messages
+                setFlash(prevFlash => {
+                    const newFlash = { ...prevFlash };
+                    Object.keys(data.flash).forEach(key => {
+                        newFlash[key] = newFlash[key] ? [...newFlash[key], ...data.flash[key]] : [...data.flash[key]];
+                    });
+                    return newFlash;
+                });
+            }
+
+            return data;
 
         } catch (error) {
             throw new Error(error);
