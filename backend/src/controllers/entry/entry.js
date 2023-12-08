@@ -55,7 +55,7 @@ export const createEntry = async (req, res, next) => {
         newAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      req.flash('error', err);
+      req.flash('error', err.message);
     } finally {
       await newEntry.save();
       await newAnalysis.save();
@@ -188,7 +188,7 @@ export const getEntryConversation = async (req, res) => {
 /**
  * Create a conversation for a specific entry.
  */
-export const createEntryConversation = async (req, res) => {
+export const createEntryConversation = async (req, res, next) => {
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
@@ -211,21 +211,22 @@ export const createEntryConversation = async (req, res) => {
       newConversation.messages[0].llm_response = llmResponse;
     }
   } catch (err) {
-    res.append('Error', err);
-  } finally {
-    await newConversation.save();
+    return next(err);
   }
+
+  await newConversation.save();
 
   const response = await EntryConversation.findOne({ entry: entryId });
   const entryConversation = response ? response._doc : {};
 
-  res.status(201).json(entryConversation);
+  req.flash('success', 'Successfully created conversation.');
+  res.status(201).json({ ...entryConversation, flash: req.flash() });
 };
 
 /**
  * Update a conversation for a specific entry.
  */
-export const updateEntryConversation = async (req, res) => {
+export const updateEntryConversation = async (req, res, next) => {
   const { chatId, journalId } = req.params;
   const messageData = req.body;
 
@@ -246,7 +247,7 @@ export const updateEntryConversation = async (req, res) => {
       messageData.messages[0].llm_response = llmResponse;
     }
   } catch (err) {
-    res.append('Error', err);
+    return next(err);
   }
 
   const response = await EntryConversation.findOneAndUpdate(
@@ -259,5 +260,6 @@ export const updateEntryConversation = async (req, res) => {
     { new: true }
   );
 
-  res.status(200).json(response);
+  req.flash('success', 'Successfully updated conversation.');
+  res.status(200).json({ ...(response)._doc, flash: req.flash() });
 };

@@ -34,6 +34,10 @@ entryAnalysisSchema.pre('save', function (next) {
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId, content) {
   const config = await Config.findById(configId);
 
+  if (!config) {
+    throw new Error('Config not found.');
+  }
+
   const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
 
   cdGpt.seedAnalysisMessages();
@@ -42,7 +46,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   const response = await cdGpt.getAnalysisCompletion();
 
   if (response.error) {
-    throw response.error.message;
+    throw new Error(response.error.message);
   }
 
   return response.choices[0].message.content;
