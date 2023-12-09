@@ -1,6 +1,11 @@
+import { useFlash } from '../context/useFlash';
+import { v4 as uuid } from 'uuid';
+
 const BASE_URL = 'http://192.168.50.157:3000/access';
 
 export function useAccess() {
+    const { setFlash } = useFlash();
+
     const response = async (endpoint, method, headers = {}, body = {}) => {
         try {
             // Construct the URL with the specific journal ID
@@ -19,12 +24,28 @@ export function useAccess() {
             }
 
             const response = await fetch(url, options);
+            const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            if (data.flash) {
+                // Append new flash messages with UUIDs
+                setFlash(prevFlash => {
+                    const newFlash = { ...prevFlash };
+                    Object.keys(data.flash).forEach(severity => {
+                        const messagesWithIds = data.flash[severity].map(text => ({
+                            id: uuid(),
+                            text
+                        }));
+                        newFlash[severity] = newFlash[severity] ? [...newFlash[severity], ...messagesWithIds] : [...messagesWithIds];
+                    });
+                    return newFlash;
+                });
             }
 
-            return await response.json();
+            if (!response.ok) {
+                throw 'Network response was not ok';
+            }
+
+            return data;
 
         } catch (error) {
             throw new Error(error);

@@ -51,11 +51,8 @@ export default function ResetPassword() {
             { 'Content-Type': 'application/json' },
             { token, newPassword }
         )
-            .then((data) => {
-                setTimeout(() => {
-                    alert(data.message);
-                    navigate('/login', { replace: true });
-                }, 2000);
+            .then(() => {
+                navigate('/login', { replace: true });
             })
             .catch((error) => {
                 console.error(error);

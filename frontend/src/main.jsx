@@ -4,6 +4,9 @@ import { Account, ForgotPassword, Login, Logout, Register, ResetPassword } from 
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import ErrorPage from './components/utils/ErrorPage'
+
+import { FlashProvider } from './context/FlashProvider.jsx';
+
 import Index from './routes/entries';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -67,6 +70,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <FlashProvider>
+      <RouterProvider router={router} />
+    </FlashProvider>
   </React.StrictMode>,
 )

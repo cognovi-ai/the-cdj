@@ -14,7 +14,13 @@ export const getAllEntries = async (req, res) => {
 
   const entries = await Entry.find({ journal: journalId });
 
-  res.status(200).json({ entries });
+  if (entries.length === 0) {
+    req.flash('info', 'Submit your first entry to get started.');
+  } else {
+    req.flash('success', 'Successfully retrieved entries.');
+  }
+
+  res.status(200).json({ entries, flash: req.flash() });
 };
 
 /**
@@ -26,7 +32,7 @@ export const createEntry = async (req, res, next) => {
   // Ensure that the journal exists
   const journal = await Journal.findById(journalId);
   if (!journal) {
-    return next(new ExpressError('Journal not found', 404));
+    return next(new ExpressError('Journal not found.', 404));
   }
 
   validateEntryAnalysis(req, res, async (err) => {
@@ -55,13 +61,14 @@ export const createEntry = async (req, res, next) => {
         newAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      res.append('Error', err);
+      req.flash('info', err.message);
     } finally {
       await newEntry.save();
       await newAnalysis.save();
+      req.flash('success', 'Successfully created entry.');
     }
 
-    res.status(201).json(await newEntry.save());
+    res.status(201).json({ ...(await newEntry.save())._doc, flash: req.flash() });
   });
 };
 
@@ -84,12 +91,12 @@ export const updateEntry = async (req, res, next) => {
 
   const journal = await Journal.findById(journalId);
   if (!journal) {
-    return next(new ExpressError('Journal not found', 404));
+    return next(new ExpressError('Journal not found.', 404));
   }
 
   validateEntryAnalysis(req, res, async (err) => {
     if (err) {
-      return next(err); // Handle any validation errors
+      return next(err);
     }
 
     const entryData = req.body;
@@ -114,20 +121,21 @@ export const updateEntry = async (req, res, next) => {
         oldAnalysis.analysis_content = analysis.analysis_content;
       }
     } catch (err) {
-      res.append('Error', err);
+      req.flash('info', err.message);
     } finally {
       await updatedEntry.save();
       await oldAnalysis.save();
     }
 
-    res.status(200).json(updatedEntry);
+    req.flash('success', 'Successfully updated entry.');
+    res.status(200).json({ ...(updatedEntry)._doc, flash: req.flash() });
   });
 };
 
 /**
  * Delete an entry by ID and all associated documents.
  */
-export const deleteEntry = async (req, res) => {
+export const deleteEntry = async (req, res, next) => {
   const { entryId } = req.params;
 
   // Start a session and transaction for atomicity
@@ -136,7 +144,11 @@ export const deleteEntry = async (req, res) => {
 
   try {
     // Delete the entry
-    await Entry.findByIdAndDelete(entryId, { session });
+    const response = await Entry.findByIdAndDelete(entryId, { session });
+
+    if (!response) {
+      return next(new ExpressError('Entry not found.', 404));
+    }
 
     // Delete associated documents
     await EntryConversation.deleteMany({ entry: entryId }, { session });
@@ -147,13 +159,14 @@ export const deleteEntry = async (req, res) => {
   } catch (error) {
     // If an error occurs, abort the transaction
     await session.abortTransaction();
-    throw error;
+    return next(new ExpressError('An error occurred while attempting to delete the entry.', 500));
   } finally {
     // End the session
     session.endSession();
   }
 
-  res.status(200).json({ message: `Successfully deleted entry ${ entryId }` });
+  req.flash('success', 'Successfully deleted entry.');
+  res.status(200).json({ flash: req.flash() });
 };
 
 /**
@@ -166,7 +179,7 @@ export const getEntryAnalysis = async (req, res, next) => {
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
 
   if (!entryAnalysis) {
-    return next(new ExpressError('Entry analysis not found', 404));
+    return next(new ExpressError('Entry analysis not found.', 404));
   }
 
   res.status(200).json(entryAnalysis._doc);
@@ -187,7 +200,7 @@ export const getEntryConversation = async (req, res) => {
 /**
  * Create a conversation for a specific entry.
  */
-export const createEntryConversation = async (req, res) => {
+export const createEntryConversation = async (req, res, next) => {
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
@@ -210,21 +223,22 @@ export const createEntryConversation = async (req, res) => {
       newConversation.messages[0].llm_response = llmResponse;
     }
   } catch (err) {
-    res.append('Error', err);
-  } finally {
-    await newConversation.save();
+    return next(err);
   }
+
+  await newConversation.save();
 
   const response = await EntryConversation.findOne({ entry: entryId });
   const entryConversation = response ? response._doc : {};
 
-  res.status(201).json(entryConversation);
+  req.flash('success', 'Successfully created conversation.');
+  res.status(201).json({ ...entryConversation, flash: req.flash() });
 };
 
 /**
  * Update a conversation for a specific entry.
  */
-export const updateEntryConversation = async (req, res) => {
+export const updateEntryConversation = async (req, res, next) => {
   const { chatId, journalId } = req.params;
   const messageData = req.body;
 
@@ -245,7 +259,7 @@ export const updateEntryConversation = async (req, res) => {
       messageData.messages[0].llm_response = llmResponse;
     }
   } catch (err) {
-    res.append('Error', err);
+    return next(err);
   }
 
   const response = await EntryConversation.findOneAndUpdate(
@@ -258,5 +272,6 @@ export const updateEntryConversation = async (req, res) => {
     { new: true }
   );
 
-  res.status(200).json(response);
+  req.flash('success', 'Successfully updated conversation.');
+  res.status(200).json({ ...(response)._doc, flash: req.flash() });
 };

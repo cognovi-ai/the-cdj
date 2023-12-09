@@ -7,6 +7,7 @@ import connectDB from './db.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import flash from 'connect-flash';
 import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session';
@@ -46,6 +47,9 @@ app.use(session({
   }
 }));
 
+// use flash
+app.use(flash());
+
 // use passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
@@ -65,13 +69,22 @@ app.use('/access', access);
 
 // 404 handler
 app.use('*', (req, res, next) => {
-  next(new ExpressError('Page Not Found', 404));
+  next(new ExpressError('Page Not Found.', 404));
 });
 
 // error handler
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = 'Something went wrong' } = err;
-  res.status(statusCode).json({ message });
+  const { statusCode = 500, message = 'Something went wrong.' } = err;
+
+  if (statusCode >= 500) {
+    req.flash('error', message);
+  } else if (statusCode === 400 || statusCode === 404) {
+    req.flash('info', message);
+  } else {
+    req.flash('warning', message);
+  }
+
+  res.status(statusCode).json({ flash: req.flash() });
 });
 
 export default app;

@@ -15,10 +15,10 @@ export const getAccount = async (req, res, next) => {
 
   try {
     const journal = await Journal.findById(journalId);
-    if (!journal) return next(new ExpressError('Journal not found', 404));
+    if (!journal) return next(new ExpressError('Journal not found.', 404));
 
     const user = await User.findById(journal.user);
-    if (!user) return next(new ExpressError('User not found', 404));
+    if (!user) return next(new ExpressError('User not found.', 404));
 
     // Journal config is optional
     const config = await Config.findById(journal.config);
@@ -26,9 +26,12 @@ export const getAccount = async (req, res, next) => {
     // Decrypt the config's apiKey
     if (config) {
       config.apiKey = config.decrypt();
+    } else {
+      req.flash('info', 'Click the Config tab for chat and analysis setup.');
     }
 
-    res.status(200).json({ user, config });
+    req.flash('success', 'Found account information.');
+    res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
     return next(err);
   }
@@ -42,7 +45,7 @@ export const updateAccount = async (req, res, next) => {
 
   try {
     const journal = await Journal.findById(journalId);
-    if (!journal) return next(new ExpressError('Journal not found', 404));
+    if (!journal) return next(new ExpressError('Journal not found.', 404));
 
     const { profile, password, config } = req.body;
 
@@ -50,25 +53,29 @@ export const updateAccount = async (req, res, next) => {
     if (profile) {
       // Find and update the user associated with the journal
       const user = await User.findByIdAndUpdate(journal.user, profile);
-      if (!user) return next(new ExpressError('User not found', 404));
+      if (!user) return next(new ExpressError('User not found.', 404));
+
+      req.flash('success', 'Profile updated successfully.');
     }
 
     // Update the user's password
     if (password) {
       const user = await User.findById(journal.user);
-      if (!user) return next(new ExpressError('User not found', 404));
+      if (!user) return next(new ExpressError('User not found.', 404));
 
       const { oldPassword, newPassword } = password;
 
       // Re-authenticate the user with the oldPassword
       const isMatch = await user.comparePassword(oldPassword);
       if (!isMatch) {
-        return next(new ExpressError('Password is incorrect', 401));
+        return next(new ExpressError('Password is incorrect.', 401));
       }
 
       // Update the user's password
       await user.setPassword(newPassword);
       await user.save();
+
+      req.flash('success', 'Password updated successfully.');
     }
 
     // Update the Config model with the config data
@@ -93,11 +100,13 @@ export const updateAccount = async (req, res, next) => {
       if (apiKey) response.apiKey = response.encrypt(apiKey);
 
       await response.save();
+
+      req.flash('success', 'Config updated successfully.');
     }
 
-    res.status(200).json({ message: 'Account updated successfully.' });
+    res.status(200).json({ flash: req.flash() });
   } catch (err) {
-    return next(err);
+    return next(new ExpressError('An error occurred while attempting to update the account.', 500));
   }
 };
 
@@ -111,20 +120,25 @@ export const deleteItem = async (req, res, next) => {
   if (deletionItem === 'config') {
     try {
       const journal = await Journal.findById(journalId);
-      if (!journal) return next(new ExpressError('Journal not found', 404));
+      if (!journal) return next(new ExpressError('Journal not found.', 404));
 
       // Delete the journal's config
       const config = await Config.findByIdAndDelete(journal.config);
-      if (!config) return next(new ExpressError('Config not found', 404));
+      if (!config) return next(new ExpressError('Config not found.', 404));
 
-      res.status(200).json({ message: 'Config deleted successfully.' });
+      req.flash('success', 'Config deleted successfully.');
+      res.status(200).json({ flash: req.flash() });
     } catch (err) {
       return next(err);
     }
   } else if (deletionItem === 'account') {
     try {
       const journal = await Journal.findById(journalId);
-      if (!journal) return next(new ExpressError('Journal not found', 404));
+      if (!journal) return next(new ExpressError('Journal not found.', 404));
+
+      // Delete the journal's user
+      const user = await User.findByIdAndDelete(journal.user);
+      if (!user) return next(new ExpressError('User not found.', 404));
 
       // Delete the journal's entries
       const entries = await Entry.find({ journal: journalId });
@@ -143,16 +157,13 @@ export const deleteItem = async (req, res, next) => {
       // Delete the journal's config
       await Config.findByIdAndDelete(journal.config);
 
-      // Delete the journal's user
-      const user = await User.findByIdAndDelete(journal.user);
-      if (!user) return next(new ExpressError('User not found', 404));
-
       // Delete the journal
       await Journal.findByIdAndDelete(journalId);
 
-      res.status(200).json({ message: 'Account deleted successfully.' });
+      req.flash('success', 'Account deleted successfully.');
+      res.status(200).json({ flash: req.flash() });
     } catch (err) {
-      return next(err);
+      return next(new ExpressError('An error occurred while attempting to delete the account.', 500));
     }
   }
 };
@@ -184,8 +195,8 @@ export const login = async (req, res, next) => {
         await newJournal.save();
       }
 
-      // Return the journal id and title
-      res.status(200).json({ journalId: journal._id, journalTitle: journal.title });
+      req.flash('success', 'Logged in successfully.');
+      res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
     });
   })(req, res, next);
 };
@@ -202,7 +213,7 @@ export const forgotPassword = async (req, res, next) => {
     if (err) return next(err);
 
     // If user doesn't exist, return error
-    if (!user) return next(new ExpressError('Could not send recovery email', 400));
+    if (!user) return next(new ExpressError('Could not send recovery email.', 400));
 
     try {
       // Generate a password reset token
@@ -214,10 +225,10 @@ export const forgotPassword = async (req, res, next) => {
       // Save the user with the new token and expiry
       await user.save();
 
-      res.status(200).json({ message: 'Recovery email sent successfully.' });
+      req.flash('success', 'Recovery email sent successfully.');
+      res.status(200).json({ flash: req.flash() });
     } catch (error) {
-      // Handle any errors here
-      return next(new ExpressError('Error during password recovery process', 500));
+      return next(new ExpressError('An error occurred while attempting to generate a recovery email.', 500));
     }
   });
 };
@@ -243,7 +254,7 @@ export const resetPassword = async (req, res, next) => {
 
     if (!user) {
       // No user found, or token has expired
-      return next(new ExpressError('Password reset token is invalid or has expired', 400));
+      return next(new ExpressError('Password reset token is invalid or has expired.', 400));
     }
 
     // Reset password
@@ -257,10 +268,11 @@ export const resetPassword = async (req, res, next) => {
     // Send a confirmation email for the password reset
     await user.sendPasswordResetConfirmationEmail();
 
-    res.status(200).json({ message: 'Password reset successfully.' });
+    req.flash('success', 'Password reset successfully.');
+    res.status(200).json({ flash: req.flash() });
   } catch (error) {
     // Handle any errors here
-    return next(new ExpressError('Error during password reset process', 500));
+    return next(new ExpressError('An error occurred while attempting to reset the password.', 500));
   }
 };
 
@@ -271,7 +283,9 @@ export const logout = (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
   });
-  res.status(200).json({ message: 'Logged out successfully.' });
+
+  req.flash('success', 'Logged out successfully.');
+  res.status(200).json({ message: 'Logged out successfully.', flash: req.flash() });
 };
 
 /**
@@ -281,7 +295,9 @@ export const register = async (req, res, next) => {
   const { fname, lname, email, password } = req.body;
 
   try {
-    const newUser = await User.register(new User({ email, fname, lname }), password);
+    const newUser = await User.register(new User({ email, fname, lname }), password).catch(err => {
+      return next(err);
+    });
 
     // Call validateJournal middleware
     validateJournal(req, res, async (err) => {
@@ -294,10 +310,12 @@ export const register = async (req, res, next) => {
       // Continue with the rest of the registration process
       req.login(newUser, err => {
         if (err) return next(err);
-        res.status(200).json({ journalId: newJournal._id, journalTitle: newJournal.title });
+
+        req.flash('success', 'Registered successfully.');
+        res.status(200).json({ journalId: newJournal._id, journalTitle: newJournal.title, flash: req.flash() });
       });
     });
   } catch (err) {
-    return next(new ExpressError('Email already in use', 409));
+    return next(new ExpressError('An error occurred while attempting to register the user.', 500));
   }
 };

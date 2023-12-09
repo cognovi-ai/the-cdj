@@ -1,6 +1,7 @@
 .message-bubble {
     display: inline-block;
     padding: 8px 12px;
+    margin-bottom: 1em;
     border-radius: 15px;
 }
 

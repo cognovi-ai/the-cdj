@@ -3,6 +3,8 @@ import './App.css'
 import { Box, CssBaseline } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
+import FlashMessages from './components/utils/FlashMessages.jsx';
+
 import Footer from './components/body/Footer';
 import Header from './components/body/Header';
 
@@ -70,6 +72,7 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <JournalProvider>
           <Header />
+          <FlashMessages />
           <Box sx={{ minHeight: '100vh' }}>
             <Outlet />
           </Box>

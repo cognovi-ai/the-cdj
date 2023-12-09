@@ -154,13 +154,15 @@ export default function Account() {
 
                 setUpdating(true);
 
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     setProfile({});
                     setPassword({});
                     setConfig({});
                     setActiveStep(0);
                     setUpdating(false);
                 }, 3000);
+
+                return () => clearTimeout(timer);
             }
         } catch (error) {
             console.error(error);

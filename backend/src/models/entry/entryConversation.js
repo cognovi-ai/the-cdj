@@ -3,6 +3,7 @@ import { Schema, model } from 'mongoose';
 
 import CdGpt from '../../assistants/gpts/CdGpt.js';
 
+import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
 const entryConversationSchema = new Schema({
@@ -39,9 +40,18 @@ entryConversationSchema.index({ 'messages.created_at': 1 });
 // Get the analysis content for an entry
 entryConversationSchema.methods.getChatContent = async function (configId, analysisId, content, messages = []) {
   const config = await Config.findById(configId);
+
+  if (!config) {
+    throw new ExpressError('Configure account settings to chat.', 404);
+  }
+
   const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
 
   const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
+
+  if (!analysis) {
+    throw new ExpressError('Analysis not found.', 404);
+  }
 
   cdGpt.seedChatMessages(analysis, messages);
   cdGpt.addUserMessage({ chat: content });
@@ -49,7 +59,7 @@ entryConversationSchema.methods.getChatContent = async function (configId, analy
   const response = await cdGpt.getChatCompletion();
 
   if (response.error) {
-    throw response.error.message;
+    throw new ExpressError(response.error.message, 400);
   }
 
   return response.choices[0].message.content;

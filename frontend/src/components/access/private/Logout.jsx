@@ -39,17 +39,19 @@ export default function Logout() {
                 );
 
                 // Logout sequence
-                setTimeout(() => {
+                let timer = setTimeout(() => {
                     setIsLoggingOut(false);
                 }, 1000);
 
-                setTimeout(() => {
+                timer = setTimeout(() => {
                     // Reset journal context
                     setJournalId('');
                     setJournalTitle('');
 
                     navigate('/login', { replace: true })
                 }, 2000);
+
+                return () => clearTimeout(timer);
             } catch (error) {
                 console.error(error);
             }

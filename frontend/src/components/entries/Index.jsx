@@ -1,23 +1,17 @@
-import { Grid, Paper, Typography } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Analysis from './analysis/Analysis';
+
 import Entry from './thoughts/Entry';
+
+import { Item } from '../utils/Item';
+
 import Thoughts from './thoughts/Thoughts';
 
-import { styled } from '@mui/material/styles';
 import { useEntries } from '../../hooks/useEntries';
 import { useJournal } from '../../context/useJournal';
 import { useParams } from 'react-router-dom';
-
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#282828' : '#fff',
-    ...theme.typography.body2,
-    padding: theme.spacing(2),
-    margin: theme.spacing(1),
-    color: theme.palette.text.primary,
-    boxShadow: 'none',
-}));
 
 export default function Entries() {
     const { journalId, journalTitle } = useJournal();
