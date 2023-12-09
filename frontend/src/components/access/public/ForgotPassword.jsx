@@ -38,17 +38,13 @@ export default function ForgotPassword() {
         }
 
         try {
-            const data = await access(
+            await access(
                 '/forgot-password',
                 'POST',
                 { 'Content-Type': 'application/json' },
                 { email });
 
-            setTimeout(() => {
-                alert(data.message);
-                navigate('/login', { replace: true });
-            }, 2000);
-
+            navigate('/login', { replace: true });
         } catch (error) {
             console.error(error);
         }
