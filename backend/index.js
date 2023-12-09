@@ -1,11 +1,18 @@
 import app from './src/app.js';
-import express from 'express';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import https from 'https';
 
-const port = 3000;
-const server = express();
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
-server.use(app);
+const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
+const certificate = fs.readFileSync(process.env.CERTIFICATE_PATH, 'utf8');
 
-server.listen(port, () => {
-  console.log(`\nEXPRESS Listening on port ${ port }.`);
+const credentials = { key: privateKey, cert: certificate };
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(process.env.HTTPS_PORT, () => {
+  console.log(`\nHTTPS Listening on port ${ process.env.HTTPS_PORT }`);
 });

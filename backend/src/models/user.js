@@ -176,7 +176,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
 
   // TODO: Change this to the actual URL of the frontend app when deployed
   // Construct the password reset URL
-  const resetUrl = `http://192.168.50.157:5173/reset-password?token=${ token }`;
+  const resetUrl = `https://192.168.50.157:5173/reset-password?token=${ token }`;
 
   // Email content
   const message = {

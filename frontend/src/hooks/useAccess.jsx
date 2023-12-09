@@ -1,7 +1,7 @@
 import { useFlash } from '../context/useFlash';
 import { v4 as uuid } from 'uuid';
 
-const BASE_URL = 'http://192.168.50.157:3000/access';
+const BASE_URL = import.meta.env.VITE_BASE_ACCESS_URL;
 
 export function useAccess() {
     const { setFlash } = useFlash();
