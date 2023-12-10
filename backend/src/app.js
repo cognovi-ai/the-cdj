@@ -18,11 +18,17 @@ if (process.env.NODE_ENV !== 'test') {
   connectDB('cdj').catch(err => console.log(err));
 }
 
+const corsOptions = {
+  origin: [
+    process.env.DEV_ORIGIN_LOCAL_URL,
+    process.env.DEV_ORIGIN_PRIVATE_URL
+  ],
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
+};
+
 // use cors middleware
-app.use(cors({
-  origin: ['https://192.168.50.157:5173', 'https://localhost:5173'],
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // use json middleware
 app.use(express.json());
@@ -33,9 +39,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'none',
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }

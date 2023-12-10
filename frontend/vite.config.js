@@ -6,7 +6,7 @@ import fs from 'fs'
 import react from '@vitejs/plugin-react'
 
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: '../backend/.env' })
+  dotenv.config()
 }
 
 // https://vitejs.dev/config/
@@ -15,8 +15,8 @@ export default defineConfig({
   server: {
     host: true,
     https: {
-      key: fs.readFileSync(process.env.VITE_PRIVATE_KEY_PATH, 'utf8'),
-      cert: fs.readFileSync(process.env.VITE_CERTIFICATE_PATH, 'utf8'),
+      key: fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8'),
+      cert: fs.readFileSync(process.env.CERTIFICATE_PATH, 'utf8'),
     },
   }
 })
