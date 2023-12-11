@@ -1,4 +1,4 @@
-import { Button, Grid, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
+import { Button, FormControl, FormHelperText, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 import PopupDialog from '../../../../utils/PopupDialog';
@@ -17,13 +17,18 @@ const configFields = [
 ];
 
 export default function Config({ savedConfig, setSavedConfig }) {
+    const [selectedModel, setSelectedModel] = useState('');
     const [showApiKey, setShowApiKey] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
     const { config, setConfig } = useAccount();
-
     const { journalId } = useJournal();
+
     const access = useAccess();
+
+    const handleChange = (event) => {
+        setSelectedModel(event.target.value);
+    };
 
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
@@ -84,30 +89,48 @@ export default function Config({ savedConfig, setSavedConfig }) {
             <Grid container spacing={3}>
                 {configFields.map(({ key, gpt, label, helperText, type }) => (
                     <Grid item key={gpt ? gpt : key} xs={12}>
-                        <TextField
-                            InputProps={key === 'apiKey' ? {
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            edge="end"
-                                            onClick={toggleApiKeyVisibility}
-                                        >
-                                            {showApiKey ? <VisibilityOff /> : <Visibility />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            } : undefined}
-                            fullWidth
-                            helperText={helperText}
-                            id={gpt ? gpt : key}
-                            label={label}
-                            name={gpt ? gpt : key}
-                            onChange={handleConfigChange}
-                            required
-                            type={key === 'apiKey' && showApiKey ? 'text' : type}
-                            value={getConfigValue(key, gpt)}
-                            variant="standard"
-                        />
+                        {gpt === 'analysis' ? (
+                            <FormControl fullWidth variant="standard">
+                                <InputLabel>{label}</InputLabel>
+                                <Select
+                                    displayEmpty
+                                    onChange={handleChange}
+                                    value={selectedModel}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    <MenuItem value={'gpt-3.5-turbo-1106'}>gpt-3.5-turbo-1106</MenuItem>
+                                    <MenuItem value={'gpt-4-1106-preview'}>gpt-4-1106-preview</MenuItem>
+                                </Select>
+                                <FormHelperText>{helperText}</FormHelperText>
+                            </FormControl>
+                        ) : (
+                            <TextField
+                                InputProps={key === 'apiKey' ? {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                edge="end"
+                                                onClick={toggleApiKeyVisibility}
+                                            >
+                                                {showApiKey ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                } : undefined}
+                                fullWidth
+                                helperText={helperText}
+                                id={gpt ? gpt : key}
+                                label={label}
+                                name={gpt ? gpt : key}
+                                onChange={handleConfigChange}
+                                required
+                                type={key === 'apiKey' && showApiKey ? 'text' : type}
+                                value={getConfigValue(key, gpt)}
+                                variant="standard"
+                            />
+                        )}
                     </Grid>
                 ))}
                 <Grid item>
