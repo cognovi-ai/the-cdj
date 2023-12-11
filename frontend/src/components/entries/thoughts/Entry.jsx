@@ -1,4 +1,4 @@
-import { Box, Button, InputLabel, TextField, Typography } from '@mui/material';
+import { Box, Button, InputLabel, LinearProgress, TextField, Typography } from '@mui/material';
 
 import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
@@ -84,6 +84,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
                     value={newEntry}
                     variant="outlined"
                 />
+                {isSubmitting && <LinearProgress />}
                 <Box
                     display="flex"
                     justifyContent="flex-end"

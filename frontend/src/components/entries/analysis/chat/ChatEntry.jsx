@@ -1,4 +1,4 @@
-import { Box, IconButton, TextField } from '@mui/material';
+import { Box, IconButton, LinearProgress, TextField } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
 import { useEntries } from '../../../../hooks/useEntries';
@@ -85,6 +85,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
                     value={newChat}
                     variant="filled"
                 />
+                {isSubmitting && <LinearProgress color="chat" />}
                 <Box
                     display="flex"
                     justifyContent="flex-end"
