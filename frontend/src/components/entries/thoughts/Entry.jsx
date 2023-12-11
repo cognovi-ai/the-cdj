@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 export default function Entry({ setEntries, setFocusedEntryId }) {
     const [newEntry, setNewEntry] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
 
     const entries = useEntries();
@@ -25,10 +26,12 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setIsSubmitting(true);
 
         // Validate the input
         if (newEntry.trim() === '') {
             setValidationError('This field is required.');
+            setIsSubmitting(false);
             return; // Exit early if validation fails
         }
 
@@ -55,6 +58,8 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
             ));
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -65,6 +70,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
             </InputLabel>
             <form onSubmit={handleSubmit}>
                 <TextField
+                    disabled={isSubmitting}
                     error={Boolean(validationError)}
                     fullWidth
                     helperText={validationError}
@@ -85,7 +91,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
                 >
                     <Button
                         color="primary"
-                        disabled={Boolean(validationError)}
+                        disabled={Boolean(validationError) || isSubmitting}
                         type="submit"
                         variant="contained"
                     >
