@@ -7,17 +7,19 @@ import { useAccess } from '../../../../../hooks/useAccess';
 
 import { useAccount } from '../../../../../context/useAccount';
 import { useJournal } from '../../../../../context/useJournal';
-
 import { useState } from 'react';
 
 const configFields = [
-    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'OpenAI models are currently only supported', type: 'text' },
+    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'OpenAI models are currently only supported', type: 'select' },
     { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'OpenAI models are currently only supported', type: 'text' },
     { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
 ];
 
+const analysisModels = [
+    'gpt-3.5-turbo-1106', 'gpt-4-1106-preview',
+];
+
 export default function Config({ savedConfig, setSavedConfig }) {
-    const [selectedModel, setSelectedModel] = useState('');
     const [showApiKey, setShowApiKey] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
@@ -26,15 +28,10 @@ export default function Config({ savedConfig, setSavedConfig }) {
 
     const access = useAccess();
 
-    const handleChange = (event) => {
-        setSelectedModel(event.target.value);
-    };
-
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
 
         setConfig((prevConfig) => {
-            // If the field being updated is part of the model object
             if (name === 'chat' || name === 'analysis') {
                 return {
                     ...prevConfig,
@@ -44,7 +41,6 @@ export default function Config({ savedConfig, setSavedConfig }) {
                     },
                 };
             }
-            // For other fields like apiKey
             return {
                 ...prevConfig,
                 [name]: value,
@@ -89,19 +85,26 @@ export default function Config({ savedConfig, setSavedConfig }) {
             <Grid container spacing={3}>
                 {configFields.map(({ key, gpt, label, helperText, type }) => (
                     <Grid item key={gpt ? gpt : key} xs={12}>
-                        {gpt === 'analysis' ? (
+                        {type === 'select' ? (
                             <FormControl fullWidth variant="standard">
                                 <InputLabel>{label}</InputLabel>
                                 <Select
                                     displayEmpty
-                                    onChange={handleChange}
-                                    value={selectedModel}
+                                    name={gpt}
+                                    onChange={handleConfigChange}
+                                    renderValue={(selected) => {
+                                        return selected || undefined;
+                                    }}
+                                    value={getConfigValue(key, gpt)}
                                 >
-                                    <MenuItem value="">
+                                    <MenuItem key="none" value="">
                                         <em>None</em>
                                     </MenuItem>
-                                    <MenuItem value={'gpt-3.5-turbo-1106'}>gpt-3.5-turbo-1106</MenuItem>
-                                    <MenuItem value={'gpt-4-1106-preview'}>gpt-4-1106-preview</MenuItem>
+                                    {analysisModels.map((model) => (
+                                        <MenuItem key={model} value={model}>
+                                            {model}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                                 <FormHelperText>{helperText}</FormHelperText>
                             </FormControl>
