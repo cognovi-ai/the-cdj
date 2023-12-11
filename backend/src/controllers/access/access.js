@@ -24,10 +24,10 @@ export const getAccount = async (req, res, next) => {
     const config = await Config.findById(journal.config);
 
     // Decrypt the config's apiKey
-    if (config) {
+    if (config && config.apiKey) {
       config.apiKey = config.decrypt();
     } else {
-      req.flash('info', 'Click the Config tab for chat and analysis setup.');
+      req.flash('info', 'Click the Config tab to complete your journal setup.');
     }
 
     req.flash('success', 'Found account information.');

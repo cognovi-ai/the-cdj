@@ -15,9 +15,9 @@ const steps = ['Profile', 'Password', 'Config'];
 
 function buildRequestBody(account) {
     return Object.keys(account).reduce((requestBody, key) => {
-        // Filter out undefined values and empty strings
+        // Filter out undefined values
         const subObject = Object.entries(account[key])
-            .filter(([, subValue]) => subValue !== undefined && subValue !== '')
+            .filter(([, subValue]) => subValue !== undefined)
             .reduce((obj, [subKey, subValue]) => ({ ...obj, [subKey]: subValue }), {});
 
         return Object.keys(subObject).length ? { ...requestBody, [key]: subObject } : requestBody;
