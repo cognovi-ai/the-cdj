@@ -1,4 +1,4 @@
-import { Box, Button, Container, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Box, Button, Container, LinearProgress, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Config from './Forms/Config';
@@ -15,9 +15,9 @@ const steps = ['Profile', 'Password', 'Config'];
 
 function buildRequestBody(account) {
     return Object.keys(account).reduce((requestBody, key) => {
-        // Filter out undefined values and empty strings
+        // Filter out undefined values
         const subObject = Object.entries(account[key])
-            .filter(([, subValue]) => subValue !== undefined && subValue !== '')
+            .filter(([, subValue]) => subValue !== undefined)
             .reduce((obj, [subKey, subValue]) => ({ ...obj, [subKey]: subValue }), {});
 
         return Object.keys(subObject).length ? { ...requestBody, [key]: subObject } : requestBody;
@@ -143,6 +143,13 @@ export default function Account() {
             // Build body based on accountMapping
             const body = buildRequestBody({ profile, password, config });
 
+            // If no body, do not update
+            if (!body) {
+                return;
+            }
+
+            setUpdating(true);
+
             // Update the account
             if (body) {
                 await access(
@@ -152,20 +159,17 @@ export default function Account() {
                     body
                 );
 
-                setUpdating(true);
-
-                const timer = setTimeout(() => {
-                    setProfile({});
-                    setPassword({});
-                    setConfig({});
-                    setActiveStep(0);
-                    setUpdating(false);
-                }, 3000);
-
-                return () => clearTimeout(timer);
+                setProfile({});
+                setPassword({});
+                setConfig({});
+                setActiveStep(0);
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setTimeout(() => {
+                setUpdating(false);
+            }, 3000);
         }
     }
 
@@ -194,6 +198,7 @@ export default function Account() {
                         <Typography variant="subtitle1">
                             Your account is being updated...
                         </Typography>
+                        <LinearProgress color="edit" sx={{ mt: 2 }} />
                     </Box>
                 )}
                 {!updating && (
@@ -217,11 +222,18 @@ export default function Account() {
                                 )}
                             </Box>
                             {activeStep === steps.length ? (
-                                <Button onClick={handleUpdate} sx={{ ml: 1 }} variant="contained">
+                                <Button
+                                    onClick={handleUpdate}
+                                    sx={{ ml: 1 }}
+                                    variant="contained"
+                                >
                                     Update
                                 </Button>
                             ) :
-                                <Button onClick={handleReview} variant="contained">
+                                <Button
+                                    onClick={handleReview}
+                                    variant="contained"
+                                >
                                     Finish
                                 </Button>}
                         </Box>

@@ -22,7 +22,8 @@ export default function Review() {
 
     const updated = useMemo(() =>
         Object.entries(account)
-            .filter(([key, value]) => value && names[key])
+            .filter(([key, value]) => (
+                value !== undefined && value !== null) && names[key])
             .flatMap(([key, value]) => {
                 // Handle nested model structure
                 if (key === 'model' && typeof value === 'object') {

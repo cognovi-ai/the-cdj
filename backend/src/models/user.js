@@ -9,7 +9,6 @@ import passportLocalMongoose from 'passport-local-mongoose';
 
 if (process.env.NODE_ENV !== 'production') dotenv.config();
 
-// User schema definition for MongoDB
 const userSchema = new Schema({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
@@ -62,9 +61,8 @@ const createPasswordValidation = (isRequired = false) => {
 // Common validation schema for both chat and analysis
 const modelFieldValidation = Joi.string()
   .pattern(/^[a-zA-Z0-9-.]+$/) // Allow alphanumerics, hyphens, and periods
-  .min(4)
+  .allow('')
   .max(50)
-  .required()
   .messages({
     'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
   });
@@ -99,7 +97,8 @@ userSchema.statics.accountJoi = Joi.object({
     analysis: modelFieldValidation
   }),
   apiKey: Joi.string()
-    .pattern(/^[a-zA-Z0-9-]{30,128}$/)
+    .pattern(/^[a-zA-Z0-9-]{0,128}$/)
+    .allow('')
     .messages({
       'string.pattern.base': 'API key must be between 30 and 128 characters long and contain only alphanumeric characters and dashes.'
     })

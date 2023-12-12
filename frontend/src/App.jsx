@@ -17,6 +17,9 @@ const theme = createTheme({
     primary: {
       main: '#282828',
     },
+    chat: {
+      main: '#4fc3f7',
+    },
     edit: {
       main: '#4fc3f7',
     },

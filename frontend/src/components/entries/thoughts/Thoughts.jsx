@@ -1,6 +1,6 @@
 import './Thoughts.css'
 
-import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
 import { useEntries } from '../../../hooks/useEntries';
@@ -16,18 +16,23 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         tags: [],
         privacy_settings: {},
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
 
     const entries = useEntries();
     const navigate = useNavigate();
 
     const handleFocus = async (entryId) => {
+        setIsSubmitting(true);
+
         // Scroll to top of page
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Focus thought analysis view on selected entry
         setFocusedEntryId(entryId);
         navigate(`/entries/${ entryId }`);
+
+        setIsSubmitting(false);
     }
 
     const handleEnterKeyPress = (event) => {
@@ -67,12 +72,16 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         setEditedData({});
         setEditedEntryId('');
         setValidationError('');
+        setIsSubmitting(false);
     };
 
     const handleSaveEdit = async () => {
+        setIsSubmitting(true);
+
         // Validate the input
         if (editedData.content.trim() === '') {
             setValidationError('This field is required.');
+            setIsSubmitting(false);
             return; // Exit early if validation fails
         }
 
@@ -99,10 +108,14 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             setValidationError('');
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (entryId) => {
+        setIsSubmitting(true);
+
         try {
             // Delete the entry on the server
             await entries(`/${ entryId }`, 'DELETE');
@@ -132,12 +145,21 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div>
-            <Typography variant="h2">Recent Thoughts</Typography>
+            <Grid container>
+                <Grid item>
+                    {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
+                </Grid>
+                <Grid item>
+                    <Typography variant="h2">Recent Thoughts</Typography>
+                </Grid>
+            </Grid>
             {allEntries.map((entry) => (
                 <Box
                     className={entry._id === focusedEntryId ? 'focused' : ''}
@@ -151,6 +173,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                         <div>
                             <TextField
                                 autoFocus
+                                disabled={isSubmitting}
                                 error={Boolean(validationError)}
                                 fullWidth
                                 helperText={validationError}
@@ -163,10 +186,11 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                                 value={editedData.content}
                                 variant="filled"
                             />
+                            {isSubmitting && <LinearProgress />}
                             <Box display="flex" justifyContent="flex-end" marginTop={2}>
                                 <Button
                                     color="primary"
-                                    disabled={Boolean(validationError)}
+                                    disabled={Boolean(validationError) || isSubmitting}
                                     onClick={handleSaveEdit}
                                     variant="contained"
                                 >
@@ -174,6 +198,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                                 </Button>
                                 <Button
                                     color="cancel"
+                                    disabled={isSubmitting}
                                     onClick={handleCancelEdit}
                                     style={{ marginLeft: 8 }}
                                     variant="contained"
@@ -187,12 +212,14 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             <IconButton
                                 aria-label="Focus"
                                 color="primary"
+                                disabled={isSubmitting}
                                 onClick={() => handleFocus(entry._id)}>
                                 <FocusIcon />
                             </IconButton>
                             <IconButton
                                 aria-label="Edit"
                                 color="edit"
+                                disabled={isSubmitting}
                                 onClick={() => handleEdit(entry._id)}
                             >
                                 <EditIcon />
@@ -200,6 +227,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             <IconButton
                                 aria-label="Delete"
                                 color="danger"
+                                disabled={isSubmitting}
                                 onClick={() => handleDelete(entry._id)}
                             >
                                 <DeleteIcon />

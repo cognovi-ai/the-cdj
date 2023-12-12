@@ -2,16 +2,6 @@ import { Schema, model } from 'mongoose';
 import { decrypt, encrypt } from '../utils/aes.js';
 import Joi from 'joi';
 
-// Common validation schema for both chat and analysis
-const modelFieldValidation = Joi.string()
-  .pattern(/^[a-zA-Z0-9-.]+$/) // Allow alphanumerics, hyphens, and periods
-  .min(4)
-  .max(50)
-  .required()
-  .messages({
-    'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
-  });
-
 const configSchema = new Schema({
   model: {
     chat: { type: String },
@@ -22,16 +12,23 @@ const configSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
+// Common validation schema for both chat and analysis
+const modelFieldValidation = Joi.string()
+  .pattern(/^[a-zA-Z0-9-.]+$/) // Allow alphanumerics, hyphens, and periods
+  .allow('')
+  .max(50)
+  .messages({
+    'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
+  });
+
 configSchema.statics.joi = Joi.object({
   model: Joi.object({
     chat: modelFieldValidation,
     analysis: modelFieldValidation
   }).required(),
   apiKey: Joi.string()
-    .pattern(/^[a-zA-Z0-9-]+$/) // Allow alphanumerics and hyphens
-    .min(20)
-    .max(50)
-    .required()
+    .pattern(/^[a-zA-Z0-9-]{0,128}$/)
+    .allow('')
     .messages({
       'string.pattern.base': 'API key must only contain alphanumeric characters and hyphens.'
     })

@@ -1,4 +1,4 @@
-import { Box, IconButton, TextField } from '@mui/material';
+import { Box, IconButton, LinearProgress, TextField } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
 import { useEntries } from '../../../../hooks/useEntries';
@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 export default function ChatEntry({ focusedEntryId, chat, setChat }) {
     const [newChat, setNewChat] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
 
     const entries = useEntries();
@@ -23,11 +24,13 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
     };
 
     const handleSendChat = async (event) => {
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault();
+        setIsSubmitting(true);
 
         // Validate the input
         if (newChat.trim() === '') {
             setValidationError('This field is required.');
+            setIsSubmitting(false);
             return; // Exit early if validation fails
         }
 
@@ -59,6 +62,8 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
             setValidationError('');
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -66,7 +71,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
         <div>
             <form onSubmit={handleSendChat}>
                 <TextField
-                    disabled={chat === undefined}
+                    disabled={chat === undefined || isSubmitting}
                     error={Boolean(validationError)}
                     fullWidth
                     helperText={validationError}
@@ -80,6 +85,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
                     value={newChat}
                     variant="filled"
                 />
+                {isSubmitting && <LinearProgress color="chat" />}
                 <Box
                     display="flex"
                     justifyContent="flex-end"
@@ -88,7 +94,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
                     <IconButton
                         aria-label="Send Chat"
                         color="primary"
-                        disabled={chat === undefined || Boolean(validationError)}
+                        disabled={chat === undefined || Boolean(validationError) || isSubmitting}
                         onClick={handleSendChat}
                     >
                         <SendIcon />

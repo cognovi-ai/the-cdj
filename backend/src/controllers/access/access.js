@@ -24,10 +24,10 @@ export const getAccount = async (req, res, next) => {
     const config = await Config.findById(journal.config);
 
     // Decrypt the config's apiKey
-    if (config) {
+    if (config && config.apiKey) {
       config.apiKey = config.decrypt();
     } else {
-      req.flash('info', 'Click the Config tab for chat and analysis setup.');
+      req.flash('info', 'Click the Config tab to complete your journal setup.');
     }
 
     req.flash('success', 'Found account information.');
@@ -92,12 +92,15 @@ export const updateAccount = async (req, res, next) => {
 
       // Update the optional fields of the config
       const { model, apiKey } = config;
+
       if (model) {
-        // Update chat and analysis fields separately
-        if (model.chat) response.model.chat = model.chat;
-        if (model.analysis) response.model.analysis = model.analysis;
+        // Update chat and analysis fields if they exist in the request body
+        if (model.chat !== undefined) model.chat ? response.model.chat = model.chat : response.model.chat = undefined;
+        if (model.analysis !== undefined) model.analysis ? response.model.analysis = model.analysis : response.model.analysis = undefined;
       }
-      if (apiKey) response.apiKey = response.encrypt(apiKey);
+
+      // Update the apiKey field if it exists in the request body
+      if (apiKey !== undefined) apiKey ? response.apiKey = response.encrypt(apiKey) : response.apiKey = undefined;
 
       await response.save();
 
