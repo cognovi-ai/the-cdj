@@ -5,6 +5,7 @@ import { Router } from 'express';
 import catchAsync from '../../utils/catchAsync.js';
 
 import { entryController as controller } from '../../controllers/index.js';
+import { createAnalysis } from '../../middleware/entry/analysis.js';
 import { isAuthenticated } from '../../middleware/access.js';
 
 // root path: /journals/:journalId/entries
@@ -18,7 +19,7 @@ router.use(isAuthenticated);
  */
 router.route('/')
   .get(catchAsync(controller.getAllEntries))
-  .post(validateEntry, catchAsync(controller.createEntry));
+  .post(validateEntry, catchAsync(controller.createEntry), catchAsync(createAnalysis));
 
 router.route('/:entryId')
   .get(catchAsync(controller.getAnEntry))

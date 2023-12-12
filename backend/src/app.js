@@ -8,6 +8,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import flash from 'connect-flash';
+
+import { initSSE } from './utils/sse.js';
+
 import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session';
@@ -64,6 +67,7 @@ passport.deserializeUser(User.deserializeUser());
 app.use(morgan('dev'));
 
 // routes
+app.use('/stream', initSSE);
 app.use('/journals/:journalId/entries', entry);
 app.use('/access', access);
 
