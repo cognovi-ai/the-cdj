@@ -3,6 +3,7 @@ import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '
 import ExpressError from '../../utils/ExpressError.js';
 
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import passport from 'passport';
 
 import { validateJournal } from '../../middleware/validation.js';
@@ -183,6 +184,16 @@ export const login = async (req, res, next) => {
       return next(new ExpressError(info.message, 401));
     }
 
+    // Generate a token if the user wants to be remembered
+    let token;
+    if (req.body.remember) {
+      try {
+        token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      } catch (err) {
+        req.flash('error', err.message);
+      }
+    }
+
     req.logIn(user, async (err) => {
       if (err) { return next(err); }
       // Handle successful login
@@ -198,8 +209,9 @@ export const login = async (req, res, next) => {
         await newJournal.save();
       }
 
+      if (token) req.flash('info', 'You will be logged out after 7 days.');
       req.flash('success', 'Logged in successfully.');
-      res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
+      res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash(), token });
     });
   })(req, res, next);
 };

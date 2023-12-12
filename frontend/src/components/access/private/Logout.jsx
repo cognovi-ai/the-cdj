@@ -48,6 +48,9 @@ export default function Logout() {
                     setJournalId('');
                     setJournalTitle('');
 
+                    // Remove token and journal ID from local storage
+                    localStorage.removeItem('token');
+
                     navigate('/login', { replace: true })
                 }, 2000);
 

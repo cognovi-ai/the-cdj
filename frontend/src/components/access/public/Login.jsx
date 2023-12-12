@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { useAccess } from '../../../hooks/useAccess';
 import { useJournal } from '../../../context/useJournal';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 function Copyright(props) {
     return (
@@ -25,6 +26,8 @@ function Copyright(props) {
 }
 
 export default function Login() {
+    const [isRememberMeChecked, setIsRememberMeChecked] = useState(false);
+
     const { setJournalId, setJournalTitle } = useJournal();
 
     const access = useAccess();
@@ -34,6 +37,10 @@ export default function Login() {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
 
+        if (!isRememberMeChecked) {
+            localStorage.removeItem('token');
+        }
+
         try {
             const data = await access(
                 '/login',
@@ -42,11 +49,16 @@ export default function Login() {
                 {
                     email: formData.get('email'),
                     password: formData.get('password'),
+                    remember: isRememberMeChecked === true,
                 });
 
             // Set the journal ID and title in the context
             setJournalId(data.journalId);
             setJournalTitle(data.journalTitle);
+
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
 
             // Redirect to the entries page
             navigate('/entries', { replace: true });
@@ -94,7 +106,13 @@ export default function Login() {
                         type="password"
                     />
                     <FormControlLabel
-                        control={<Checkbox color="primary" value="remember" />}
+                        control={
+                            <Checkbox
+                                checked={isRememberMeChecked}
+                                color="primary"
+                                onChange={() => setIsRememberMeChecked(!isRememberMeChecked)}
+                            />
+                        }
                         label="Remember me"
                     />
                     <Button
