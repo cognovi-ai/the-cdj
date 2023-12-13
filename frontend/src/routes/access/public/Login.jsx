@@ -18,7 +18,7 @@ export default function LoginRoute() {
     useEffect(() => {
         const login = async () => {
             const data = await access(
-                '/login',
+                '/token-login',
                 'POST',
                 {
                     'Content-Type': 'application/json',

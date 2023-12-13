@@ -1,4 +1,4 @@
-import { hasToken, isAuthenticated } from '../../middleware/access.js';
+import { isAuthenticated, isLoggedIn } from '../../middleware/access.js';
 import { validateAccount, validateLogin, validateNewPassword, validateRegistration } from '../../middleware/validation.js';
 
 import { Router } from 'express';
@@ -16,7 +16,10 @@ router.route('/:journalId/account')
   .delete(isAuthenticated, catchAsync(controller.deleteItem));
 
 router.route('/login')
-  .post(validateLogin, hasToken, catchAsync(controller.login));
+  .post(validateLogin, catchAsync(controller.login));
+
+router.route('/token-login')
+  .post(isLoggedIn, catchAsync(controller.tokenLogin));
 
 router.route('/forgot-password')
   .post(catchAsync(controller.forgotPassword));

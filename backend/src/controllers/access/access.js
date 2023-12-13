@@ -176,29 +176,6 @@ export const deleteItem = async (req, res, next) => {
  * Login a user.
  */
 export const login = async (req, res, next) => {
-  if (req.token) {
-    const { token } = req;
-
-    // Retrieve the user's journal
-    const journal = await Journal.findOne({ user: token.id }).populate('user');
-
-    // If user has no journal or the token is expired, return error
-    if (!journal) {
-      return next(new ExpressError('Journal not found.', 404));
-    }
-
-    // Log the user in
-    return req.logIn(journal.user, function (err) {
-      // Show info message only for first 12 hours by iat timestamp
-      if (token.iat + 43200 > Date.now() / 1000) req.flash('info', 'Logging out will prevent automatic future logins.');
-
-      req.flash('success', 'Automatically logged in successfully.');
-
-      if (err) { return next(err); }
-      return res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
-    });
-  }
-
   passport.authenticate('local', (err, user, info) => {
     if (err) { return next(err); }
 
@@ -237,6 +214,36 @@ export const login = async (req, res, next) => {
       res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash(), token });
     });
   })(req, res, next);
+};
+
+/**
+ * Login a user with a token.
+ */
+export const tokenLogin = async (req, res, next) => {
+  if (req.token) {
+    const { token } = req;
+
+    // Retrieve the user's journal
+    const journal = await Journal.findOne({ user: token.id }).populate('user');
+
+    // If user has no journal or the token is expired, return error
+    if (!journal) {
+      return next(new ExpressError('Journal not found.', 404));
+    }
+
+    // Log the user in
+    req.logIn(journal.user, function (err) {
+      // Show info message only for first 12 hours by iat timestamp
+      if (token.iat + 43200 > Date.now() / 1000) req.flash('info', 'Logging out will prevent automatic future logins.');
+
+      req.flash('success', 'Automatically logged in successfully.');
+
+      if (err) { return next(err); }
+      return res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
+    });
+  } else {
+    return next(new ExpressError('Token is invalid or has expired.', 403));
+  }
 };
 
 /**
