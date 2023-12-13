@@ -17,22 +17,27 @@ export default function LoginRoute() {
 
     useEffect(() => {
         const login = async () => {
-            const data = await access(
-                '/token-login',
-                'POST',
-                {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${ token }`
-                },
-            );
+            try {
+                const data = await access(
+                    '/token-login',
+                    'POST',
+                    {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ token }`
+                    },
+                );
 
-            // Set the journal ID and title in the context
-            setJournalId(data.journalId);
-            setJournalTitle(data.journalTitle);
+                // Set the journal ID and title in the context
+                setJournalId(data.journalId);
+                setJournalTitle(data.journalTitle);
 
-            // Navigate back to the previous page
-            const previousPage = location.state?.from || '/entries';
-            navigate(previousPage);
+                // Navigate back to the previous page
+                const previousPage = location.state?.from || '/entries';
+                navigate(previousPage);
+
+            } catch (error) {
+                localStorage.removeItem('token');
+            }
         }
 
         if (token) {
