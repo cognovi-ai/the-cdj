@@ -45,7 +45,7 @@ export const validateRegistration = (req, res, next) => {
   const { error, value } = User.registrationJoi.validate(req.body, {
     allowUnknown: true,
     stripUnknown: true,
-    abortEarly: false
+    abortEarly: true
   });
 
   if (error) {

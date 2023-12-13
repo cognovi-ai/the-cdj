@@ -344,6 +344,8 @@ export const register = async (req, res, next) => {
       return next(err);
     });
 
+    if (!newUser) return;
+
     // Call validateJournal middleware
     validateJournal(req, res, async (err) => {
       if (err) return next(err); // Handle validation errors
