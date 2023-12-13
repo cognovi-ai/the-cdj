@@ -15,7 +15,7 @@ journalSchema.statics.joi = Joi.object({
     .max(100)
     .trim()
     .empty('')
-    .default('Untitled')
+    .default('The Cognitive Distortion Journal')
 });
 
 // Indexing on user as journals will often be queried per user.
