@@ -53,7 +53,7 @@ const createPasswordValidation = (isRequired = false) => {
     .pattern(/^[a-zA-Z0-9_!]{8,30}$/)
     .messages({
       'string.min': 'Password must be at least 8 characters long.',
-      'string.pattern.base': 'Password must contain only alphanumeric characters and special characters.'
+      'string.pattern.base': 'Password must contain only alphanumeric characters, underscores, and exclamation points.'
     });
   return isRequired ? validator.required() : validator;
 };
@@ -117,10 +117,10 @@ userSchema.index({ fname: 1, lname: 1 });
 userSchema.plugin(passportLocalMongoose, {
   usernameField: 'email',
   errorMessages: {
-    IncorrectPasswordError: 'Incorrect login credentials',
-    IncorrectUsernameError: 'Incorrect login credentials',
-    MissingUsernameError: 'No email was given',
-    UserExistsError: 'Email already in use'
+    IncorrectPasswordError: 'Incorrect login credentials.',
+    IncorrectUsernameError: 'Incorrect login credentials.',
+    MissingUsernameError: 'No email was given.',
+    UserExistsError: 'The email address provided cannot be used.'
   }
 });
 
