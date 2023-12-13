@@ -71,7 +71,8 @@ const modelFieldValidation = Joi.string()
 // Base Joi validation schema
 userSchema.statics.baseJoi = Joi.object({
   email: createEmailValidation(true),
-  password: createPasswordValidation(true)
+  password: createPasswordValidation(true),
+  remember: Joi.boolean()
 });
 
 // Registration Joi validation schema
