@@ -130,33 +130,27 @@ export default function Entries() {
                 </Item>
             </Grid>
             <Grid item md={6} xs={12}>
-                <Item>
-                    <Analysis
-                        editedEntryId={editedEntryId}
-                        focusedEntryId={focusedEntryId}
-                        journalId={journalId}
-                    />
-                </Item>
+                {focusedEntryId && <Analysis
+                    editedEntryId={editedEntryId}
+                    focusedEntryId={focusedEntryId}
+                    journalId={journalId}
+                />}
             </Grid>
-            <Grid item md={6} xs={12}>
-                <Item>
-                    <Entry
-                        journalId={journalId}
-                        setEntries={setAllEntries}
-                        setFocusedEntryId={setFocusedEntryId}
-                    />
-                </Item>
-                <Item>
-                    <Thoughts
-                        allEntries={allEntries}
-                        editedEntryId={editedEntryId}
-                        focusedEntryId={focusedEntryId}
-                        journalId={journalId}
-                        setAllEntries={setAllEntries}
-                        setEditedEntryId={setEditedEntryId}
-                        setFocusedEntryId={setFocusedEntryId}
-                    />
-                </Item>
+            <Grid item md={focusedEntryId ? 6 : 12} xs={12}>
+                <Entry
+                    journalId={journalId}
+                    setEntries={setAllEntries}
+                    setFocusedEntryId={setFocusedEntryId}
+                />
+                {focusedEntryId && <Thoughts
+                    allEntries={allEntries}
+                    editedEntryId={editedEntryId}
+                    focusedEntryId={focusedEntryId}
+                    journalId={journalId}
+                    setAllEntries={setAllEntries}
+                    setEditedEntryId={setEditedEntryId}
+                    setFocusedEntryId={setFocusedEntryId}
+                />}
             </Grid>
         </Grid>
     );

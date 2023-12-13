@@ -2,6 +2,8 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Chat from './chat/Chat';
+
+import { Item } from '../../utils/Item';
 import { useEntries } from '../../../hooks/useEntries';
 
 export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
@@ -36,18 +38,18 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
     }, [focusedEntryId, editedEntryId]);
 
     return (
-        <div>
+        <Item>
             <Box>
-                <Typography variant="h2">Thought Analysis</Typography>
+                <Typography variant="h2">{focusedData?.entry?.title}</Typography>
                 <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
-                        <Typography variant="body1">{focusedData && focusedData.entry && focusedData.entry.content}</Typography>
+                        <Typography variant="body1">{focusedData?.entry?.content}</Typography>
                     </Grid>
                     <Grid item md={6} xs={12}>
-                        <Typography variant="body2">{focusedData && focusedData.analysis_content}</Typography>
+                        <Typography variant="body2">{focusedData?.analysis_content}</Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <Typography variant="caption">{focusedData && focusedData.created_at}</Typography>
+                        <Typography variant="caption">{focusedData?.created_at}</Typography>
                     </Grid>
                 </Grid>
             </Box>
@@ -59,6 +61,6 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
                     setChat={setChat}
                 />
             </Box>
-        </div>
+        </Item>
     );
 }
