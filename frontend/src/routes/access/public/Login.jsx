@@ -32,7 +32,6 @@ export default function LoginRoute() {
 
             // Navigate back to the previous page
             const previousPage = location.state?.from || '/entries';
-
             navigate(previousPage);
         }
 

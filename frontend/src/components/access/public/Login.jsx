@@ -1,4 +1,5 @@
 import { Avatar, Box, Button, Checkbox, Container, FormControlLabel, Grid } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { AltRoute } from '@mui/icons-material';
 
@@ -8,7 +9,6 @@ import Typography from '@mui/material/Typography';
 
 import { useAccess } from '../../../hooks/useAccess';
 import { useJournal } from '../../../context/useJournal';
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 function Copyright(props) {
@@ -32,6 +32,7 @@ export default function Login() {
 
     const access = useAccess();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -60,8 +61,9 @@ export default function Login() {
                 localStorage.setItem('token', data.token);
             }
 
-            // Redirect to the entries page
-            navigate('/entries', { replace: true });
+            // Navigate back to the previous page
+            const previousPage = location.state?.from || '/entries';
+            navigate(previousPage);
 
         } catch (error) {
             console.error(error);
