@@ -1,3 +1,4 @@
+import { hasToken, isAuthenticated } from '../../middleware/access.js';
 import { validateAccount, validateLogin, validateNewPassword, validateRegistration } from '../../middleware/validation.js';
 
 import { Router } from 'express';
@@ -5,7 +6,6 @@ import { Router } from 'express';
 import catchAsync from '../../utils/catchAsync.js';
 
 import { accessController as controller } from '../../controllers/index.js';
-import { isAuthenticated } from '../../middleware/access.js';
 
 // root path: /access
 const router = Router({ mergeParams: true });
@@ -16,7 +16,7 @@ router.route('/:journalId/account')
   .delete(isAuthenticated, catchAsync(controller.deleteItem));
 
 router.route('/login')
-  .post(validateLogin, catchAsync(controller.login));
+  .post(validateLogin, hasToken, catchAsync(controller.login));
 
 router.route('/forgot-password')
   .post(catchAsync(controller.forgotPassword));

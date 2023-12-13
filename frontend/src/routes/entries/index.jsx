@@ -11,7 +11,7 @@ export default function Index() {
 
     useEffect(() => {
         if (!journalId) {
-            navigate('/login');
+            navigate('/login', { state: { from: '/entries' } });
         }
 
     }, [journalId]);

@@ -5,6 +5,9 @@ import ExpressError from '../utils/ExpressError.js';
  * Validate the request body for login data.
  */
 export const validateLogin = (req, res, next) => {
+  // Requesting authorization with token
+  if (req.headers.authorization) return next();
+
   const { error, value } = User.baseJoi.validate(req.body, {
     allowUnknown: true,
     stripUnknown: true,

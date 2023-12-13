@@ -11,12 +11,6 @@ export function useEntries() {
 
     const response = async (endpoint, method, headers = {}, body = {}) => {
         try {
-            // Add Authorization header if a token is present
-            const token = localStorage.getItem('token');
-            if (token) {
-                headers.Authorization = `Bearer ${ token }`;
-            }
-
             // Construct the URL with the specific journal ID
             const url = BASE_URL + journalId + '/entries' + endpoint;
 

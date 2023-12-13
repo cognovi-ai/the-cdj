@@ -13,7 +13,7 @@ export default function AccountRoute() {
 
     useEffect(() => {
         if (!journalId) {
-            navigate('/login');
+            navigate('/login', { state: { from: '/account' } });
         }
 
     }, [journalId]);
