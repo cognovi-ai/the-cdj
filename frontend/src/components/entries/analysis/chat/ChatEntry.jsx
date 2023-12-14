@@ -68,7 +68,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
     }
 
     return (
-        <div>
+        <>
             <form onSubmit={handleSendChat}>
                 <TextField
                     disabled={chat === undefined || isSubmitting}
@@ -101,6 +101,6 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
                     </IconButton>
                 </Box>
             </form>
-        </div>
+        </>
     )
 }

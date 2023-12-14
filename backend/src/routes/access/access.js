@@ -10,6 +10,9 @@ import { accessController as controller } from '../../controllers/index.js';
 // root path: /access
 const router = Router({ mergeParams: true });
 
+router.route('/journal/:journalId')
+  .put(isAuthenticated, catchAsync(controller.updateJournal));
+
 router.route('/:journalId/account')
   .get(isAuthenticated, catchAsync(controller.getAccount))
   .put(isAuthenticated, validateAccount, catchAsync(controller.updateAccount))

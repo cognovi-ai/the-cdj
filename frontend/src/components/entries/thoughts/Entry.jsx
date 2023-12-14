@@ -1,5 +1,6 @@
 import { Box, Button, InputLabel, LinearProgress, TextField, Typography } from '@mui/material';
 
+import { Item } from '../../utils/Item';
 import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -64,7 +65,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
     };
 
     return (
-        <div>
+        <Item>
             <InputLabel htmlFor="new-entry" sx={{ color: 'inherit' }}>
                 <Typography variant="h2">Thought Entry</Typography>
             </InputLabel>
@@ -100,6 +101,6 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
                     </Button>
                 </Box>
             </form>
-        </div>
+        </Item>
     );
 }

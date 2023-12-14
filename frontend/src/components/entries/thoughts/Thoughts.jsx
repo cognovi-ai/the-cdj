@@ -3,6 +3,7 @@ import './Thoughts.css'
 import { Box, Button, CircularProgress, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
+import { Item } from '../../utils/Item';
 import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -151,7 +152,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
     };
 
     return (
-        <div>
+        <Item>
             <Grid container>
                 <Grid item>
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
@@ -170,7 +171,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     }}>
                     <Typography variant="body1">{entry.title}</Typography>
                     {editing && editedEntryId === entry._id ? (
-                        <div>
+                        <>
                             <TextField
                                 autoFocus
                                 disabled={isSubmitting}
@@ -206,9 +207,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                                     Cancel
                                 </Button>
                             </Box>
-                        </div>
+                        </>
                     ) : (
-                        <div>
+                        <>
                             <IconButton
                                 aria-label="Focus"
                                 color="primary"
@@ -232,10 +233,10 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             >
                                 <DeleteIcon />
                             </IconButton>
-                        </div>
+                        </>
                     )}
                 </Box>
             ))}
-        </div>
+        </Item>
     );
 }
