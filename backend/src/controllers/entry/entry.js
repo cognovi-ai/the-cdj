@@ -186,6 +186,50 @@ export const getEntryAnalysis = async (req, res, next) => {
 };
 
 /**
+ * Update the analysis of an entry by entry ID.
+ */
+export const updateEntryAnalysis = async (req, res, next) => {
+  const { entryId, journalId } = req.params;
+
+  // Ensure that the journal exists
+  const journal = await Journal.findById(journalId);
+  if (!journal) {
+    return next(new ExpressError('Journal not found.', 404));
+  }
+
+  const entry = await Entry.findById(entryId);
+
+  if (!entry) {
+    return next(new ExpressError('Entry not found.', 404));
+  }
+
+  const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
+
+  try {
+    const response = await oldAnalysis.getAnalysisContent(journal.config, entry.content);
+    // Parse the response
+    const analysis = JSON.parse(response);
+
+    // Complete the entry and analysis with the analysis content if available
+    if (analysis) {
+      entry.title = analysis.title;
+      entry.mood = analysis.mood;
+      entry.tags = analysis.tags;
+
+      oldAnalysis.analysis_content = analysis.analysis_content;
+
+      oldAnalysis.save();
+      entry.save();
+    }
+  } catch (err) {
+    req.flash('info', err.message);
+  }
+
+  req.flash('success', 'Successfully generated a new analysis.');
+  res.status(200).json({ flash: req.flash() });
+};
+
+/**
  * Get a conversation for a specific entry.
  */
 export const getEntryConversation = async (req, res) => {

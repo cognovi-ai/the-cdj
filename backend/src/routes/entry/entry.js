@@ -29,7 +29,8 @@ router.route('/:entryId')
  * Entry analysis routes.
  */
 router.route('/:entryId/analysis')
-  .get(catchAsync(controller.getEntryAnalysis));
+  .get(catchAsync(controller.getEntryAnalysis))
+  .put(catchAsync(controller.updateEntryAnalysis));
 
 /**
  * Entry conversation routes.
