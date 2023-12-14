@@ -203,10 +203,10 @@ export const updateEntryAnalysis = async (req, res, next) => {
     return next(new ExpressError('Entry not found.', 404));
   }
 
-  const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
+  const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
   try {
-    const response = await oldAnalysis.getAnalysisContent(journal.config, entry.content);
+    const response = await entryAnalysis.getAnalysisContent(journal.config, entry.content);
     // Parse the response
     const analysis = JSON.parse(response);
 
@@ -216,9 +216,9 @@ export const updateEntryAnalysis = async (req, res, next) => {
       entry.mood = analysis.mood;
       entry.tags = analysis.tags;
 
-      oldAnalysis.analysis_content = analysis.analysis_content;
+      entryAnalysis.analysis_content = analysis.analysis_content;
 
-      oldAnalysis.save();
+      entryAnalysis.save();
       entry.save();
     }
   } catch (err) {
@@ -226,7 +226,7 @@ export const updateEntryAnalysis = async (req, res, next) => {
   }
 
   req.flash('success', 'Successfully generated a new analysis.');
-  res.status(200).json({ flash: req.flash() });
+  res.status(200).json({ ...(entryAnalysis)._doc, entry: entry._doc, flash: req.flash() });
 };
 
 /**

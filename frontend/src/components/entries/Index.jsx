@@ -134,6 +134,7 @@ export default function Entries() {
                     editedEntryId={editedEntryId}
                     focusedEntryId={focusedEntryId}
                     journalId={journalId}
+                    setAllEntries={setAllEntries}
                 />}
             </Grid>
             <Grid item md={focusedEntryId ? 6 : 12} xs={12}>

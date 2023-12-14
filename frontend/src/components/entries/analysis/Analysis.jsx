@@ -7,7 +7,7 @@ import { Item } from '../../utils/Item';
 import { Update as UpdateIcon } from '@mui/icons-material';
 import { useEntries } from '../../../hooks/useEntries';
 
-export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
+export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries }) {
     const [focusedData, setFocusedData] = useState({});
     const [updating, setUpdating] = useState(false);
     const [chat, setChat] = useState({});
@@ -46,11 +46,17 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId }) {
             setUpdating(true);
 
             try {
-                await entries(`/${ focusedEntryId }/analysis`, 'PUT');
+                const response = await entries(`/${ focusedEntryId }/analysis`, 'PUT');
 
-                const entryAnalysisData = await entries(`/${ focusedEntryId }/analysis`, 'GET');
+                // Re-render this component
+                setFocusedData({ ...response });
 
-                setFocusedData(entryAnalysisData);
+                // Side-effect re-renders sibling Thoughts component
+                setAllEntries(allEntries => allEntries.map(entry =>
+                    entry._id === focusedEntryId ? { ...response.entry } : entry
+                ));
+
+
             } catch (error) {
                 console.error(error);
             } finally {
