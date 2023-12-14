@@ -56,7 +56,6 @@ export const getAccount = async (req, res, next) => {
       req.flash('info', 'Click the Config tab to complete your journal setup.');
     }
 
-    req.flash('success', 'Found account information.');
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
     return next(err);
@@ -242,7 +241,7 @@ export const login = async (req, res, next) => {
       }
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
-      req.flash('success', 'Logged in successfully.');
+      req.flash('success', `Welcome back, ${ user.fname }. You've been logged in successfully.`);
       res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash(), token });
     });
   })(req, res, next);
@@ -268,7 +267,7 @@ export const tokenLogin = async (req, res, next) => {
       // Show info message only for first 12 hours by iat timestamp
       if (token.iat + 43200 > Date.now() / 1000) req.flash('info', 'Logging out will prevent automatic future logins.');
 
-      req.flash('success', 'Automatically logged in successfully.');
+      req.flash('success', `Welcome back, ${ journal.user.fname }. You've been automatically logged in successfully.`);
 
       if (err) { return next(err); }
       return res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
@@ -390,7 +389,7 @@ export const register = async (req, res, next) => {
       req.login(newUser, err => {
         if (err) return next(err);
 
-        req.flash('success', 'Registered successfully.');
+        req.flash('success', `Welcome, ${ fname }. You've been registered successfully.`);
         res.status(200).json({ journalId: newJournal._id, journalTitle: newJournal.title, flash: req.flash() });
       });
     });
