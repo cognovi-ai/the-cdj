@@ -220,12 +220,12 @@ export const updateEntryAnalysis = async (req, res, next) => {
 
       entryAnalysis.save();
       entry.save();
+      req.flash('success', 'Successfully generated a new analysis.');
     }
   } catch (err) {
     req.flash('info', err.message);
   }
 
-  req.flash('success', 'Successfully generated a new analysis.');
   res.status(200).json({ ...(entryAnalysis)._doc, entry: entry._doc, flash: req.flash() });
 };
 
