@@ -63,7 +63,6 @@ export const createEntry = async (req, res, next) => {
     } finally {
       await newEntry.save();
       await newAnalysis.save();
-      req.flash('success', 'Successfully created entry.');
     }
 
     res.status(201).json({ ...(await newEntry.save())._doc, flash: req.flash() });

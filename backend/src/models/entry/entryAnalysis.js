@@ -35,7 +35,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   const config = await Config.findById(configId);
 
   if (!config) {
-    throw new Error('Configure account settings to get an analysis.');
+    throw new Error('Configure your account settings to get an analysis.');
   }
 
   const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
