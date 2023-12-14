@@ -19,7 +19,6 @@ entryConversationSchema.statics.joi = Joi.object({
   messages: Joi.array().items(Joi.object({
     message_content: Joi.string()
       .min(1)
-      .max(280)
       .trim()
       .required(),
     llm_response: Joi.string()
