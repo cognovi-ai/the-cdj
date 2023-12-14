@@ -80,7 +80,6 @@ export const updateAccount = async (req, res, next) => {
       // Find and update the user associated with the journal
       const user = await User.findByIdAndUpdate(journal.user, profile);
       if (!user) return next(new ExpressError('User not found.', 404));
-
       req.flash('success', 'Profile updated successfully.');
     }
 
@@ -131,6 +130,11 @@ export const updateAccount = async (req, res, next) => {
       await response.save();
 
       req.flash('success', 'Config updated successfully.');
+    }
+
+    // If the email was updated, re-authenticate the user
+    if (profile?.email || password) {
+      req.flash('info', 'Please log in again with your new credentials.');
     }
 
     res.status(200).json({ flash: req.flash() });

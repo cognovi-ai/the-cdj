@@ -11,6 +11,8 @@ import { useAccess } from '../../../../hooks/useAccess';
 import { useAccount } from '../../../../context/useAccount';
 import { useJournal } from '../../../../context/useJournal';
 
+import { useNavigate } from 'react-router-dom';
+
 const steps = ['Profile', 'Password', 'Config'];
 
 function buildRequestBody(account) {
@@ -68,6 +70,7 @@ export default function Account() {
 
     const { journalId } = useJournal();
     const access = useAccess();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const makeRequest = async () => {
@@ -139,6 +142,7 @@ export default function Account() {
     };
 
     const handleUpdate = async () => {
+        let requireReauth = false;
         try {
             // Build body based on accountMapping
             const body = buildRequestBody({ profile, password, config });
@@ -159,6 +163,10 @@ export default function Account() {
                     body
                 );
 
+                if (profile.email || password) {
+                    requireReauth = true;
+                }
+
                 setProfile({});
                 setPassword({});
                 setConfig({});
@@ -169,6 +177,10 @@ export default function Account() {
         } finally {
             setTimeout(() => {
                 setUpdating(false);
+
+                if (requireReauth) {
+                    navigate('/login', { state: { from: '/account' } });
+                }
             }, 3000);
         }
     }
