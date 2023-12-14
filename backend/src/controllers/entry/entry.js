@@ -16,8 +16,6 @@ export const getAllEntries = async (req, res) => {
 
   if (entries.length === 0) {
     req.flash('info', 'Submit your first entry to get started.');
-  } else {
-    req.flash('success', 'Successfully retrieved entries.');
   }
 
   res.status(200).json({ entries, flash: req.flash() });
@@ -316,6 +314,5 @@ export const updateEntryConversation = async (req, res, next) => {
     { new: true }
   );
 
-  req.flash('success', 'Successfully updated conversation.');
   res.status(200).json({ ...(response)._doc, flash: req.flash() });
 };
