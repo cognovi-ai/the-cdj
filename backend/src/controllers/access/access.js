@@ -78,7 +78,10 @@ export const updateAccount = async (req, res, next) => {
     // Update the User model with the profile data
     if (profile) {
       // Find and update the user associated with the journal
-      const user = await User.findByIdAndUpdate(journal.user, profile);
+      const user = await User.findByIdAndUpdate(journal.user, profile)
+        .catch(() => {
+          req.flash('warning', 'The email address provided cannot be used.');
+        });
       if (!user) return next(new ExpressError('User not found.', 404));
       req.flash('success', 'Profile updated successfully.');
     }
