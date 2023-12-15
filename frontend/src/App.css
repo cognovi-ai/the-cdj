@@ -1,7 +1,6 @@
-body {
-    background-color: rgba(0, 0, 0, 0.5);
-    background-image: url('/home_books_on_table.jpg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+.outlet {
+    background-color: rgba(255, 255, 255, 0.35);
+    height: 100vh;
+    padding: 2em;
+    box-shadow: 'none';
 }
