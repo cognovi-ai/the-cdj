@@ -1,3 +1,5 @@
+import './Account.css';
+
 import { Box, Button, Container, LinearProgress, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
@@ -186,8 +188,8 @@ export default function Account() {
     }
 
     return (
-        <Container component="main" maxWidth="sm" sx={{ mb: 4 }}>
-            <Paper sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }} variant="outlined">
+        <Container className="account" component="main" maxWidth="sm" sx={{ mb: 4 }}>
+            <Paper className="tab" sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }} variant="outlined">
                 <Typography align="center" component="h1" variant="h4">
                     Account
                 </Typography>

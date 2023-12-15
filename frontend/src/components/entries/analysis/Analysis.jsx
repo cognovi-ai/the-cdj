@@ -137,7 +137,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
     }
 
     return (
-        <Item>
+        <Item sx={{ padding: '1em', margin: '1em' }}>
             <Box>
                 <Typography variant="h2">
                     {focusedData?.entry?.title}

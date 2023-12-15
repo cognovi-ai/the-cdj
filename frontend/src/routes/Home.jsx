@@ -2,12 +2,12 @@ import './Home.css'
 
 import { Box, Typography } from '@mui/material';
 
-import { Item } from '../components/utils/Item';
+import { Body } from '../components/utils/Body';
 
 export default function Home() {
     return (
-        <Box display="flex">
-            <Item>
+        <Box className="home" display="flex">
+            <Body>
                 <Typography
                     align="center"
                     className="title"
@@ -18,7 +18,7 @@ export default function Home() {
                     The Cognitive Distortion Journal
                 </Typography>
                 <Typography
-                    margin="2em 10em"
+                    margin="2em"
                     marginBottom="4em"
                     variant="body1"
                 >
@@ -33,13 +33,12 @@ export default function Home() {
                 <Typography
                     align="center"
                     fontSize={12}
-                    margin="0.5em"
                     title="Iris Murdoch"
                     variant="body2"
                 >
                     Iris Murdoch
                 </Typography>
-            </Item >
-        </Box >
+            </Body>
+        </Box>
     );
 }

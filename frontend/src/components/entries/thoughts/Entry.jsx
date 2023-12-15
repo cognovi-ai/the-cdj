@@ -65,7 +65,7 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
     };
 
     return (
-        <Item>
+        <Item sx={{ padding: '1em', margin: '1em' }}>
             <InputLabel htmlFor="new-entry" sx={{ color: 'inherit' }}>
                 <Typography variant="h2">Thought Entry</Typography>
             </InputLabel>
