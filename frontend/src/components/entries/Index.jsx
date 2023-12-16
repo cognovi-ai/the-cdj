@@ -103,7 +103,7 @@ export default function Entries() {
     return (
         <Grid container spacing={1}>
             <Grid item xs={12}>
-                <Item sx={{ padding: '1em', margin: '1em' }}>
+                <Item>
                     {enteringTitle ? (
                         <TextField
                             autoFocus
