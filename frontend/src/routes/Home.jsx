@@ -2,17 +2,16 @@ import './Home.css'
 
 import { Box, Typography } from '@mui/material';
 
-import { Item } from '../components/utils/Item';
-
 export default function Home() {
     return (
-        <Box display="flex">
-            <Item>
+        <Box className="home" display="flex" flexDirection="column">
+            <Box className="container">
                 <Typography
                     align="center"
                     className="title"
                     justifyContent="center"
                     marginBottom="2em"
+                    marginTop="4em"
                     variant="h1"
                 >
                     The Cognitive Distortion Journal
@@ -26,11 +25,12 @@ export default function Home() {
                 </Typography>
                 <Typography
                     align="center"
+                    className="quote"
                     variant="body2"
                 >
-                    We live in a <i>fantasy</i> world, a world of <i>illusion</i>. The great task in life is to <i>find reality</i>.
+                    We live in a <i>fantasy</i> world, a world of <i>illusion.</i> The great task in life is to <i>find reality.</i>
                 </Typography>
-            </Item >
+            </Box>
         </Box >
     );
 }
