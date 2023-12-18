@@ -5,8 +5,8 @@ import PopupDialog from '../../../../utils/PopupDialog';
 
 import { useAccess } from '../../../../../hooks/useAccess';
 
-import { useAccount } from '../../../../../context/useAccount';
-import { useJournal } from '../../../../../context/useJournal';
+import { useAccount } from '../../../../../contexts/useAccount';
+import { useJournal } from '../../../../../contexts/useJournal';
 import { useState } from 'react';
 
 const configFields = [

@@ -1,7 +1,7 @@
 import Logout from '../../../components/access/private/Logout';
 
 import { useEffect } from 'react';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 export default function LogoutRoute() {

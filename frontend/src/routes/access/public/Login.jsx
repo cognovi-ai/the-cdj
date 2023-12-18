@@ -4,7 +4,7 @@ import Login from '../../../components/access/public/Login'
 
 import { useAccess } from '../../../hooks/useAccess';
 import { useEffect } from 'react';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 
 export default function LoginRoute() {
     const token = localStorage.getItem('token');

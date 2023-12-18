@@ -1,7 +1,7 @@
 import { Box, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import MenuLink from './MenuLink';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 
 export default function NavMenuUnstacked({ navItems = {}, handleCloseNavMenu }) {
     const { journalId } = useJournal();

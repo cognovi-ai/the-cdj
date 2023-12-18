@@ -10,7 +10,7 @@ import Thoughts from './thoughts/Thoughts';
 
 import { useAccess } from '../../hooks/useAccess';
 import { useEntries } from '../../hooks/useEntries';
-import { useJournal } from '../../context/useJournal';
+import { useJournal } from '../../contexts/useJournal';
 import { useParams } from 'react-router-dom';
 
 export default function Entries() {
