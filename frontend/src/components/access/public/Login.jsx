@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { AltRoute } from '@mui/icons-material';
 
+import Copyright from '../../utils/Copyright';
 import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -10,20 +11,6 @@ import Typography from '@mui/material/Typography';
 import { useAccess } from '../../../hooks/useAccess';
 import { useJournal } from '../../../contexts/useJournal';
 import { useState } from 'react';
-
-function Copyright(props) {
-    return (
-        <Typography align="center" color="text.secondary" variant="body2" {...props}>
-            {'© 2023 '}
-            <MenuLink
-                page={{
-                    label: 'The Cognitive Distortion Journal',
-                    name: '',
-                    visibility: ''
-                }} />
-        </Typography>
-    );
-}
 
 export default function Login() {
     const [isRememberMeChecked, setIsRememberMeChecked] = useState(false);

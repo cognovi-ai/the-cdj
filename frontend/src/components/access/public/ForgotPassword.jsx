@@ -2,26 +2,13 @@ import { Avatar, Box, Button, Container, Grid } from '@mui/material';
 
 import { AltRoute } from '@mui/icons-material';
 
+import Copyright from '../../utils/Copyright';
 import MenuLink from '../../../components/nav/menus/MenuLink';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import { useAccess } from '../../../hooks/useAccess';
 import { useNavigate } from 'react-router-dom';
-
-function Copyright(props) {
-    return (
-        <Typography align="center" color="text.secondary" variant="body2" {...props}>
-            {'© 2023 '}
-            <MenuLink
-                page={{
-                    label: 'The Cognitive Distortion Journal',
-                    name: '',
-                    visibility: ''
-                }} />
-        </Typography>
-    );
-}
 
 export default function ForgotPassword() {
     const access = useAccess();
