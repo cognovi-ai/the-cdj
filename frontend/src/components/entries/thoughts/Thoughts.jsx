@@ -152,7 +152,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
     };
 
     return (
-        <Item sx={{ padding: '1em', margin: '1em' }}>
+        <Item>
             <Grid container>
                 <Grid item>
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
