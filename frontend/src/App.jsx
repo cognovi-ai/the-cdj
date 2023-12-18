@@ -1,6 +1,6 @@
 import './App.css'
 
-import { Body } from './styles/components'
+import { Body, Document } from './styles/components';
 import { CssBaseline } from '@mui/material';
 
 import FlashMessages from './components/utils/FlashMessages.jsx';
@@ -17,14 +17,16 @@ export default function App() {
     <>
       <CssBaseline />
       <ThemeProvider theme={theme}>
-        <JournalProvider>
-          <Header />
-          <Body>
-            <FlashMessages />
-            <Outlet />
-          </Body>
-        </JournalProvider>
-        <Footer />
+        <Document>
+          <JournalProvider>
+            <Header />
+            <Body>
+              <FlashMessages />
+              <Outlet />
+            </Body>
+          </JournalProvider>
+          <Footer />
+        </Document>
       </ThemeProvider>
     </>
   )
