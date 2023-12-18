@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Analysis from './analysis/Analysis';
 import Entry from './thoughts/Entry';
 
-import { Item } from '../utils/Item';
+import { Item } from '../../styles/components/Item';
 
 import Thoughts from './thoughts/Thoughts';
 

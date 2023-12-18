@@ -1,4 +1,4 @@
-import { Item } from './Item';
+import { Item } from '../../styles/components/Item';
 import { useRouteError } from 'react-router-dom';
 
 export default function ErrorPage() {

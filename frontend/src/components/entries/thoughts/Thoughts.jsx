@@ -3,7 +3,7 @@ import './Thoughts.css'
 import { Box, Button, CircularProgress, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
 
-import { Item } from '../../utils/Item';
+import { Item } from '../../../styles/components/Item';
 import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';

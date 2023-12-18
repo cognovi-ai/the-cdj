@@ -1,6 +1,6 @@
 import FlashMessage from './FlashMessage';
 
-import { Item } from './Item.jsx';
+import { Item } from '../../styles/components/Item.jsx';
 
 import { useFlash } from '../../context/useFlash';
 

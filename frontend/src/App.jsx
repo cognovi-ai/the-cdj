@@ -2,7 +2,6 @@ import './App.css'
 import { Box, CssBaseline } from '@mui/material';
 
 import FlashMessages from './components/utils/FlashMessages.jsx';
-
 import Footer from './components/body/Footer';
 import Header from './components/body/Header';
 
