@@ -8,7 +8,7 @@ import TitleStacked from './TitleStacked';
 import TitleUnstacked from './TitleUnstacked';
 import UserMenu from './menus/UserMenu';
 
-import { useJournal } from '../../context/useJournal';
+import { useJournal } from '../../contexts/useJournal';
 import { useTheme } from '@mui/material/styles';
 
 const navItems = {

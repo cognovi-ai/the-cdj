@@ -1,8 +1,8 @@
 import FlashMessage from './FlashMessage';
 
-import { Item } from './Item.jsx';
+import { Item } from '../../styles/components';
 
-import { useFlash } from '../../context/useFlash';
+import { useFlash } from '../../contexts/useFlash.jsx';
 
 export default function FlashMessages() {
     const { flash, setFlash } = useFlash();

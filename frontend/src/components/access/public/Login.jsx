@@ -8,7 +8,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import { useAccess } from '../../../hooks/useAccess';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 import { useState } from 'react';
 
 function Copyright(props) {

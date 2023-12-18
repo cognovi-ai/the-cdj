@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import { useAccess } from '../../../hooks/useAccess';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {

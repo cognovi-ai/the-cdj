@@ -1,6 +1,6 @@
 import { Box, Button, InputLabel, LinearProgress, TextField, Typography } from '@mui/material';
 
-import { Item } from '../../utils/Item';
+import { Item } from '../../../styles/components';
 import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';

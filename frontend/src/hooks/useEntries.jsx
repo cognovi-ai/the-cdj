@@ -1,5 +1,5 @@
-import { useFlash } from '../context/useFlash';
-import { useJournal } from '../context/useJournal';
+import { useFlash } from '../contexts/useFlash';
+import { useJournal } from '../contexts/useJournal';
 
 import { v4 as uuid } from 'uuid';
 

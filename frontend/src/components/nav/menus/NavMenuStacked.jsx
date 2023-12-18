@@ -5,7 +5,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 
 import MenuLink from './MenuLink';
 
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 
 export default function NavMenuStacked({
     navItems = {},

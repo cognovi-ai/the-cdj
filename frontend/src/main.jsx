@@ -5,7 +5,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import ErrorPage from './components/utils/ErrorPage'
 
-import { FlashProvider } from './context/FlashProvider.jsx';
+import { FlashProvider } from './contexts/FlashProvider.jsx';
 
 import Index from './routes/entries';
 import React from 'react'

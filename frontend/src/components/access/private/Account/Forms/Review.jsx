@@ -2,7 +2,7 @@ import { FormControlLabel, Grid, List, ListItem, ListItemText, Switch, Typograph
 
 import { useMemo, useState } from 'react';
 
-import { useAccount } from '../../../../../context/useAccount';
+import { useAccount } from '../../../../../contexts/useAccount';
 
 const names = {
     fname: 'First name',

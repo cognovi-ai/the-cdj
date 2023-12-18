@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import Chat from './chat/Chat';
 
-import { Item } from '../../utils/Item';
+import { Item } from '../../../styles/components';
 import { Update as UpdateIcon } from '@mui/icons-material';
 import { useEntries } from '../../../hooks/useEntries';
 

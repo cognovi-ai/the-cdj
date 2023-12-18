@@ -4,8 +4,8 @@ import PopupDialog from '../../../../utils/PopupDialog';
 
 import { useAccess } from '../../../../../hooks/useAccess';
 
-import { useAccount } from '../../../../../context/useAccount';
-import { useJournal } from '../../../../../context/useJournal';
+import { useAccount } from '../../../../../contexts/useAccount';
+import { useJournal } from '../../../../../contexts/useJournal';
 
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';

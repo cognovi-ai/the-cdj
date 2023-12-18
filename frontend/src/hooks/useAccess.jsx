@@ -1,4 +1,4 @@
-import { useFlash } from '../context/useFlash';
+import { useFlash } from '../contexts/useFlash';
 import { v4 as uuid } from 'uuid';
 
 const BASE_URL = 'http://192.168.50.157:3000/access';

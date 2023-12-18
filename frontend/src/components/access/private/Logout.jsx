@@ -6,7 +6,7 @@ import { AltRoute } from '@mui/icons-material';
 import MenuLink from '../../../components/nav/menus/MenuLink';
 
 import { useAccess } from '../../../hooks/useAccess';
-import { useJournal } from '../../../context/useJournal';
+import { useJournal } from '../../../contexts/useJournal';
 import { useNavigate } from 'react-router-dom';
 
 function Copyright(props) {
