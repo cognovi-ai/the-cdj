@@ -1,6 +1,6 @@
 import './Home.css'
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery } from '@mui/material';
 import { createRef, useEffect, useRef } from 'react';
 
 const cds = [
@@ -21,6 +21,9 @@ export default function Home() {
     const boxRef = useRef(null);
     const cdRefs = cds.map(() => ({ example: createRef(), distortion: createRef() }));
 
+    // Check if the screen size matches the 'md' breakpoint or larger
+    const matches = useMediaQuery(theme => theme.breakpoints.up('sm'));
+
     useEffect(() => {
         const scrollInterval = setInterval(() => {
             if (boxRef.current) {
@@ -29,15 +32,17 @@ export default function Home() {
         }, 50);
 
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('grow');
-                    entry.target.previousSibling.classList.add('shrink');
-                } else {
-                    entry.target.classList.remove('grow');
-                    entry.target.previousSibling.classList.remove('shrink');
-                }
-            });
+            if (matches) {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('grow');
+                        entry.target.previousSibling.classList.add('shrink');
+                    } else {
+                        entry.target.classList.remove('grow');
+                        entry.target.previousSibling.classList.remove('shrink');
+                    }
+                });
+            }
         }, { threshold: 0.5 });
 
         cdRefs.forEach((ref) => {
@@ -96,7 +101,7 @@ export default function Home() {
                                 align="center"
                                 className="cd-distortion"
                                 ref={cdRefs[index].distortion}
-                                variant="body1"
+                                variant="body2"
                             >
                                 {cd.distortion}
                             </Typography>
