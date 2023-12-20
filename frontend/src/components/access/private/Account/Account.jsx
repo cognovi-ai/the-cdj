@@ -2,7 +2,7 @@ import { Box, Button, Container, LinearProgress, Paper, Step, StepLabel, Stepper
 import { useEffect, useState } from 'react';
 
 import Config from './Forms/Config';
-import MenuLink from '../../../nav/menus/MenuLink';
+import Copyright from '../../../utils/Copyright';
 import Password from './Forms/Password';
 import Profile from './Forms/Profile';
 import Review from './Forms/Review';
@@ -41,21 +41,6 @@ const removeMatchingProperties = (source, reference) => {
         });
     }
 };
-
-
-function Copyright(props) {
-    return (
-        <Typography align="center" color="text.secondary" variant="body2" {...props}>
-            {'© 2023 '}
-            <MenuLink
-                page={{
-                    label: 'The Cognitive Distortion Journal',
-                    name: '',
-                    visibility: ''
-                }} />
-        </Typography>
-    );
-}
 
 export default function Account() {
     const [activeStep, setActiveStep] = useState(0);

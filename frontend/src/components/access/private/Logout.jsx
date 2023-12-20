@@ -3,25 +3,11 @@ import { useEffect, useState } from 'react';
 
 import { AltRoute } from '@mui/icons-material';
 
-import MenuLink from '../../../components/nav/menus/MenuLink';
+import Copyright from '../../utils/Copyright';
 
 import { useAccess } from '../../../hooks/useAccess';
 import { useJournal } from '../../../contexts/useJournal';
 import { useNavigate } from 'react-router-dom';
-
-function Copyright(props) {
-    return (
-        <Typography align="center" color="text.secondary" variant="body2" {...props}>
-            {'© 2023 '}
-            <MenuLink
-                page={{
-                    label: 'The Cognitive Distortion Journal',
-                    name: '',
-                    visibility: ''
-                }} />
-        </Typography>
-    );
-}
 
 export default function Logout() {
     const { setJournalId, setJournalTitle } = useJournal();
