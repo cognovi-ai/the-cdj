@@ -1,15 +1,7 @@
 .container {
     position: relative;
-    margin: 4em;
-}
-
-.container::before,
-.container::after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 30px;
-    z-index: 2;
+    margin-top: 2em;
+    margin-bottom: 2em;
 }
 
 .container::before {
@@ -33,36 +25,8 @@
         display: none;
     }
 
-    -ms-overflow-style: none;
     /* IE and Edge */
-    scrollbar-width: none;
+    -ms-overflow-style: none;
     /* Firefox */
-}
-
-.cd-distortion.grow {
-    animation: grow-font 5s ease-in-out forwards;
-}
-
-@keyframes grow-font {
-    from {
-        font-size: 0.7em;
-    }
-
-    to {
-        font-size: 1em;
-    }
-}
-
-.cd-example.shrink {
-    animation: shrink-font 6s ease-in-out forwards;
-}
-
-@keyframes shrink-font {
-    from {
-        font-size: 1em;
-    }
-
-    to {
-        font-size: 0.7em;
-    }
+    scrollbar-width: none;
 }
