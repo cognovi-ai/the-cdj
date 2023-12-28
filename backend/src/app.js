@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // use cors middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://192.168.50.157:5173'],
+  origin: [process.env.DEV_ORIGIN_LOCAL_URL, process.env.DEV_ORIGIN_PRIVATE_URL],
   credentials: true
 }));
 
