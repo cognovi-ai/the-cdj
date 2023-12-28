@@ -1,6 +1,6 @@
 export default class Assistant {
   constructor(bearer, model = '', temperature = 0.7) {
-    this.baseUrl = 'https://api.openai.com/v1';
+    this.baseUrl = process.env.OPENAI_API_URL;
     this.bearer = `Bearer ${ bearer }`;
     this.model = model;
     this.temperature = temperature;
