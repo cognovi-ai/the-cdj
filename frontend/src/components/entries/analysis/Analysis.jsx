@@ -138,10 +138,10 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
 
     return (
         <Item>
-            <Box>
-                <Typography variant="h2">
-                    {focusedData?.entry?.title}
-                </Typography>
+            <Typography variant="h2">
+                {focusedData?.entry?.title}
+            </Typography>
+            <Box sx={{ maxHeight: '45vh', overflow: 'auto' }}>
                 <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
                         {editing ? (
