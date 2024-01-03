@@ -1,10 +1,10 @@
 import './Messages.css';
 
-import { Grid, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 export default function Messages({ chat }) {
     return (
-        <>
+        <Box sx={{ width: '100%' }}>
             {chat && chat.messages && chat.messages.map((message, index) => (
                 <Grid container key={index} margin="0 0 1em" spacing={1}>
                     <Grid item xs={4} />
@@ -26,6 +26,6 @@ export default function Messages({ chat }) {
                     </Grid>
                 </Grid>
             ))}
-        </>
+        </Box>
     );
 }
