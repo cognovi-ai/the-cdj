@@ -5,9 +5,13 @@ import Chat from './chat/Chat';
 
 import { Item } from '../../../styles/components';
 import { Update as UpdateIcon } from '@mui/icons-material';
-import { useEntries } from '../../../hooks/useEntries';
 
-export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries }) {
+import typeWriter from '../../../../public/scripts/typeWriter'
+
+import { useEntries } from '../../../hooks/useEntries';
+import { v4 as uuid } from 'uuid';
+
+export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries, typeWrittenId, setTypeWrittenId }) {
     const [focusedData, setFocusedData] = useState({});
     const [editedData, setEditedData] = useState('');
     const [editing, setEditing] = useState(false);
@@ -15,6 +19,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
     const [validationError, setValidationError] = useState('');
     const [regenerating, setRegenerating] = useState(false);
     const [chat, setChat] = useState({});
+    const [typedAnalysis, setTypedAnalysis] = useState('')
 
     const entries = useEntries();
 
@@ -36,13 +41,18 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
 
                 setChat(chatData);
 
+                setTypedAnalysis('');
+                if (typeWrittenId) {
+                    typeWriter(entryAnalysisData.analysis_content, setTypedAnalysis, 10);
+                }
+
             } catch (error) {
                 console.error(error);
             }
         };
 
         makeRequest();
-    }, [focusedEntryId, editedEntryId]);
+    }, [focusedEntryId, editedEntryId, typeWrittenId]);
 
     const handleSave = () => {
         if (!editedData.length) {
@@ -76,6 +86,9 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                 setAllEntries(allEntries => allEntries.map(entry =>
                     entry._id === focusedEntryId ? { ...entryAnalysisData.entry } : entry
                 ));
+
+                // Set the entry to be typed
+                setTypeWrittenId(uuid());
 
             } catch (error) {
                 console.error(error);
@@ -125,6 +138,8 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                     entry._id === focusedEntryId ? { ...response.entry } : entry
                 ));
 
+                // Random ID to trigger typeWriter if focusedEntryId is the same
+                setTypeWrittenId(uuid());
 
             } catch (error) {
                 console.error(error);
@@ -185,10 +200,9 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                             </>
                         ) : (
                             <Typography variant="body2">
-                                {focusedData?.analysis_content}
+                                {typeWrittenId ? typedAnalysis : focusedData?.analysis_content}
                             </Typography>
-                        )
-                        }
+                        )}
                         <Tooltip title="Generate a new analysis.">
                             <Box display="flex" justifyContent="flex-end">
                                 <Button

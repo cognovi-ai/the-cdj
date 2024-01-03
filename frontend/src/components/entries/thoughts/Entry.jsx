@@ -5,7 +5,7 @@ import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Entry({ setEntries, setFocusedEntryId }) {
+export default function Entry({ setEntries, setFocusedEntryId, setTypeWrittenId }) {
     const [newEntry, setNewEntry] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
@@ -57,6 +57,9 @@ export default function Entry({ setEntries, setFocusedEntryId }) {
             setEntries((entries) => (
                 [data, ...entries]
             ));
+
+            // Set the entry to be typed
+            setTypeWrittenId(data._id);
         } catch (error) {
             console.error(error);
         } finally {

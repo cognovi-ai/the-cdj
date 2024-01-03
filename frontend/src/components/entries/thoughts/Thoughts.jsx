@@ -8,7 +8,7 @@ import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId }) {
+export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId, setTypeWrittenId }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -34,6 +34,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         navigate(`/entries/${ entryId }`);
 
         setIsSubmitting(false);
+
+        // Stop typing animation on focus change
+        setTypeWrittenId('');
     }
 
     const handleEnterKeyPress = (event) => {
@@ -107,6 +110,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             setEditedData({});
             setEditedEntryId('');
             setValidationError('');
+
+            // Set the entry to be typed
+            setTypeWrittenId(editedEntryId);
         } catch (error) {
             console.error(error);
         } finally {
@@ -144,6 +150,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                 // Stay on the focused entry if filteredEntries is not empty
                 navigate(`/entries/${ filteredEntries.length ? focusedEntryId : '' }`);
             }
+
+            // Clear typing animation
+            setTypeWrittenId('');
         } catch (error) {
             console.error(error);
         } finally {
@@ -158,7 +167,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
                 </Grid>
                 <Grid item>
-                    <Typography variant="h2">Recent Thoughts</Typography>
+                    <Typography mt="-2em" variant="h2">Recent Thoughts</Typography>
                 </Grid>
             </Grid>
             <Box sx={{ height: '90vh', overflow: 'auto' }}>
