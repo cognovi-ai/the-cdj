@@ -62,14 +62,14 @@ export default function Home({ data }) {
                 </Grid>
                 <Grid item xs={12}>
                     <Typography
-                        align="center"
                         className="header"
+                        ml="2em"
                         variant="h3"
                     >
                         I. Cognitive Distortions
                     </Typography>
                 </Grid>
-                <Grid item md={8} xs={12}>
+                <Grid item xs={12}>
                     <Typography
                         m="2em"
                         overflow={'wrap'}
@@ -78,7 +78,7 @@ export default function Home({ data }) {
                         Cognitive distortions are ways in which our mind convinces us of things that are not true. They do us a disservice by reinforcing negative thinking and unpleasant emotions. These mental filters, or mind traps, detrimentally warp our view of reality. They become the lens we use to view the world and others around us.
                     </Typography>
                 </Grid>
-                <Grid item md={4} xs={12}>
+                <Grid item xs={12}>
                     <Box className="container">
                         <Box className="box" ref={boxRef}>
                             {cds.map((cd, index) => (
@@ -117,14 +117,14 @@ export default function Home({ data }) {
                 </Grid>
                 <Grid item xs={12}>
                     <Typography
-                        align="center"
                         className="header"
+                        ml="2em"
                         variant="h3"
                     >
                         II. Addressing the Mental Filter
                     </Typography>
                 </Grid>
-                <Grid item md={8} xs={12}>
+                <Grid item xs={12}>
                     <Typography
                         m="2em"
                         overflow={'wrap'}
@@ -133,7 +133,7 @@ export default function Home({ data }) {
                         In cognitive behavioral therapy, cognitive distortions are addressed, first, through identification, then through a reframing. This journal is designed to help you identify and reframe such thinking. It is a tool that can help you become more aware of your thoughts and feelings, and help you achieve a more positive and optimistic outlook on life.
                     </Typography>
                 </Grid>
-                <Grid item md={4} xs={12}>
+                <Grid item xs={12}>
                     <Box className="container">
                         <Box className="box">
                             {cds.map((cd, index) => (
