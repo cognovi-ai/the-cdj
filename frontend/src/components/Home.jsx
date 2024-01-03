@@ -1,13 +1,20 @@
 import './Home.css'
 
-import { Box, Fade, Grid, Grow, Typography } from '@mui/material';
+import { Box, Fade, Grid, Grow, LinearProgress, TextField, Typography } from '@mui/material';
 import { createRef, useEffect, useRef, useState } from 'react';
+
+import typeWriter from '../../public/scripts/typeWriter';
 
 export default function Home({ data }) {
     const { cds } = data;
+
+    const [isVisible, setIsVisible] = useState(cds.map(() => false));
+    const [typedThought, setTypedThought] = useState('');
+    const [typedAnalysis, setTypedAnalysis] = useState('');
+    const [isTypingDone, setIsTypingDone] = useState(false);
+
     const boxRef = useRef(null);
     const cdRefs = cds.map(() => ({ example: createRef(), distortion: createRef() }));
-    const [isVisible, setIsVisible] = useState(cds.map(() => false));
 
     useEffect(() => {
         // Set initial scroll position to the bottom
@@ -42,6 +49,20 @@ export default function Home({ data }) {
         });
 
         return () => {
+            setTypedThought('');
+            setIsTypingDone(false);
+
+            setTimeout(() => {
+                typeWriter(cds[0].example, setTypedThought, 60)
+                    .then(() => {
+                        setIsTypingDone(true);
+                        setTypedAnalysis('');
+                        typeWriter(cds[0].analysis, setTypedAnalysis, 10)
+                            .then(() => setIsTypingDone(false));
+                    }
+                    );
+            }, 1000);
+
             clearInterval(scrollInterval);
         };
     }, []);
@@ -60,25 +81,52 @@ export default function Home({ data }) {
                         The Cognitive Distortion Journal
                     </Typography>
                 </Grid>
-                <Grid item xs={12}>
-                    <Typography
-                        className="header"
-                        ml="2em"
-                        variant="h3"
-                    >
-                        I. Cognitive Distortions
+                <Box sx={{ margin: '2em', width: '100%' }}>
+                    {!typedAnalysis && <Fade in={true} timeout={2000}>
+                        <Typography mb="1em" variant="h2">Check your thought.</Typography>
+                    </Fade>}
+                    {typedAnalysis && <Fade in={true} timeout={2000}>
+                        <Typography mb="1em" variant="h2">Is it a cognitive distortion?</Typography>
+                    </Fade>}
+                    <TextField
+                        InputProps={{
+                            readOnly: true,
+                            style: { color: 'black' }
+                        }}
+                        autoFocus
+                        disabled={isTypingDone}
+                        id="new-entry"
+                        label="Enter your thought."
+                        maxRows={6}
+                        minRows={3}
+                        multiline
+                        sx={{ width: '100%' }}
+                        value={typedThought}
+                        variant="outlined"
+                    />
+                    {isTypingDone && <LinearProgress />}
+                    <Typography m="1em" mt="4em" variant="body2">
+                        {typedAnalysis &&
+                            <Fade in={true} timeout={1000}>
+                                <Typography variant="h2">{cds[0].label}</Typography>
+                            </Fade>
+                        }
+                        {typedAnalysis &&
+                            <Fade in={true} timeout={2000}>
+                                <Typography variant="body2">{typedAnalysis}</Typography>
+                            </Fade>
+                        }
                     </Typography>
-                </Grid>
-                <Grid item xs={12}>
+                </Box>
+                <Grid item md={6} xs={12}>
                     <Typography
-                        m="2em"
+                        m="1em"
                         overflow={'wrap'}
+                        p="1em"
                         variant="body1"
                     >
-                        Cognitive distortions are ways in which our mind convinces us of things that are not true. They do us a disservice by reinforcing negative thinking and unpleasant emotions. These mental filters, or mind traps, detrimentally warp our view of reality. They become the lens we use to view the world and others around us.
+                        <Typography variant="h3">Cognitive distortions</Typography> are ways in which our mind convinces us of things that are not true. They do us a disservice by reinforcing negative thinking and unpleasant emotions. These mental filters, or mind traps, detrimentally warp our view of reality. They become the lens we use to view the world and others around us.
                     </Typography>
-                </Grid>
-                <Grid item xs={12}>
                     <Box className="container">
                         <Box className="box" ref={boxRef}>
                             {cds.map((cd, index) => (
@@ -115,25 +163,15 @@ export default function Home({ data }) {
                         </Box>
                     </Box>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item md={6} xs={12}>
                     <Typography
-                        className="header"
-                        ml="2em"
-                        variant="h3"
-                    >
-                        II. Addressing the Mental Filter
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography
-                        m="2em"
+                        m="1em"
                         overflow={'wrap'}
+                        p="1em"
                         variant="body1"
                     >
-                        In cognitive behavioral therapy, cognitive distortions are addressed, first, through identification, then through a reframing. This journal is designed to help you identify and reframe such thinking. It is a tool that can help you become more aware of your thoughts and feelings, and help you achieve a more positive and optimistic outlook on life.
+                        <Typography variant="h3">In cognitive behavioral therapy</Typography> cognitive distortions are addressed through identification and then a reframing. This journal is designed to help you identify and reframe such thinking. It is a tool that can help you become more aware of your thoughts and feelings, and help you achieve a more positive and optimistic outlook on life.
                     </Typography>
-                </Grid>
-                <Grid item xs={12}>
                     <Box className="container">
                         <Box className="box">
                             {cds.map((cd, index) => (
@@ -161,7 +199,7 @@ export default function Home({ data }) {
                         </Box>
                     </Box>
                 </Grid>
-            </Grid>
-        </Box>
+            </Grid >
+        </Box >
     );
 }
