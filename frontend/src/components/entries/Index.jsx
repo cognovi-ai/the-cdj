@@ -23,6 +23,7 @@ export default function Entries() {
     const [enteringTitle, setEnteringTitle] = useState('');
     const [copiedJournalTitle, setCopiedJournalTitle] = useState('');
     const [validationError, setValidationError] = useState('');
+    const [typeWrittenId, setTypeWrittenId] = useState('');
 
     const entries = useEntries();
     const access = useAccess();
@@ -137,6 +138,8 @@ export default function Entries() {
                     focusedEntryId={focusedEntryId}
                     journalId={journalId}
                     setAllEntries={setAllEntries}
+                    setTypeWrittenId={setTypeWrittenId}
+                    typeWrittenId={typeWrittenId}
                 />}
             </Grid>
             <Grid item md={focusedEntryId ? 6 : 12} xs={12}>
@@ -144,6 +147,7 @@ export default function Entries() {
                     journalId={journalId}
                     setEntries={setAllEntries}
                     setFocusedEntryId={setFocusedEntryId}
+                    setTypeWrittenId={setTypeWrittenId}
                 />
                 {focusedEntryId && <Thoughts
                     allEntries={allEntries}
@@ -153,6 +157,7 @@ export default function Entries() {
                     setAllEntries={setAllEntries}
                     setEditedEntryId={setEditedEntryId}
                     setFocusedEntryId={setFocusedEntryId}
+                    setTypeWrittenId={setTypeWrittenId}
                 />}
             </Grid>
         </Grid>
