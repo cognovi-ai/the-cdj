@@ -161,82 +161,84 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     <Typography variant="h2">Recent Thoughts</Typography>
                 </Grid>
             </Grid>
-            {allEntries.map((entry) => (
-                <Box
-                    className={entry._id === focusedEntryId ? 'focused' : ''}
-                    key={entry._id}
-                    sx={{
-                        margin: '0 0 2em',
-                        padding: '8px 12px',
-                    }}>
-                    <Typography variant="body1">{entry.title}</Typography>
-                    {editing && editedEntryId === entry._id ? (
-                        <>
-                            <TextField
-                                autoFocus
-                                disabled={isSubmitting}
-                                error={Boolean(validationError)}
-                                fullWidth
-                                helperText={validationError}
-                                label="Edit your thought."
-                                maxRows={6}
-                                minRows={3}
-                                multiline
-                                onChange={handleEditing}
-                                onKeyDown={handleEnterKeyPress}
-                                value={editedData.content}
-                                variant="filled"
-                            />
-                            {isSubmitting && <LinearProgress />}
-                            <Box display="flex" justifyContent="flex-end" marginTop={2}>
-                                <Button
-                                    color="primary"
-                                    disabled={Boolean(validationError) || isSubmitting}
-                                    onClick={handleSaveEdit}
-                                    variant="contained"
-                                >
-                                    Save
-                                </Button>
-                                <Button
-                                    color="cancel"
+            <Box sx={{ height: '90vh', overflow: 'auto' }}>
+                {allEntries.map((entry) => (
+                    <Box
+                        className={entry._id === focusedEntryId ? 'focused' : ''}
+                        key={entry._id}
+                        sx={{
+                            margin: '0 0 2em',
+                            padding: '8px 12px',
+                        }}>
+                        <Typography variant="body1">{entry.title}</Typography>
+                        {editing && editedEntryId === entry._id ? (
+                            <>
+                                <TextField
+                                    autoFocus
                                     disabled={isSubmitting}
-                                    onClick={handleCancelEdit}
-                                    style={{ marginLeft: 8 }}
-                                    variant="contained"
+                                    error={Boolean(validationError)}
+                                    fullWidth
+                                    helperText={validationError}
+                                    label="Edit your thought."
+                                    maxRows={6}
+                                    minRows={3}
+                                    multiline
+                                    onChange={handleEditing}
+                                    onKeyDown={handleEnterKeyPress}
+                                    value={editedData.content}
+                                    variant="filled"
+                                />
+                                {isSubmitting && <LinearProgress />}
+                                <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                                    <Button
+                                        color="primary"
+                                        disabled={Boolean(validationError) || isSubmitting}
+                                        onClick={handleSaveEdit}
+                                        variant="contained"
+                                    >
+                                        Save
+                                    </Button>
+                                    <Button
+                                        color="cancel"
+                                        disabled={isSubmitting}
+                                        onClick={handleCancelEdit}
+                                        style={{ marginLeft: 8 }}
+                                        variant="contained"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <IconButton
+                                    aria-label="Focus"
+                                    color="primary"
+                                    disabled={isSubmitting}
+                                    onClick={() => handleFocus(entry._id)}>
+                                    <FocusIcon />
+                                </IconButton>
+                                <IconButton
+                                    aria-label="Edit"
+                                    color="edit"
+                                    disabled={isSubmitting}
+                                    onClick={() => handleEdit(entry._id)}
                                 >
-                                    Cancel
-                                </Button>
-                            </Box>
-                        </>
-                    ) : (
-                        <>
-                            <IconButton
-                                aria-label="Focus"
-                                color="primary"
-                                disabled={isSubmitting}
-                                onClick={() => handleFocus(entry._id)}>
-                                <FocusIcon />
-                            </IconButton>
-                            <IconButton
-                                aria-label="Edit"
-                                color="edit"
-                                disabled={isSubmitting}
-                                onClick={() => handleEdit(entry._id)}
-                            >
-                                <EditIcon />
-                            </IconButton>
-                            <IconButton
-                                aria-label="Delete"
-                                color="danger"
-                                disabled={isSubmitting}
-                                onClick={() => handleDelete(entry._id)}
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        </>
-                    )}
-                </Box>
-            ))}
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                    aria-label="Delete"
+                                    color="danger"
+                                    disabled={isSubmitting}
+                                    onClick={() => handleDelete(entry._id)}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </>
+                        )}
+                    </Box>
+                ))}
+            </Box>
         </Item>
     );
 }
