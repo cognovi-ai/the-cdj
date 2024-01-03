@@ -119,6 +119,8 @@ export default function Entries() {
                         />
                     ) : (
                         <Typography
+                            align="center"
+                            m="-1em"
                             onClick={isEnteringTitle}
                             sx={{ cursor: 'pointer' }}
                             variant="h1"

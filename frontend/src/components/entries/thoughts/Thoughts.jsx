@@ -158,7 +158,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
                 </Grid>
                 <Grid item>
-                    <Typography variant="h2">Recent Thoughts</Typography>
+                    <Typography mt="-2em" variant="h2">Recent Thoughts</Typography>
                 </Grid>
             </Grid>
             <Box sx={{ height: '90vh', overflow: 'auto' }}>
