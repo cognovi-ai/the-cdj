@@ -9,7 +9,7 @@ export default function Chat({ journalId, focusedEntryId, chat, setChat }) {
             <InputLabel htmlFor="new-message" sx={{ color: 'inherit' }}>
                 <Typography variant="h2">Chat</Typography>
             </InputLabel >
-            {chat.messages && <Box sx={{ overflow: 'auto', flexGrow: 1, maxHeight: '50vh' }}>
+            {chat.messages && <Box sx={{ overflowY: 'auto', overflowX: 'hidden', flexGrow: 1, maxHeight: '50vh', pl: '1.6em', pr: '1.6em' }}>
                 <Messages
                     chat={chat}
                 />
