@@ -7,6 +7,7 @@ import ErrorPage from './components/utils/ErrorPage'
 
 import { FlashProvider } from './contexts/FlashProvider.jsx';
 
+import Home from './routes/Home';
 import Index from './routes/entries';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -20,7 +21,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <h1>Home</h1>,
+        element: <Home />,
       },
       {
         path: '/entries',

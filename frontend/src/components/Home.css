@@ -1,0 +1,32 @@
+.container {
+    position: relative;
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+.container::before {
+    top: 0;
+    background: linear-gradient(to bottom, white, rgba(255, 255, 255, 0));
+}
+
+.container::after {
+    bottom: 0;
+    background: linear-gradient(to top, white, rgba(255, 255, 255, 0));
+}
+
+.box {
+    overflow: auto;
+    height: 120px;
+    position: relative;
+    z-index: 1;
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* IE and Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+}
