@@ -8,7 +8,7 @@ import { useEntries } from '../../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId, setTypeWrittenId }) {
+export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId, setTypeWrittenId, isSubmitting, setIsSubmitting }) {
     const [editing, setEditing] = useState(false);
     const [editedData, setEditedData] = useState({
         title: '',
@@ -17,7 +17,6 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         tags: [],
         privacy_settings: {},
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
 
     const entries = useEntries();

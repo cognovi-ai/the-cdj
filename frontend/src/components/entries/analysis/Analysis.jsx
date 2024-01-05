@@ -11,7 +11,7 @@ import typeWriter from '../../../../public/scripts/typeWriter'
 import { useEntries } from '../../../hooks/useEntries';
 import { v4 as uuid } from 'uuid';
 
-export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries, typeWrittenId, setTypeWrittenId }) {
+export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries, typeWrittenId, setTypeWrittenId, setIsSubmitting }) {
     const [focusedData, setFocusedData] = useState({});
     const [editedData, setEditedData] = useState('');
     const [editing, setEditing] = useState(false);
@@ -65,6 +65,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
         }
 
         setIsSaving(true);
+        setIsSubmitting(true);
 
         const makeRequest = async () => {
             try {
@@ -95,6 +96,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
             } finally {
                 setEditing(false);
                 setIsSaving(false);
+                setIsSubmitting(false);
             }
         }
 
@@ -107,6 +109,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
     }
 
     const handleOnBlur = () => {
+        setIsSubmitting(false);
         setEditing(false);
     }
 
@@ -123,6 +126,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
 
     const handleNewAnalysis = (event) => {
         event.preventDefault();
+        setIsSubmitting(true);
 
         const makeRequest = async () => {
             setRegenerating(true);
@@ -145,6 +149,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                 console.error(error);
             } finally {
                 setRegenerating(false);
+                setIsSubmitting(false);
             }
         };
 
