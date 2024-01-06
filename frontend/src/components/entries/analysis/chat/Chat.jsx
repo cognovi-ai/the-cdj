@@ -1,21 +1,32 @@
 import { Box, InputLabel, Typography } from '@mui/material';
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import ChatEntry from './ChatEntry';
 import Messages from './Messages';
 
 export default function Chat({ journalId, focusedEntryId, chat, setChat }) {
     const messagesEndRef = useRef(null);
+    const lastMessageRef = useRef(null);
+    const alignChatRef = useRef(null);
+
+    const [hasSent, setHasSent] = useState(false);
 
     useEffect(() => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+            if (hasSent) {
+                lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+                alignChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+            } else {
+                messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+            }
         }
     }, [chat]);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Box
+            ref={alignChatRef}
+            sx={{ display: 'flex', flexDirection: 'column' }}
+        >
             <InputLabel
                 htmlFor="new-message"
                 sx={{ color: 'inherit' }}>
@@ -32,13 +43,18 @@ export default function Chat({ journalId, focusedEntryId, chat, setChat }) {
                         pl: '1.6em',
                         pr: '1.6em'
                     }}>
-                    <Messages chat={chat} />
+                    <Messages
+                        chat={chat}
+                        lastMessageRef={lastMessageRef}
+                        setHasSent={setHasSent}
+                    />
                 </Box>}
             <ChatEntry
                 chat={chat}
                 focusedEntryId={focusedEntryId}
                 journalId={journalId}
                 setChat={setChat}
+                setHasSent={setHasSent}
             />
         </Box>
     )

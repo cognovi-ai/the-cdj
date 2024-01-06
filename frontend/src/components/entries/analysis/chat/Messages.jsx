@@ -2,7 +2,13 @@ import './Messages.css';
 
 import { Box, Grid, Typography } from '@mui/material';
 
-export default function Messages({ chat }) {
+import { useEffect } from 'react';
+
+export default function Messages({ chat, lastMessageRef, setHasSent }) {
+    useEffect(() => {
+        setHasSent(false);
+    });
+
     return (
         <Box sx={{ width: '100%' }}>
             {chat && chat.messages && chat.messages.map((message, index) => (
@@ -10,6 +16,7 @@ export default function Messages({ chat }) {
                     container
                     key={index}
                     margin="0 0 1em"
+                    ref={index === chat.messages.length - 1 ? lastMessageRef : null}
                     spacing={1}
                 >
                     <Grid item xs={4} />
