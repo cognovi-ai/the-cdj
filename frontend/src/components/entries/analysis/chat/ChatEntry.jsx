@@ -4,7 +4,7 @@ import { Send as SendIcon } from '@mui/icons-material';
 import { useEntries } from '../../../../hooks/useEntries';
 import { useState } from 'react';
 
-export default function ChatEntry({ focusedEntryId, chat, setChat }) {
+export default function ChatEntry({ focusedEntryId, chat, setChat, setHasSent }) {
     const [newChat, setNewChat] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
@@ -63,6 +63,7 @@ export default function ChatEntry({ focusedEntryId, chat, setChat }) {
         } catch (error) {
             console.error(error);
         } finally {
+            setHasSent(true);
             setIsSubmitting(false);
         }
     }
