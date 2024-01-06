@@ -50,6 +50,8 @@ export default function Account() {
     const [savedProfile, setSavedProfile] = useState({})
     const [savedConfig, setSavedConfig] = useState({})
 
+    const [changesMade, setChangesMade] = useState(false);
+
     // Contains data to update from each form
     const { profile, setProfile, password, setPassword, config, setConfig } = useAccount();
 
@@ -85,6 +87,33 @@ export default function Account() {
         makeRequest();
     }, [updating]);
 
+
+    useEffect(() => {
+        // Remove matching properties
+        removeMatchingProperties(profile, savedProfile);
+        removeMatchingProperties(config, savedConfig);
+
+        const account = { ...profile, ...password, ...config };
+
+        if (account.model) {
+            if (Object.keys(account.model).length === 0) {
+                delete account.model;
+            }
+        }
+
+        // Check if the resulting objects are not empty
+        if (Object.keys(account).length > 0) {
+            setChangesMade(true);
+        } else {
+            setChangesMade(false);
+        }
+
+        if (account.oldPassword || account.newPassword) {
+            if (!account.oldPassword || !account.newPassword) {
+                setChangesMade(false);
+            }
+        }
+    }, [profile, config, savedProfile, savedConfig, password]);
 
     function getStepContent(step) {
         switch (step) {
@@ -220,6 +249,7 @@ export default function Account() {
                             </Box>
                             {activeStep === steps.length ? (
                                 <Button
+                                    disabled={!changesMade || updating}
                                     onClick={handleUpdate}
                                     sx={{ ml: 1 }}
                                     variant="contained"
@@ -228,6 +258,7 @@ export default function Account() {
                                 </Button>
                             ) :
                                 <Button
+                                    disabled={!changesMade}
                                     onClick={handleReview}
                                     variant="contained"
                                 >
