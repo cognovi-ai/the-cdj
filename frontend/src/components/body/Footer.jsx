@@ -5,7 +5,7 @@ export default function Footer() {
         <AppBar color="primary" position="static">
             <Toolbar>
                 <h5>
-                    © 2023 The Cognitive Distortion Journal
+                    {`© ${ new Date().getFullYear() } The Cognitive Distortion Journal`}
                 </h5>
             </Toolbar>
         </AppBar>
