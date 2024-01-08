@@ -49,6 +49,7 @@ VITE_ENTRIES_URL=http://localhost:3000/journals/
 ```
 
 5. Create a `.env` file in the backend directory and add the following environment variables:
+
 *Ensure you replace items in angle brackets with your own values.*
 
 ```sh
@@ -74,7 +75,12 @@ Gmail SMTP Settings https://www.saleshandy.com/smtp/gmail-smtp-settings/
 mongod
 ```
 
-7. Run the dev servers
+7. Seed the database (optional).
+```sh
+node backend/data/seed.js
+```
+
+8. Run the dev servers
 ```sh
 npm run dev
 ```
