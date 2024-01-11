@@ -6,7 +6,7 @@ import Chat from './chat/Chat';
 import { Item } from '../../../styles/components';
 import { Update as UpdateIcon } from '@mui/icons-material';
 
-import typeWriter from '../../../../public/scripts/typeWriter'
+import typeWriter from '../../../scripts/typeWriter'
 
 import { useEntries } from '../../../hooks/useEntries';
 import { v4 as uuid } from 'uuid';
