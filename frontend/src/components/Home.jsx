@@ -3,7 +3,7 @@ import './Home.css'
 import { Box, Fade, Grid, Grow, LinearProgress, TextField, Typography } from '@mui/material';
 import { createRef, useEffect, useRef, useState } from 'react';
 
-import typeWriter from '../../public/scripts/typeWriter';
+import typeWriter from '../scripts/typeWriter'
 
 export default function Home({ data }) {
     const { cds } = data;
