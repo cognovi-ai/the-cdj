@@ -55,23 +55,31 @@ export default function Home({ data }) {
     }, [isAnalysisTypingDone]);
 
     useEffect(() => {
-        return () => {
-            setTypedThought('');
-            setIsTypingDone(false);
+        let isMounted = true;
 
-            setTimeout(() => {
+        setTimeout(() => {
+            if (isMounted) {
                 typeWriter(cds[0].example, setTypedThought, 60)
                     .then(() => {
-                        setIsTypingDone(true);
-                        setTypedAnalysis('');
-                        typeWriter(cds[0].analysis, setTypedAnalysis, 10)
-                            .then(() => {
-                                setIsTypingDone(false);
-                                setIsAnalysisTypingDone(true)
-                            });
-                    }
-                    );
-            }, 1000);
+                        if (isMounted) {
+                            setIsTypingDone(true);
+                            setTypedAnalysis('');
+                            typeWriter(cds[0].analysis, setTypedAnalysis, 10)
+                                .then(() => {
+                                    if (isMounted) {
+                                        setIsTypingDone(false);
+                                        setIsAnalysisTypingDone(true)
+                                    }
+                                });
+                        }
+                    });
+            }
+        }, 1000);
+
+        return () => {
+            isMounted = false;
+            setTypedThought('');
+            setIsTypingDone(false);
         }
     }, []);
 
