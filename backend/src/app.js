@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // use cors middleware
 app.use(cors({
-  origin: [process.env.DEV_ORIGIN_LOCAL_URL, process.env.DEV_ORIGIN_PRIVATE_URL],
+  origin: [process.env.ORIGIN_SELF, process.env.ORIGIN_LOCAL, process.env.ORIGIN_PUBLIC, process.env.ORIGIN_DOMAIN],
   credentials: true
 }));
 
