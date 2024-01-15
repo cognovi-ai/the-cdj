@@ -2,7 +2,7 @@ import { connect } from 'mongoose';
 
 export default async function connectDB(dbName) {
   // Define the local URI for development and testing
-  const localUri = `mongodb://localhost:27017/${ dbName }`;
+  const localUri = `${ process.env.MONGO_URI }/${ dbName }`;
 
   // Define the MongoDB Atlas URI for production
   const atlasUri = process.env.ATLAS_URI;
