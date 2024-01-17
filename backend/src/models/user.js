@@ -174,9 +174,8 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
     }
   });
 
-  // TODO: Change this to the actual URL of the frontend app when deployed
   // Construct the password reset URL
-  const resetUrl = `${ process.env.DEV_ORIGIN_PRIVATE_URL }/reset-password?token=${ token }`;
+  const resetUrl = `${ process.env.RESET_PASSWORD_URL }/reset-password?token=${ token }`;
 
   // Email content
   const message = {
