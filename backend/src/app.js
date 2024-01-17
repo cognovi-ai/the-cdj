@@ -5,17 +5,11 @@ import User from './models/user.js';
 
 import connectDB from './db.js';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express from 'express';
 import flash from 'connect-flash';
 import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session';
-
-// load environment variables
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config();
-}
 
 const app = express();
 
