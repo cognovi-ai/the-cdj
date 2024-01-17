@@ -1,22 +1,20 @@
-import app from './src/app.js';
+/* eslint-disable sort-imports, import/first */
+
+// Load environment variables
 import dotenv from 'dotenv';
-import express from 'express';
+dotenv.config();
+
+import app from './src/app.js';
 import fs from 'fs';
 import https from 'https';
 
 const port = process.env.PORT;
 
 if (process.env.NODE_ENV !== 'production') {
-  const server = express();
-
-  server.use(app);
-
-  server.listen(port, () => {
+  app.listen(port, () => {
     console.log(`\nEXPRESS Listening on port ${ port }.`);
   });
 } else {
-  dotenv.config();
-
   const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
   const certificate = fs.readFileSync(process.env.CERTIFICATE_PATH, 'utf8');
   const ca = fs.readFileSync(process.env.CA_PATH, 'utf8');
