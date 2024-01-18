@@ -12,7 +12,7 @@ const port = process.env.PORT;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
-    console.log(`\nEXPRESS Listening on port ${ port }.`);
+    console.log(`\nEXPRESS Listening on port ${ port }`);
   });
 } else {
   const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');

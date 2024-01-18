@@ -14,7 +14,7 @@ export default function connectStore(store) {
 
     // redis client events
     redisClient.on('error', err => console.log(err));
-    redisClient.on('connect', () => console.log(`Connected to Redis: ${ process.env.REDIS_HOST }:${ process.env.REDIS_PORT }.`));
+    redisClient.on('connect', () => console.log(`Connected to Redis: ${ process.env.REDIS_HOST }:${ process.env.REDIS_PORT }`));
 
     // create redis store
     return new RedisStore({
