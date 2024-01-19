@@ -15,7 +15,10 @@ const userSchema = new Schema({
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: undefined },
-  resetPasswordExpires: { type: Date, default: undefined }
+  resetPasswordExpires: { type: Date, default: undefined },
+  verifyEmailToken: { type: String, default: undefined },
+  verifyEmailExpires: { type: Date, default: undefined },
+  emailVerified: { type: Boolean, default: false }
 });
 
 // Utility functions
@@ -163,6 +166,23 @@ userSchema.methods.generatePasswordResetToken = function () {
   return resetToken;
 };
 
+// Generate an email confirmation token
+userSchema.methods.generateEmailVerificationToken = function () {
+  // Generate a token
+  const verificationToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash the token and set to confirmEmailToken field
+  this.verifyEmailToken = crypto
+    .createHash('sha256')
+    .update(verificationToken)
+    .digest('hex');
+
+  // Set an expiry time of 10 minutes
+  this.verifyEmailExpires = Date.now() + 600000;
+
+  return verificationToken;
+};
+
 userSchema.methods.sendPasswordResetEmail = async function (token) {
   // Configure your SMTP transporter
   const transporter = nodemailer.createTransport({
@@ -175,7 +195,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
   });
 
   // Construct the password reset URL
-  const resetUrl = `${ process.env.RESET_PASSWORD_URL }/reset-password?token=${ token }`;
+  const resetUrl = `${ process.env.TOKENIZED_URL }/reset-password?token=${ token }`;
 
   // Email content
   const message = {
@@ -217,5 +237,30 @@ userSchema.pre('save', function (next) {
   this.updated_at = new Date();
   next();
 });
+
+userSchema.methods.sendBetaRequestConfirmationEmail = async function (token) {
+  // Configure your SMTP transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: 587,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+
+  const verificationUrl = `${ process.env.TOKENIZED_URL }/verify-email?token=${ token }`;
+
+  // Email content
+  const message = {
+    from: `"The CDJ" <${ process.env.SMTP_USER }>`, // Sender address
+    to: this.email, // Recipient address (user's email)
+    subject: 'Beta Access Request Confirmation',
+    text: `Dear ${ this.fname },\n\nYour request for beta access has been received. You will receive an email when your request is approved. Thank you for your interest in the app! Please click the link to verify your email address.\n\n${ verificationUrl }\n\nSincerely,\nThe CDJ Team\n`
+  };
+
+  // Send the email
+  await transporter.sendMail(message);
+};
 
 export default model('User', userSchema);

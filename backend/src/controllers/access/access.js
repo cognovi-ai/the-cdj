@@ -397,3 +397,42 @@ export const register = async (req, res, next) => {
     return next(new ExpressError('An error occurred while attempting to register the user.', 500));
   }
 };
+
+/**
+ * Validate a user's email address.
+ */
+export const verifyEmail = async (req, res, next) => {
+  const { token } = req.body;
+
+  try {
+    // Hash the incoming token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Search for user by hashed token
+    const user = await User.findOne({
+      verifyEmailToken: hashedToken
+    });
+
+    if (!user) {
+      // No user found
+      return next(new ExpressError('Email verification token is invalid.', 400));
+    }
+
+    // Confirm email
+    user.emailVerified = true;
+    user.verifyEmailToken = undefined;
+    user.verifyEmailExpires = undefined;
+
+    // Save the updated user
+    await user.save();
+
+    req.flash('success', 'Email verified successfully.');
+    res.status(200).json({ flash: req.flash() });
+  } catch (error) {
+    // Handle any errors here
+    return next(new ExpressError('An error occurred while attempting to verify the email.', 500));
+  }
+};
