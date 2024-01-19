@@ -96,6 +96,14 @@ export default function Home({ data }) {
                     >
                         The Cognitive Distortion Journal
                     </Typography>
+                    <Typography
+                        align="center"
+                        className="title"
+                        justifyContent="center"
+                        variant="subtitle1"
+                    >
+                        {import.meta.env.VITE_RELEASE_PHASE}
+                    </Typography>
                 </Grid>
                 <Box sx={{ ml: '2em', mr: '2em', mb: '2em', width: '100%' }}>
                     {!typedAnalysis && <Fade in={true} timeout={2000}>
