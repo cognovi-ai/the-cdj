@@ -224,7 +224,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
     from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
     to: this.email, // Recipient address (user's email)
     subject: 'Password Reset Request',
-    text: `You are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n`
+    text: `Dear ${ this.fname },\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\nThe CDJ Team\n`
   };
 
   // Send the email
@@ -247,7 +247,7 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
     from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
     to: this.email, // Recipient address (user's email)
     subject: 'Password Reset Confirmation',
-    text: 'Your password has been successfully reset.\n'
+    text: 'Your password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\nThe CDJ Team\n'
   };
 
   // Send the email
