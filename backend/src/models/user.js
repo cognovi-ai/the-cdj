@@ -109,7 +109,6 @@ userSchema.statics.accountJoi = Joi.object({
     .messages({
       'string.pattern.base': 'API key must be between 30 and 128 characters long and contain only alphanumeric characters and dashes.'
     })
-  // Add other fields as necessary
 });
 
 // Mongoose schema indices and plugins
@@ -130,6 +129,14 @@ userSchema.plugin(passportLocalMongoose, {
   }
 });
 
+// Mongoose middleware
+// Set new updated_at timestamp before saving.
+userSchema.pre('save', function (next) {
+  this.updated_at = new Date();
+  next();
+});
+
+// User schema methods and statics
 // Compare passwords for re-authentication
 userSchema.methods.comparePassword = function (candidatePassword) {
   return new Promise((resolve, reject) => {
@@ -205,7 +212,10 @@ userSchema.methods.generateBetaAccessToken = function () {
   return betaAccessToken;
 };
 
-userSchema.methods.sendPasswordResetEmail = async function (token) {
+// Utility function for sending emails
+userSchema.methods.sendMail = async function (content) {
+  const { to, subject, text } = content;
+
   // Configure your SMTP transporter
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -216,148 +226,89 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
     }
   });
 
+  // Insert the email content
+  const message = {
+    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`,
+    to,
+    subject,
+    text
+  };
+
+  // Send the email
+  await transporter.sendMail(message);
+};
+
+// Send a password reset email
+userSchema.methods.sendPasswordResetEmail = async function (token) {
   // Construct the password reset URL
   const resetUrl = `${ process.env.TOKENIZED_URL }/reset-password?token=${ token }`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: this.email, // Recipient address (user's email)
-    subject: 'Password Reset Request',
-    text: `Dear ${ this.fname },\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\nThe CDJ Team\n`
-  };
+  // Recipient address (user's email)
+  const to = this.email;
+  const subject = 'Password Reset Request';
+  const text = `Dear ${ this.fname },\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\n\nThe CDJ Team\n`;
 
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
+// Send a password reset confirmation email
 userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
-  // Configure your SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
+  // Recipient address (user's email)
+  const to = this.email;
+  const subject = 'Password Reset Confirmation';
+  const text = `Dear ${ this.fname },\n\nYour password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\n\nThe CDJ Team\n`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: this.email, // Recipient address (user's email)
-    subject: 'Password Reset Confirmation',
-    text: 'Your password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\nThe CDJ Team\n'
-  };
-
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
-// Set new updated_at timestamp before saving.
-userSchema.pre('save', function (next) {
-  this.updated_at = new Date();
-  next();
-});
-
+// Send beta request confirmation email
 userSchema.methods.sendBetaRequestConfirmationEmail = async function (token) {
-  // Configure your SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-
+  // Construct the verification URL
   const verificationUrl = `${ process.env.TOKENIZED_URL }/verify-email?token=${ token }`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: this.email, // Recipient address (user's email)
-    subject: 'Beta Access Request Confirmation',
-    text: `Dear ${ this.fname },\n\nYour request for beta access has been received. You will receive an email when your request is approved. Thank you for your interest in the app! Please click the link to verify your email address.\n\n${ verificationUrl }\n\nSincerely,\nThe CDJ Team\n`
-  };
+  // Recipient address (user's email)
+  const to = this.email;
+  const subject = 'Beta Access Request Confirmation';
+  const text = `Dear ${ this.fname },\n\nYou have requested beta access for The Cognitive Distortion Journal. After you verify your email address, you will receive an email when your request is reviewed with instructions. Thank you for your interest in the app!\n\nPlease click the link to verify your email address.\n\n${ verificationUrl }\n\nSincerely,\n\nThe CDJ Team\n`;
 
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
+// Send beta request email to support
 userSchema.methods.sendBetaRequestEmail = async function (token) {
-  // Configure your SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-
+  // Construct the approval and denial URLs
   const approvalUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-approval?token=${ token }`;
-
   const denialUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-denial?token=${ token }`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: process.env.MANAGED_INBOX, // Self
-    subject: 'User Request Beta Access',
-    text: `${ this.fname } ${ this.lname } <${ this.email }> has requested beta access. Use the following tokenized links to approve or deny them.\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`
-  };
+  // Recipient address (support email)
+  const to = process.env.MANAGED_INBOX;
+  const subject = 'User Request Beta Access';
+  const text = `${ this.fname } ${ this.lname } <${ this.email }> has requested beta access. Use the following tokenized links to approve or deny them.\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`;
 
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
+// Send beta approval email
 userSchema.methods.sendBetaApprovalEmail = async function (token) {
-  // Configure your SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-
+  // Construct the password reset URL
   const passwordResetUrl = `${ process.env.TOKENIZED_URL }/reset-password?token=${ token }`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: this.email, // Recipient address (user's email)
-    subject: 'Beta Access Approved',
-    text: `Dear ${ this.fname },\n\nYour request for beta access has been approved. Please click the following link to complete your registration. You will be prompted to set a password for your account.\n\n${ passwordResetUrl }\n\nSincerely,\nThe CDJ Team\n`
-  };
+  // Recipient address (user's email)
+  const to = this.email;
+  const subject = 'Beta Access Approved';
+  const text = `Dear ${ this.fname },\n\nYour request for beta access has been approved. Please click the following link to complete your registration. You will be prompted to set a password for your account.\n\n${ passwordResetUrl }\n\nSincerely,\n\nThe CDJ Team\n`;
 
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
+// Send beta denial email
 userSchema.methods.sendBetaDenialEmail = async function () {
-  // Configure your SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
+  // Recipient address (user's email)
+  const to = this.email;
+  const subject = 'Beta Access Denied';
+  const text = `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Thank you for your interest in the app! We hope you will consider using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
-  // Email content
-  const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SMTP_USER }>`, // Sender address
-    to: this.email, // Recipient address (user's email)
-    subject: 'Beta Access Denied',
-    text: `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Thank you for your interest in the app! We hope you will consider using the app when it is released.\n\nSincerely,\nThe CDJ Team\n`
-  };
-
-  // Send the email
-  await transporter.sendMail(message);
+  this.sendMail({ to, subject, text });
 };
 
 export default model('User', userSchema);
