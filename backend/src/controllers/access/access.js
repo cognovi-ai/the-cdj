@@ -227,7 +227,14 @@ export const login = async (req, res, next) => {
 
     req.logIn(user, async (err) => {
       if (err) { return next(err); }
-      // Handle successful login
+
+      // Give existing users beta access
+      if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
+        user.betaAccess = true;
+        await user.save();
+
+        req.flash('info', 'You have been granted beta access.');
+      }
 
       // Retrieve the user's journal
       let journal = await Journal.findOne({ user: user._id });
@@ -241,7 +248,9 @@ export const login = async (req, res, next) => {
       }
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
+
       req.flash('success', `Welcome back, ${ user.fname }. You've been logged in successfully.`);
+
       res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash(), token });
     });
   })(req, res, next);
@@ -263,13 +272,22 @@ export const tokenLogin = async (req, res, next) => {
     }
 
     // Log the user in
-    req.logIn(journal.user, function (err) {
+    req.logIn(journal.user, async function (err) {
+      if (err) { return next(err); }
+
+      // Give existing users beta access
+      if (process.env.RELEASE_PHASE === 'beta' && !journal.user?.betaAccess) {
+        journal.user.betaAccess = true;
+        await journal.user.save();
+
+        req.flash('info', 'You have been granted beta access.');
+      }
+
       // Show info message only for first 12 hours by iat timestamp
       if (token.iat + 43200 > Date.now() / 1000) req.flash('info', 'Logging out will prevent automatic future logins.');
 
       req.flash('success', `Welcome back, ${ journal.user.fname }. You've been automatically logged in successfully.`);
 
-      if (err) { return next(err); }
       return res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
     });
   } else {
