@@ -39,4 +39,10 @@ router.route('/register')
 router.route('/verify-email')
   .post(catchAsync(controller.verifyEmail));
 
+router.route('/beta-approval')
+  .get(catchAsync(controller.betaApproval));
+
+router.route('/beta-denial')
+  .get(catchAsync(controller.betaDenial));
+
 export default router;

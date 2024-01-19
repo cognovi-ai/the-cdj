@@ -40,17 +40,21 @@ export const requestBetaAccess = async (req, res, next) => {
 
   try {
     // Create a new user
-    const newUser = new User({ email, fname, lname });
-
-    // Send a confirmation email for the beta request
-    await newUser.sendBetaRequestConfirmationEmail(newUser.generateEmailVerificationToken());
+    const newUser = await new User({ email, fname, lname });
 
     // Save the new user
     await newUser.save();
 
+    // Send a confirmation email for the beta request
+    await newUser.sendBetaRequestConfirmationEmail(newUser.generateEmailVerificationToken());
+
     req.flash('info', 'A request for beta access has been sent to The CDJ Team. Please check your mailbox to verify your email. Once verified, a followup email will be sent when you are approved with a special link to complete your registration. Thank you for your interest in the app!');
     res.status(200).json({ flash: req.flash() });
   } catch (err) {
+    if (err?.code === 11000) {
+      return next(new ExpressError('Cannot request beta access at this time.', 400));
+    }
+
     return next(new ExpressError('An error occurred while attempting to request beta access.', 500));
   }
 };

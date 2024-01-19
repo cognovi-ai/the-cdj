@@ -230,14 +230,14 @@ export const login = async (req, res, next) => {
       // Handle successful login
 
       // Retrieve the user's journal
-      const journal = await Journal.findOne({ user: user._id });
+      let journal = await Journal.findOne({ user: user._id });
 
       // If user has no journal, create one
       if (!journal) {
-        const newJournal = new Journal({
+        journal = new Journal({
           user: user._id
         });
-        await newJournal.save();
+        await journal.save();
       }
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
@@ -424,7 +424,13 @@ export const verifyEmail = async (req, res, next) => {
     // Confirm email
     user.emailVerified = true;
     user.verifyEmailToken = undefined;
-    user.verifyEmailExpires = undefined;
+    user.verifyEmailTokenExpires = undefined;
+
+    // Send email to admin to approve the user for beta access
+    if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
+      user.sendBetaRequestEmail(user.generateBetaAccessToken());
+      req.flash('info', 'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.');
+    }
 
     // Save the updated user
     await user.save();
@@ -434,5 +440,98 @@ export const verifyEmail = async (req, res, next) => {
   } catch (error) {
     // Handle any errors here
     return next(new ExpressError('An error occurred while attempting to verify the email.', 500));
+  }
+};
+
+/**
+ * Approve a user for beta access.
+ */
+export const betaApproval = async (req, res, next) => {
+  const { token } = req.query;
+
+  if (process.env.RELEASE_PHASE !== 'beta') return next(new ExpressError('Beta is not the current release phase.', 400));
+
+  if (!token) return next(new ExpressError('Beta access request token is required.', 400));
+
+  try {
+    // Hash the incoming token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Search for user by hashed token
+    const user = await User.findOne({
+      betaAccess: false,
+      betaAccessToken: hashedToken
+    });
+
+    if (!user) {
+      // No user found
+      return next(new ExpressError('Beta access request token is invalid.', 400));
+    }
+
+    // Approve beta access
+    user.betaAccess = true;
+    user.betaAccessToken = undefined;
+    user.betaAccessTokenExpires = undefined;
+
+    // Send email to user to complete registration
+    user.sendBetaApprovalEmail(user.generatePasswordResetToken());
+
+    // Save the updated user
+    await user.save();
+
+    req.flash('success', 'Beta access approved successfully.');
+    res.status(200).json({ flash: req.flash() });
+  } catch (error) {
+    // Handle any errors here
+    return next(new ExpressError('An error occurred while attempting to approve beta access.', 500));
+  }
+};
+
+/**
+ * Deny a user for beta access.
+ */
+export const betaDenial = async (req, res, next) => {
+  const { token } = req.query;
+
+  if (process.env.RELEASE_PHASE !== 'beta') return next(new ExpressError('Beta is not the current release phase.', 400));
+
+  if (!token) return next(new ExpressError('Beta access request token is required.', 400));
+
+  try {
+    // Hash the incoming token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Search for user by hashed token
+    const user = await User.findOne({
+      betaAccess: false,
+      betaAccessToken: hashedToken
+    });
+
+    if (!user) {
+      // No user found
+      return next(new ExpressError('Beta access request token is invalid.', 400));
+    }
+
+    // Deny beta access
+    user.betaAccessToken = undefined;
+    user.betaAccessTokenExpires = undefined;
+
+    // Send denial email to user
+    user.sendBetaDenialEmail();
+
+    // Save the updated user
+    await user.save();
+
+    req.flash('success', 'Beta access denied successfully.');
+    res.status(200).json({ flash: req.flash() });
+  } catch (error) {
+    // Handle any errors here
+    return next(new ExpressError('An error occurred while attempting to deny beta access.', 500));
   }
 };
