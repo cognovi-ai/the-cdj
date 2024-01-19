@@ -1,4 +1,4 @@
-import { isAuthenticated, isLoggedIn } from '../../middleware/access.js';
+import { isAuthenticated, isLoggedIn, requestBetaAccess } from '../../middleware/access.js';
 import { validateAccount, validateLogin, validateNewPassword, validateRegistration } from '../../middleware/validation.js';
 
 import { Router } from 'express';
@@ -34,6 +34,15 @@ router.route('/logout')
   .get(isAuthenticated, controller.logout);
 
 router.route('/register')
-  .post(validateRegistration, catchAsync(controller.register));
+  .post(validateRegistration, catchAsync(requestBetaAccess), catchAsync(controller.register));
+
+router.route('/verify-email')
+  .post(catchAsync(controller.verifyEmail));
+
+router.route('/beta-approval')
+  .get(catchAsync(controller.betaApproval));
+
+router.route('/beta-denial')
+  .get(catchAsync(controller.betaDenial));
 
 export default router;
