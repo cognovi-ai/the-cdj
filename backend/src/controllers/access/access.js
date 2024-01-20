@@ -309,6 +309,11 @@ export const forgotPassword = async (req, res, next) => {
     // If user doesn't exist, return error
     if (!user) return next(new ExpressError('Could not send recovery email.', 400));
 
+    // Check betaAccess if beta release phase is beta and user is not approved
+    if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
+      return next(new ExpressError('You must be approved for beta access to reset your password.', 403));
+    }
+
     try {
       // Generate a password reset token
       const token = await user.generatePasswordResetToken();
