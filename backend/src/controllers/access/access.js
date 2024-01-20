@@ -49,8 +49,8 @@ export const getAccount = async (req, res, next) => {
     // Journal config is optional
     const config = await Config.findById(journal.config);
 
-    // Decrypt the config's apiKey
-    if (!config.model.analysis || !config.model.chat) req.flash('info', 'Click the Config tab to complete your journal setup.');
+    // If the config doesn't exist instruct the user to set it up
+    if (!config?.model.analysis || !config?.model.chat) req.flash('info', 'Click the Config tab to complete your journal setup.');
 
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
@@ -114,16 +114,13 @@ export const updateAccount = async (req, res, next) => {
       }
 
       // Update the optional fields of the config
-      const { model, apiKey } = config;
+      const { model } = config;
 
       if (model) {
         // Update chat and analysis fields if they exist in the request body
         if (model.chat !== undefined) model.chat ? response.model.chat = model.chat : response.model.chat = undefined;
         if (model.analysis !== undefined) model.analysis ? response.model.analysis = model.analysis : response.model.analysis = undefined;
       }
-
-      // Update the apiKey field if it exists in the request body
-      if (apiKey !== undefined) apiKey ? response.apiKey = response.encrypt(apiKey) : response.apiKey = undefined;
 
       await response.save();
 

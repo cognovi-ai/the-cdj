@@ -17,7 +17,7 @@ const models = {
 };
 
 export default function Config({ savedConfig }) {
-    const [showApiKey, setShowApiKey] = useState(false);
+    const [visible, setVisible] = useState(false);
     const [recommending, setRecommending] = useState(false);
 
     const { config, setConfig } = useAccount();
@@ -52,7 +52,7 @@ export default function Config({ savedConfig }) {
         setRecommending(false);
     }
 
-    const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
+    const toggleVisibility = () => setVisible(!visible);
 
     const getConfigValue = (key, gpt) => {
         if (key === 'model') {
@@ -99,14 +99,14 @@ export default function Config({ savedConfig }) {
                             </FormControl>
                         ) : (
                             <TextField
-                                InputProps={key === 'apiKey' ? {
+                                InputProps={key === 'sensitive' ? {
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             <IconButton
                                                 edge="end"
-                                                onClick={toggleApiKeyVisibility}
+                                                onClick={toggleVisibility}
                                             >
-                                                {showApiKey ? <VisibilityOff /> : <Visibility />}
+                                                {visible ? <VisibilityOff /> : <Visibility />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
@@ -118,7 +118,7 @@ export default function Config({ savedConfig }) {
                                 name={gpt ? gpt : key}
                                 onChange={handleConfigChange}
                                 required
-                                type={key === 'apiKey' && showApiKey ? 'text' : type}
+                                type={key === 'sensitive' && visible ? 'text' : type}
                                 value={getConfigValue(key, gpt)}
                                 variant="standard"
                             />

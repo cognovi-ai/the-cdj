@@ -102,13 +102,7 @@ userSchema.statics.accountJoi = Joi.object({
   model: Joi.object({
     chat: modelFieldValidation,
     analysis: modelFieldValidation
-  }),
-  apiKey: Joi.string()
-    .pattern(/^[a-zA-Z0-9-]{0,128}$/)
-    .allow('')
-    .messages({
-      'string.pattern.base': 'API key must be between 30 and 128 characters long and contain only alphanumeric characters and dashes.'
-    })
+  })
 });
 
 // Mongoose schema indices and plugins
