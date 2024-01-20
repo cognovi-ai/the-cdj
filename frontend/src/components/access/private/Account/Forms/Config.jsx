@@ -18,7 +18,7 @@ const models = {
 
 export default function Config({ savedConfig }) {
     const [visible, setVisible] = useState(false);
-    const [recommending, setRecommending] = useState(false);
+    const [settingDefault, setSettingDefault] = useState(false);
 
     const { config, setConfig } = useAccount();
 
@@ -36,20 +36,18 @@ export default function Config({ savedConfig }) {
         });
     };
 
-    const handleRecommending = async () => {
-        setRecommending(true);
+    const handleSettingDefault = async () => {
+        setSettingDefault(true);
     }
 
-    const recommendConfig = async () => {
-        const recommendedConfig = {
+    const defaultConfig = async () => {
+        setConfig({
             model: {
                 analysis: 'gpt-3.5-turbo-1106',
                 chat: 'gpt-4',
             },
-        };
-
-        setConfig(recommendedConfig);
-        setRecommending(false);
+        });
+        setSettingDefault(false);
     }
 
     const toggleVisibility = () => setVisible(!visible);
@@ -128,19 +126,19 @@ export default function Config({ savedConfig }) {
                 <Grid item>
                     <Button
                         color="info"
-                        onClick={handleRecommending}
+                        onClick={handleSettingDefault}
                         sx={{ mt: '10px' }}
-                        variant="contained">Recommend</Button>
+                        variant="contained">Default</Button>
                 </Grid>
             </Grid>
             <PopupDialog
-                action={recommendConfig}
+                action={defaultConfig}
                 buttonAgree="Accept"
                 buttonDeny="No thanks"
                 description="For the optimal experience, we recommend using gpt-3.5-turbo-1106 for speed and gpt-4 for brevity."
-                open={recommending}
-                setOpen={setRecommending}
-                title="Recommend Config"
+                open={settingDefault}
+                setOpen={setSettingDefault}
+                title="Use Default Config?"
             />
         </>
     );
