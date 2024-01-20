@@ -50,11 +50,7 @@ export const getAccount = async (req, res, next) => {
     const config = await Config.findById(journal.config);
 
     // Decrypt the config's apiKey
-    if (config && config.apiKey) {
-      config.apiKey = config.decrypt();
-    } else {
-      req.flash('info', 'Click the Config tab to complete your journal setup.');
-    }
+    if (!config.model.analysis || !config.model.chat) req.flash('info', 'Click the Config tab to complete your journal setup.');
 
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {

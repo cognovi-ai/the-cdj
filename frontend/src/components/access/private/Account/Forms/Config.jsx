@@ -3,68 +3,53 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 import PopupDialog from '../../../../utils/PopupDialog';
 
-import { useAccess } from '../../../../../hooks/useAccess';
-
 import { useAccount } from '../../../../../contexts/useAccount';
-import { useJournal } from '../../../../../contexts/useJournal';
 import { useState } from 'react';
 
 const configFields = [
-    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'OpenAI models are currently only supported', type: 'select' },
-    { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'OpenAI models are currently only supported', type: 'text' },
-    { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
+    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'Used to analyze thoughts and for metadata processing', type: 'select' },
+    { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'Used as the therapy assistant in chat', type: 'select' },
 ];
 
-const analysisModels = [
-    'gpt-3.5-turbo-1106', 'gpt-4-1106-preview',
-];
+const models = {
+    analysis: ['gpt-3.5-turbo-1106', 'gpt-4-1106-preview',],
+    chat: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-4', 'gpt-4-32k'],
+};
 
-export default function Config({ savedConfig, setSavedConfig }) {
+export default function Config({ savedConfig }) {
     const [showApiKey, setShowApiKey] = useState(false);
-    const [deleting, setDeleting] = useState(false);
+    const [recommending, setRecommending] = useState(false);
 
     const { config, setConfig } = useAccount();
-    const { journalId } = useJournal();
-
-    const access = useAccess();
 
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
 
         setConfig((prevConfig) => {
-            if (name === 'chat' || name === 'analysis') {
-                return {
-                    ...prevConfig,
-                    model: {
-                        ...prevConfig.model,
-                        [name]: value,
-                    },
-                };
-            }
             return {
                 ...prevConfig,
-                [name]: value,
+                model: {
+                    ...prevConfig.model,
+                    [name]: value,
+                },
             };
         });
     };
 
-    const handleDeleting = async () => {
-        setDeleting(true);
+    const handleRecommending = async () => {
+        setRecommending(true);
     }
 
-    const deleteConfig = async () => {
-        try {
-            await access(
-                `/${ journalId }/account?deletionItem=config`,
-                'DELETE'
-            );
+    const recommendConfig = async () => {
+        const recommendedConfig = {
+            model: {
+                analysis: 'gpt-3.5-turbo-1106',
+                chat: 'gpt-4',
+            },
+        };
 
-            setConfig({});
-            setSavedConfig({});
-
-        } catch (error) {
-            console.error(error);
-        }
+        setConfig(recommendedConfig);
+        setRecommending(false);
     }
 
     const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
@@ -100,7 +85,11 @@ export default function Config({ savedConfig, setSavedConfig }) {
                                     <MenuItem key="none" value="">
                                         <em>None</em>
                                     </MenuItem>
-                                    {analysisModels.map((model) => (
+                                    {gpt === 'analysis' ? models.analysis.map((model) => (
+                                        <MenuItem key={model} value={model}>
+                                            {model}
+                                        </MenuItem>
+                                    )) : models.chat.map((model) => (
                                         <MenuItem key={model} value={model}>
                                             {model}
                                         </MenuItem>
@@ -138,20 +127,20 @@ export default function Config({ savedConfig, setSavedConfig }) {
                 ))}
                 <Grid item>
                     <Button
-                        color="danger"
-                        onClick={handleDeleting}
+                        color="info"
+                        onClick={handleRecommending}
                         sx={{ mt: '10px' }}
-                        variant="contained">Delete Config</Button>
+                        variant="contained">Recommend</Button>
                 </Grid>
             </Grid>
             <PopupDialog
-                action={deleteConfig}
-                buttonAgree="Delete"
-                buttonDeny="Cancel"
-                description="Are you sure you want to delete your config? This action cannot be undone."
-                open={deleting}
-                setOpen={setDeleting}
-                title="Delete Config"
+                action={recommendConfig}
+                buttonAgree="Accept"
+                buttonDeny="No thanks"
+                description="For the optimal experience, we recommend using gpt-3.5-turbo-1106 for speed and gpt-4 for brevity."
+                open={recommending}
+                setOpen={setRecommending}
+                title="Recommend Config"
             />
         </>
     );

@@ -11,7 +11,6 @@ const names = {
     oldPassword: 'Old Password',
     newPassword: 'New Password',
     model: 'Model',
-    apiKey: 'API Key',
 };
 
 export default function Review() {
@@ -34,7 +33,7 @@ export default function Review() {
                 }
 
                 // Hide sensitive data unless toggled to show
-                if ((key === 'oldPassword' || key === 'newPassword' || key === 'apiKey') && !showSensitive) {
+                if ((key === 'oldPassword' || key === 'newPassword') && !showSensitive) {
                     return { name: names[key], desc: '******' };
                 }
 
