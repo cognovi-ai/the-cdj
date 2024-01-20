@@ -204,8 +204,20 @@ export const login = async (req, res, next) => {
     if (err) { return next(err); }
 
     if (!user) {
-      // Handle login failure
-      return next(new ExpressError(info.message, 401));
+      const { email } = req.body;
+
+      if (email) {
+        // Handle login failure
+        const susUser = User.findOne({ email, betaAccess: false });
+
+        if (susUser) {
+          req.flash('warning', `You do not have ${ process.env.RELEASE_PHASE } access.`);
+
+          return res.status(403).json({ flash: req.flash() });
+        }
+
+        return next(new ExpressError(info.message, 401));
+      }
     }
 
     // Generate a token if the user wants to be remembered
@@ -307,6 +319,15 @@ export const forgotPassword = async (req, res, next) => {
 
     // If user doesn't exist, return error
     if (!user) return next(new ExpressError('Could not send recovery email.', 400));
+
+    // If user does not have betaAccess, return error
+    if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
+      // Send email to admin alert admin of suspicious activity
+      user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
+      await user.save();
+
+      return next(new ExpressError('You do not have beta access. Admin has been flagged.', 403));
+    }
 
     try {
       // Generate a password reset token

@@ -52,7 +52,7 @@ export const requestBetaAccess = async (req, res, next) => {
     res.status(200).json({ flash: req.flash() });
   } catch (err) {
     if (err?.code === 11000) {
-      return next(new ExpressError('Cannot request beta access at this time.', 400));
+      return next(new ExpressError('Cannot request beta access at this time.', 403));
     }
 
     return next(new ExpressError('An error occurred while attempting to request beta access.', 500));
