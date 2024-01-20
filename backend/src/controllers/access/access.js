@@ -232,11 +232,17 @@ export const login = async (req, res, next) => {
       // Retrieve the user's journal
       let journal = await Journal.findOne({ user: user._id });
 
-      // If user has no journal, create one
+      // May not have a journal if the user must be approved for access
       if (!journal) {
+        // Create default config
+        const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+        await newConfig.save();
+
         journal = new Journal({
-          user: user._id
+          user: user._id,
+          config: newConfig._id
         });
+
         await journal.save();
       }
 
@@ -392,8 +398,12 @@ export const register = async (req, res, next) => {
     validateJournal(req, res, async (err) => {
       if (err) return next(err); // Handle validation errors
 
+      // Create default config
+      const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+      await newConfig.save();
+
       // Continue with creating the journal if validation is successful
-      const newJournal = new Journal({ user: newUser._id, title: req.body.title });
+      const newJournal = new Journal({ user: newUser._id, title: req.body.title, config: newConfig._id });
       await newJournal.save();
 
       // Continue with the rest of the registration process
