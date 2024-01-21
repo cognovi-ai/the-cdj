@@ -200,23 +200,34 @@ export const deleteItem = async (req, res, next) => {
  * Login a user.
  */
 export const login = async (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', async (err, user, info) => {
     if (err) { return next(err); }
 
     if (!user) {
       const { email } = req.body;
+      const susUser = await User.findOne({ email });
 
-      if (email) {
+      if (susUser) {
         // Handle login failure
-        const susUser = User.findOne({ email, betaAccess: false });
-
-        if (susUser) {
+        if (susUser.betaAccess === false) {
           req.flash('warning', `You do not have ${ process.env.RELEASE_PHASE } access.`);
+          return res.status(403).json({ flash: req.flash() });
+        } else if (susUser.betaAccess === undefined) {
+          if (!susUser.emailVerified) {
+            susUser.sendBetaAccessVerificationEmail(susUser.generateEmailVerificationToken());
 
+            susUser.save();
+
+            req.flash('info', 'You must verify your email address in order for your beta request to be reviewed. Please check your mailbox for messages from The CDJ Team.');
+          } else {
+            req.flash('info', 'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.');
+          }
           return res.status(403).json({ flash: req.flash() });
         }
 
-        return next(new ExpressError(info.message, 401));
+        return next(new ExpressError(info.message, 403));
+      } else {
+        return next(new ExpressError('Email or password is incorrect.', 401));
       }
     }
 
@@ -320,10 +331,16 @@ export const forgotPassword = async (req, res, next) => {
     // If user doesn't exist, return error
     if (!user) return next(new ExpressError('Could not send recovery email.', 400));
 
-    // If user does not have betaAccess, return error
+    // A decision has not been made if betaAccess is undefined
     if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
+      // Prevent spamming the email server
+      if (user.betaAccessTokenExpires > Date.now() && user.betaAccess === false) {
+        return next(new ExpressError('You do not have beta access.', 403));
+      };
+
       // Send email to admin alert admin of suspicious activity
       user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
+      user.betaAccess = false; // Prevent spamming the email server
       await user.save();
 
       return next(new ExpressError('You do not have beta access. Admin has been flagged.', 403));
@@ -504,7 +521,6 @@ export const betaApproval = async (req, res, next) => {
 
     // Search for user by hashed token
     const user = await User.findOne({
-      betaAccess: false,
       betaAccessToken: hashedToken
     });
 
@@ -551,7 +567,6 @@ export const betaDenial = async (req, res, next) => {
 
     // Search for user by hashed token
     const user = await User.findOne({
-      betaAccess: false,
       betaAccessToken: hashedToken
     });
 
@@ -561,8 +576,7 @@ export const betaDenial = async (req, res, next) => {
     }
 
     // Deny beta access
-    user.betaAccessToken = undefined;
-    user.betaAccessTokenExpires = undefined;
+    user.betaAccess = false;
 
     // Send denial email to user
     user.sendBetaDenialEmail();

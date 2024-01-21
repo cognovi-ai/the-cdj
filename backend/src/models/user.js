@@ -21,7 +21,7 @@ const userSchema = new Schema({
   emailVerified: { type: Boolean, default: false },
   betaAccessToken: { type: String, default: undefined },
   betaAccessTokenExpires: { type: Date, default: undefined },
-  betaAccess: { type: Boolean, default: false }
+  betaAccess: { type: Boolean, default: undefined }
 });
 
 // Utility functions
@@ -184,8 +184,6 @@ userSchema.methods.generateEmailVerificationToken = function () {
   // Set an expiry time of 1 week
   this.verifyEmailTokenExpires = Date.now() + 604800000;
 
-  this.save();
-
   return verificationToken;
 };
 
@@ -256,13 +254,13 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
 };
 
 // Send beta request confirmation email
-userSchema.methods.sendBetaRequestConfirmationEmail = async function (token) {
+userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
   // Construct the verification URL
   const verificationUrl = `${ process.env.TOKENIZED_URL }/verify-email?token=${ token }`;
 
   // Recipient address (user's email)
   const to = this.email;
-  const subject = 'Beta Access Request Confirmation';
+  const subject = 'Beta Access Email Verification';
   const text = `Dear ${ this.fname },\n\nYou have requested beta access for The Cognitive Distortion Journal. After you verify your email address, you will receive an email when your request is reviewed with instructions. Thank you for your interest in the app!\n\nPlease click the link to verify your email address.\n\n${ verificationUrl }\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
@@ -300,7 +298,7 @@ userSchema.methods.sendBetaDenialEmail = async function () {
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Beta Access Denied';
-  const text = `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Thank you for your interest in the app! We hope you will consider using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${ this.betaAccessTokenExpires.toLocaleDateString() }. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
