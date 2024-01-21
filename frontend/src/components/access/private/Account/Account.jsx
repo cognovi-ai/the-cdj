@@ -75,8 +75,7 @@ export default function Account() {
                 // Set the config data
                 if (data.config)
                     setSavedConfig({
-                        model: data.config.model,
-                        apiKey: data.config.apiKey,
+                        model: { analysis: data.config.model?.analysis || '', chat: data.config.model?.chat || '' },
                     });
 
             } catch (error) {

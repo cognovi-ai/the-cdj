@@ -42,9 +42,16 @@ entryConversationSchema.methods.getChatContent = async function (configId, analy
 
   if (!config) {
     throw new ExpressError('Configure your account settings to chat.', 404);
+  } else if (config.apiKey) {
+    try {
+      // Remove an API key from a legacy config
+      await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
+    } catch (err) {
+      throw new ExpressError(err, 500);
+    }
   }
 
-  const cdGpt = new CdGpt(config.decrypt(), config.model.chat);
+  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.chat);
 
   const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
 

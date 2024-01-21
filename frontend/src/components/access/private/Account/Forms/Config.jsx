@@ -3,71 +3,54 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 import PopupDialog from '../../../../utils/PopupDialog';
 
-import { useAccess } from '../../../../../hooks/useAccess';
-
 import { useAccount } from '../../../../../contexts/useAccount';
-import { useJournal } from '../../../../../contexts/useJournal';
 import { useState } from 'react';
 
 const configFields = [
-    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'OpenAI models are currently only supported', type: 'select' },
-    { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'OpenAI models are currently only supported', type: 'text' },
-    { key: 'apiKey', label: 'API key', helperText: 'Retrieve your API key at https://platform.openai.com/api-keys', type: 'password' },
+    { key: 'model', gpt: 'analysis', label: 'LLM analysis model', helperText: 'Used to analyze thoughts and for metadata processing', type: 'select' },
+    { key: 'model', gpt: 'chat', label: 'LLM chat model', helperText: 'Used as the therapy assistant in chat', type: 'select' },
 ];
 
-const analysisModels = [
-    'gpt-3.5-turbo-1106', 'gpt-4-1106-preview',
-];
+const models = {
+    analysis: ['gpt-3.5-turbo-1106', 'gpt-4-1106-preview',],
+    chat: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-4', 'gpt-4-32k'],
+};
 
-export default function Config({ savedConfig, setSavedConfig }) {
-    const [showApiKey, setShowApiKey] = useState(false);
-    const [deleting, setDeleting] = useState(false);
+export default function Config({ savedConfig }) {
+    const [visible, setVisible] = useState(false);
+    const [settingDefault, setSettingDefault] = useState(false);
 
     const { config, setConfig } = useAccount();
-    const { journalId } = useJournal();
-
-    const access = useAccess();
 
     const handleConfigChange = (event) => {
         const { name, value } = event.target;
 
         setConfig((prevConfig) => {
-            if (name === 'chat' || name === 'analysis') {
-                return {
-                    ...prevConfig,
-                    model: {
-                        ...prevConfig.model,
-                        [name]: value,
-                    },
-                };
-            }
             return {
                 ...prevConfig,
-                [name]: value,
+                model: {
+                    ...prevConfig.model,
+                    [name]: value,
+                },
             };
         });
     };
 
-    const handleDeleting = async () => {
-        setDeleting(true);
+    const handleSettingDefault = async () => {
+        setSettingDefault(true);
     }
 
-    const deleteConfig = async () => {
-        try {
-            await access(
-                `/${ journalId }/account?deletionItem=config`,
-                'DELETE'
-            );
-
-            setConfig({});
-            setSavedConfig({});
-
-        } catch (error) {
-            console.error(error);
-        }
+    const defaultConfig = async () => {
+        setConfig({
+            model: {
+                analysis: 'gpt-3.5-turbo-1106',
+                chat: 'gpt-4',
+            },
+        });
+        setSettingDefault(false);
     }
 
-    const toggleApiKeyVisibility = () => setShowApiKey(!showApiKey);
+    const toggleVisibility = () => setVisible(!visible);
 
     const getConfigValue = (key, gpt) => {
         if (key === 'model') {
@@ -100,7 +83,11 @@ export default function Config({ savedConfig, setSavedConfig }) {
                                     <MenuItem key="none" value="">
                                         <em>None</em>
                                     </MenuItem>
-                                    {analysisModels.map((model) => (
+                                    {gpt === 'analysis' ? models.analysis.map((model) => (
+                                        <MenuItem key={model} value={model}>
+                                            {model}
+                                        </MenuItem>
+                                    )) : models.chat.map((model) => (
                                         <MenuItem key={model} value={model}>
                                             {model}
                                         </MenuItem>
@@ -110,14 +97,14 @@ export default function Config({ savedConfig, setSavedConfig }) {
                             </FormControl>
                         ) : (
                             <TextField
-                                InputProps={key === 'apiKey' ? {
+                                InputProps={key === 'sensitive' ? {
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             <IconButton
                                                 edge="end"
-                                                onClick={toggleApiKeyVisibility}
+                                                onClick={toggleVisibility}
                                             >
-                                                {showApiKey ? <VisibilityOff /> : <Visibility />}
+                                                {visible ? <VisibilityOff /> : <Visibility />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
@@ -129,7 +116,7 @@ export default function Config({ savedConfig, setSavedConfig }) {
                                 name={gpt ? gpt : key}
                                 onChange={handleConfigChange}
                                 required
-                                type={key === 'apiKey' && showApiKey ? 'text' : type}
+                                type={key === 'sensitive' && visible ? 'text' : type}
                                 value={getConfigValue(key, gpt)}
                                 variant="standard"
                             />
@@ -138,20 +125,20 @@ export default function Config({ savedConfig, setSavedConfig }) {
                 ))}
                 <Grid item>
                     <Button
-                        color="danger"
-                        onClick={handleDeleting}
+                        color="info"
+                        onClick={handleSettingDefault}
                         sx={{ mt: '10px' }}
-                        variant="contained">Delete Config</Button>
+                        variant="contained">Default</Button>
                 </Grid>
             </Grid>
             <PopupDialog
-                action={deleteConfig}
-                buttonAgree="Delete"
-                buttonDeny="Cancel"
-                description="Are you sure you want to delete your config? This action cannot be undone."
-                open={deleting}
-                setOpen={setDeleting}
-                title="Delete Config"
+                action={defaultConfig}
+                buttonAgree="Accept"
+                buttonDeny="No thanks"
+                description="For the optimal experience, we recommend using gpt-3.5-turbo-1106 for speed and gpt-4 for brevity."
+                open={settingDefault}
+                setOpen={setSettingDefault}
+                title="Use Default Config?"
             />
         </>
     );

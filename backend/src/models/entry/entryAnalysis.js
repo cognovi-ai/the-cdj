@@ -36,9 +36,16 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
 
   if (!config) {
     throw new Error('Configure your account settings to get an analysis.');
+  } else if (config.apiKey) {
+    try {
+      // Remove an API key from a legacy config
+      await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
-  const cdGpt = new CdGpt(config.decrypt(), config.model.analysis);
+  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);
 
   cdGpt.seedAnalysisMessages();
   cdGpt.addUserMessage({ analysis: content });

@@ -102,13 +102,7 @@ userSchema.statics.accountJoi = Joi.object({
   model: Joi.object({
     chat: modelFieldValidation,
     analysis: modelFieldValidation
-  }),
-  apiKey: Joi.string()
-    .pattern(/^[a-zA-Z0-9-]{0,128}$/)
-    .allow('')
-    .messages({
-      'string.pattern.base': 'API key must be between 30 and 128 characters long and contain only alphanumeric characters and dashes.'
-    })
+  })
 });
 
 // Mongoose schema indices and plugins
@@ -307,6 +301,20 @@ userSchema.methods.sendBetaDenialEmail = async function () {
   const to = this.email;
   const subject = 'Beta Access Denied';
   const text = `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Thank you for your interest in the app! We hope you will consider using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
+
+  this.sendMail({ to, subject, text });
+};
+
+// Send admin alert for forgot password abuse
+userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
+  // Construct the approval and denial URLs
+  const approvalUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-approval?token=${ token }`;
+  const denialUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-denial?token=${ token }`;
+
+  // Recipient address (support email)
+  const to = process.env.MANAGED_INBOX;
+  const subject = 'ALERT: User Forgot Password Abuse';
+  const text = `${ this.fname } ${ this.lname } <${ this.email }> has attempted to abuse the forgot password feature. This can happen when a user is trying to gain access to an account that is not theirs or they are trying to gain access in a closed ${ process.env.RELEASE_PHASE } release.\n\nIf in a closed release, use the following tokenized links to deny or approve them.\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`;
 
   this.sendMail({ to, subject, text });
 };

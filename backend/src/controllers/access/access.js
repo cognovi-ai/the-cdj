@@ -49,12 +49,8 @@ export const getAccount = async (req, res, next) => {
     // Journal config is optional
     const config = await Config.findById(journal.config);
 
-    // Decrypt the config's apiKey
-    if (config && config.apiKey) {
-      config.apiKey = config.decrypt();
-    } else {
-      req.flash('info', 'Click the Config tab to complete your journal setup.');
-    }
+    // If the config doesn't exist instruct the user to set it up
+    if (!config?.model.analysis || !config?.model.chat) req.flash('info', 'Click the Config tab to complete your journal setup.');
 
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
@@ -118,16 +114,13 @@ export const updateAccount = async (req, res, next) => {
       }
 
       // Update the optional fields of the config
-      const { model, apiKey } = config;
+      const { model } = config;
 
       if (model) {
         // Update chat and analysis fields if they exist in the request body
         if (model.chat !== undefined) model.chat ? response.model.chat = model.chat : response.model.chat = undefined;
         if (model.analysis !== undefined) model.analysis ? response.model.analysis = model.analysis : response.model.analysis = undefined;
       }
-
-      // Update the apiKey field if it exists in the request body
-      if (apiKey !== undefined) apiKey ? response.apiKey = response.encrypt(apiKey) : response.apiKey = undefined;
 
       await response.save();
 
@@ -211,8 +204,20 @@ export const login = async (req, res, next) => {
     if (err) { return next(err); }
 
     if (!user) {
-      // Handle login failure
-      return next(new ExpressError(info.message, 401));
+      const { email } = req.body;
+
+      if (email) {
+        // Handle login failure
+        const susUser = User.findOne({ email, betaAccess: false });
+
+        if (susUser) {
+          req.flash('warning', `You do not have ${ process.env.RELEASE_PHASE } access.`);
+
+          return res.status(403).json({ flash: req.flash() });
+        }
+
+        return next(new ExpressError(info.message, 401));
+      }
     }
 
     // Generate a token if the user wants to be remembered
@@ -239,11 +244,17 @@ export const login = async (req, res, next) => {
       // Retrieve the user's journal
       let journal = await Journal.findOne({ user: user._id });
 
-      // If user has no journal, create one
+      // May not have a journal if the user must be approved for access
       if (!journal) {
+        // Create default config
+        const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+        await newConfig.save();
+
         journal = new Journal({
-          user: user._id
+          user: user._id,
+          config: newConfig._id
         });
+
         await journal.save();
       }
 
@@ -309,9 +320,13 @@ export const forgotPassword = async (req, res, next) => {
     // If user doesn't exist, return error
     if (!user) return next(new ExpressError('Could not send recovery email.', 400));
 
-    // Check betaAccess if beta release phase is beta and user is not approved
-    if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
-      return next(new ExpressError('You must be approved for beta access to reset your password.', 403));
+    // If user does not have betaAccess, return error
+    if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
+      // Send email to admin alert admin of suspicious activity
+      user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
+      await user.save();
+
+      return next(new ExpressError('You do not have beta access. Admin has been flagged.', 403));
     }
 
     try {
@@ -404,8 +419,12 @@ export const register = async (req, res, next) => {
     validateJournal(req, res, async (err) => {
       if (err) return next(err); // Handle validation errors
 
+      // Create default config
+      const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+      await newConfig.save();
+
       // Continue with creating the journal if validation is successful
-      const newJournal = new Journal({ user: newUser._id, title: req.body.title });
+      const newJournal = new Journal({ user: newUser._id, title: req.body.title, config: newConfig._id });
       await newJournal.save();
 
       // Continue with the rest of the registration process

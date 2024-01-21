@@ -1,5 +1,4 @@
 import { Schema, model } from 'mongoose';
-import { decrypt, encrypt } from '../utils/aes.js';
 import Joi from 'joi';
 
 const configSchema = new Schema({
@@ -7,7 +6,7 @@ const configSchema = new Schema({
     chat: { type: String },
     analysis: { type: String }
   },
-  apiKey: { type: String, unique: true },
+  apiKey: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });
@@ -25,24 +24,8 @@ configSchema.statics.joi = Joi.object({
   model: Joi.object({
     chat: modelFieldValidation,
     analysis: modelFieldValidation
-  }).required(),
-  apiKey: Joi.string()
-    .pattern(/^[a-zA-Z0-9-]{0,128}$/)
-    .allow('')
-    .messages({
-      'string.pattern.base': 'API key must only contain alphanumeric characters and hyphens.'
-    })
+  }).required()
 });
-
-// Encrypt the apiKey
-configSchema.methods.encrypt = function (apiKey) {
-  return encrypt(apiKey);
-};
-
-// Decrypt the apiKey
-configSchema.methods.decrypt = function () {
-  return decrypt(this.apiKey);
-};
 
 // Set new updated_at value before saving
 configSchema.pre('save', function (next) {
