@@ -51,6 +51,11 @@ export default function Entry({ setEntries, setFocusedEntryId, setTypeWrittenId 
 
             // Make the new entry the focused entry on submit
             setFocusedEntryId(data._id);
+
+            // Scroll to top of page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Set the URL to the new entry
             navigate(`/entries/${ data._id }`);
 
             // Add new entry to thought list

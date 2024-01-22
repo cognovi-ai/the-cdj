@@ -1,4 +1,5 @@
 .focused {
     border-radius: 15px;
     background-color: #f2f2f2;
+    padding: 8px 12px;
 }

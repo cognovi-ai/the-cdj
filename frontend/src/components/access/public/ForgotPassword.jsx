@@ -58,7 +58,7 @@ export default function ForgotPassword() {
                     }}
                     variant="h5"
                 >
-                    Reset password
+                    Forgot password
                 </Typography>
                 <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
                     <TextField

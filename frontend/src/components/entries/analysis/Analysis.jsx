@@ -156,12 +156,23 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
         makeRequest();
     }
 
+    const getReadableDate = (date) => {
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+
+        return new Date(date).toLocaleDateString('en-US', options);
+    }
+
     return (
         <Item>
-            <Typography noWrap variant="h2">
+            <Typography lineHeight="2em" mb="0.5em" variant="h2">
                 {focusedData?.entry?.title}
             </Typography>
-            <Box sx={{ maxHeight: '45vh', overflow: 'auto', pt: '1em', pr: '1em' }}>
+            <Box sx={{ maxHeight: '45vh', overflow: 'auto', pr: '1em' }}>
                 <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
                         {editing ? (
@@ -223,7 +234,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="caption">
-                            {focusedData?.created_at}
+                            {getReadableDate(focusedData?.created_at)}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -231,6 +242,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
             <Box>
                 <Chat
                     chat={chat}
+                    focusedData={focusedData}
                     focusedEntryId={focusedEntryId}
                     journalId={journalId}
                     setChat={setChat}

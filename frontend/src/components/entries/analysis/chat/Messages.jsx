@@ -9,6 +9,21 @@ export default function Messages({ chat, lastMessageRef, setHasSent }) {
         setHasSent(false);
     });
 
+    const getReadableDate = (date) => {
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        };
+
+        return new Date(date).toLocaleString('en-US', options);
+    }
+
+
     return (
         <Box sx={{ width: '100%' }}>
             {chat && chat.messages && chat.messages.map((message, index) => (
@@ -41,9 +56,10 @@ export default function Messages({ chat, lastMessageRef, setHasSent }) {
                         <Typography
                             align="center"
                             display="block"
+                            mt="1em"
                             variant="caption"
                         >
-                            {message.created_at}
+                            {getReadableDate(message.created_at)}
                         </Typography>
                     </Grid>
                 </Grid>
