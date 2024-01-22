@@ -186,7 +186,6 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                         key={entry._id}
                         sx={{
                             margin: '0 0 2em',
-                            padding: '8px 12px',
                         }}>
                         <Box
                             sx={{
