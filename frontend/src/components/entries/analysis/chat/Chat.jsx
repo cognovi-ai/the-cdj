@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import ChatEntry from './ChatEntry';
 import Messages from './Messages';
 
-export default function Chat({ journalId, focusedEntryId, chat, setChat }) {
+export default function Chat({ journalId, focusedEntryId, focusedData, chat, setChat }) {
     const messagesEndRef = useRef(null);
     const lastMessageRef = useRef(null);
     const alignChatRef = useRef(null);
@@ -32,6 +32,9 @@ export default function Chat({ journalId, focusedEntryId, chat, setChat }) {
                 sx={{ color: 'inherit' }}>
                 <Typography variant="h2">Chat</Typography>
             </InputLabel >
+            <Typography mb="1.5em" variant="body1">
+                Talk about <i>{focusedData?.entry?.title}</i>.
+            </Typography>
             {chat.messages &&
                 <Box
                     ref={messagesEndRef}

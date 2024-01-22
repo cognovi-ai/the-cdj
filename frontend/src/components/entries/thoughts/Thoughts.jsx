@@ -159,6 +159,16 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         }
     };
 
+    const getReadableDate = (date) => {
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+
+        return new Date(date).toLocaleDateString('en-US', options);
+    }
+
     return (
         <Item>
             <Grid container>
@@ -178,7 +188,25 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             margin: '0 0 2em',
                             padding: '8px 12px',
                         }}>
-                        <Typography variant="body1">{entry.title}</Typography>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                            }}
+                        >
+                            <Typography
+                                sx={{ flex: 2 }}
+                                variant="body1"
+                            >
+                                {entry.title}
+                            </Typography>
+                            <Typography
+                                sx={{ flex: 1, lineHeight: '2.6em', textAlign: 'right' }}
+                                variant="caption"
+                            >
+                                {getReadableDate(entry.created_at)}
+                            </Typography>
+                        </Box>
+                        <Typography noWrap variant="body2">{entry.content}</Typography>
                         {editing && editedEntryId === entry._id ? (
                             <>
                                 <TextField
