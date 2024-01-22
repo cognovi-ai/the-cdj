@@ -179,7 +179,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     <Typography mt="-2em" variant="h2">Recent Thoughts</Typography>
                 </Grid>
             </Grid>
-            <Box sx={{ height: '90vh', overflow: 'auto' }}>
+            <Box sx={{ height: '100vh', overflow: 'auto' }}>
                 {allEntries.map((entry) => (
                     <Box
                         className={entry._id === focusedEntryId ? 'focused' : ''}

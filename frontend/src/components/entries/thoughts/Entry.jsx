@@ -74,7 +74,7 @@ export default function Entry({ setEntries, setFocusedEntryId, setTypeWrittenId 
 
     return (
         <Item>
-            <InputLabel htmlFor="new-entry" sx={{ color: 'inherit' }}>
+            <InputLabel htmlFor="new-entry" sx={{ color: 'inherit', mt: '-0.7em' }}>
                 <Typography variant="h2">Thought Entry</Typography>
             </InputLabel>
             <form onSubmit={handleSubmit}>
