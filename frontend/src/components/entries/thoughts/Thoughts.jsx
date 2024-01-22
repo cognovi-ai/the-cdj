@@ -188,24 +188,29 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             margin: '0 0 2em',
                         }}>
                         <Box
-                            sx={{
-                                display: 'flex',
-                            }}
+                            onClick={() => handleFocus(entry._id)}
+                            sx={{ cursor: 'pointer' }}
                         >
-                            <Typography
-                                sx={{ flex: 2 }}
-                                variant="body1"
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                }}
                             >
-                                {entry.title}
-                            </Typography>
-                            <Typography
-                                sx={{ flex: 1, lineHeight: '2.6em', textAlign: 'right' }}
-                                variant="caption"
-                            >
-                                {getReadableDate(entry.created_at)}
-                            </Typography>
+                                <Typography
+                                    sx={{ flex: 2 }}
+                                    variant="body1"
+                                >
+                                    {entry.title}
+                                </Typography>
+                                <Typography
+                                    sx={{ flex: 1, lineHeight: '2.6em', textAlign: 'right' }}
+                                    variant="caption"
+                                >
+                                    {getReadableDate(entry.created_at)}
+                                </Typography>
+                            </Box>
+                            <Typography noWrap variant="body2">{entry.content}</Typography>
                         </Box>
-                        <Typography noWrap variant="body2">{entry.content}</Typography>
                         {editing && editedEntryId === entry._id ? (
                             <>
                                 <TextField
@@ -246,13 +251,15 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                             </>
                         ) : (
                             <>
-                                <IconButton
+                                {entry._id !== focusedEntryId && <IconButton
                                     aria-label="Focus"
                                     color="primary"
                                     disabled={isSubmitting}
-                                    onClick={() => handleFocus(entry._id)}>
+                                    onClick={() => handleFocus(entry._id)}
+                                >
                                     <FocusIcon />
                                 </IconButton>
+                                }
                                 <IconButton
                                     aria-label="Edit"
                                     color="edit"
