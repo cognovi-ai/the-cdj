@@ -187,6 +187,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                                 onBlur={handleOnBlur}
                                 onChange={handleEditing}
                                 onKeyDown={handleKeyPress}
+                                sx={{ mt: '0.5em' }}
                                 value={editedData}
                                 variant="outlined"
                             />
