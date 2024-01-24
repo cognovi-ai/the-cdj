@@ -1,4 +1,4 @@
-import { Grid, TextField, Typography } from '@mui/material';
+import { Grid, TextField, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import Analysis from './analysis/Analysis';
@@ -120,14 +120,16 @@ export default function Entries() {
                             variant="standard"
                         />
                     ) : (
-                        <Typography
-                            align="center"
-                            onClick={isEnteringTitle}
-                            sx={{ cursor: 'pointer' }}
-                            variant="h1"
-                        >
-                            {journalTitle}
-                        </Typography>
+                        <Tooltip title="Click to edit your title.">
+                            <Typography
+                                align="center"
+                                onClick={isEnteringTitle}
+                                sx={{ cursor: 'pointer' }}
+                                variant="h1"
+                            >
+                                {journalTitle}
+                            </Typography>
+                        </Tooltip>
                     )
                     }
                 </Item>
