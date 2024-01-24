@@ -1,0 +1,36 @@
+name: Deploy Backend
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    environment: Backend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: SSH and Deploy
+      env:
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        TARGET: ${{ secrets.EC2_BACKEND_TARGET }}
+        NODE_ENV: ${{ secrets.NODE_ENV }}
+      run: |
+        # Setting up SSH Key
+        mkdir -p ~/.ssh
+        echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+        # SSH commands to update and restart the backend
+        ssh -T -o StrictHostKeyChecking=no $EC2_HOST << 'EOSSH'
+          cd $TARGET
+          git checkout main
+          git pull
+          sudo NODE_ENV=$NODE_ENV pm2 restart the-cdj
+        EOSSH
+
+        # Clean up SSH Keys
+        rm -rf ~/.ssh/
