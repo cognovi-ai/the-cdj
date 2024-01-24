@@ -35,7 +35,7 @@ jobs:
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
-        TARGET: /home/ubuntu/client/deploy/
+        TARGET: ${{ secrets.EC2_FRONTEND_TARGET }}
       run: |
         mkdir -p ~/.ssh
         echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
