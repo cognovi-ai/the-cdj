@@ -1,7 +1,7 @@
 import './Thoughts.css'
 
-import { Box, Button, CircularProgress, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon, AspectRatio as FocusIcon } from '@mui/icons-material';
+import { Box, Button, CircularProgress, Collapse, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
+import { Delete as DeleteIcon, ArrowDropDown as DownIcon, Edit as EditIcon, AspectRatio as FocusIcon, ArrowDropUp as UpIcon } from '@mui/icons-material';
 
 import { Item } from '../../../styles/components';
 import { useEntries } from '../../../hooks/useEntries';
@@ -18,6 +18,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         privacy_settings: {},
     });
     const [validationError, setValidationError] = useState('');
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const entries = useEntries();
     const navigate = useNavigate();
@@ -169,6 +170,10 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
         return new Date(date).toLocaleDateString('en-US', options);
     }
 
+    const handleCollapse = () => {
+        setIsCollapsed(!isCollapsed);
+    }
+
     return (
         <Item>
             <Grid container>
@@ -176,111 +181,118 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
                 </Grid>
                 <Grid item>
-                    <Typography mt="-2em" variant="h2">Recent Thoughts</Typography>
+                    <Typography mt="-2em" onClick={handleCollapse} variant="h2">
+                        Recent Thoughts
+                        <IconButton aria-label="Collapse" color="primary" size="small">
+                            {isCollapsed ? <DownIcon /> : <UpIcon />}
+                        </IconButton>
+                    </Typography>
                 </Grid>
             </Grid>
-            <Box sx={{ height: '100vh', overflow: 'auto' }}>
-                {allEntries.map((entry) => (
-                    <Box
-                        className={entry._id === focusedEntryId ? 'focused' : ''}
-                        key={entry._id}
-                        sx={{
-                            margin: '0 0 2em',
-                        }}>
+            <Collapse in={!isCollapsed} timeout="auto" unmountOnExit>
+                <Box sx={{ height: '100vh', overflow: 'auto' }}>
+                    {allEntries.map((entry) => (
                         <Box
-                            onClick={() => handleFocus(entry._id)}
-                            sx={{ cursor: 'pointer' }}
-                        >
+                            className={entry._id === focusedEntryId ? 'focused' : ''}
+                            key={entry._id}
+                            sx={{
+                                margin: '0 0 2em',
+                            }}>
                             <Box
-                                sx={{
-                                    display: 'flex',
-                                }}
+                                onClick={() => handleFocus(entry._id)}
+                                sx={{ cursor: 'pointer' }}
                             >
-                                <Typography
-                                    sx={{ flex: 2 }}
-                                    variant="body1"
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                    }}
                                 >
-                                    {entry.title}
-                                </Typography>
-                                <Typography
-                                    sx={{ flex: 1, lineHeight: '2.6em', textAlign: 'right' }}
-                                    variant="caption"
-                                >
-                                    {getReadableDate(entry.created_at)}
-                                </Typography>
-                            </Box>
-                            <Typography noWrap variant="body2">{entry.content}</Typography>
-                        </Box>
-                        {editing && editedEntryId === entry._id ? (
-                            <>
-                                <TextField
-                                    autoFocus
-                                    disabled={isSubmitting}
-                                    error={Boolean(validationError)}
-                                    fullWidth
-                                    helperText={validationError}
-                                    label="Edit your thought."
-                                    maxRows={6}
-                                    minRows={3}
-                                    multiline
-                                    onChange={handleEditing}
-                                    onKeyDown={handleEnterKeyPress}
-                                    value={editedData.content}
-                                    variant="filled"
-                                />
-                                {isSubmitting && <LinearProgress />}
-                                <Box display="flex" justifyContent="flex-end" marginTop={2}>
-                                    <Button
-                                        color="primary"
-                                        disabled={Boolean(validationError) || isSubmitting}
-                                        onClick={handleSaveEdit}
-                                        variant="contained"
+                                    <Typography
+                                        sx={{ flex: 2 }}
+                                        variant="body1"
                                     >
-                                        Save
-                                    </Button>
-                                    <Button
-                                        color="cancel"
-                                        disabled={isSubmitting}
-                                        onClick={handleCancelEdit}
-                                        style={{ marginLeft: 8 }}
-                                        variant="contained"
+                                        {entry.title}
+                                    </Typography>
+                                    <Typography
+                                        sx={{ flex: 1, lineHeight: '2.6em', textAlign: 'right' }}
+                                        variant="caption"
                                     >
-                                        Cancel
-                                    </Button>
+                                        {getReadableDate(entry.created_at)}
+                                    </Typography>
                                 </Box>
-                            </>
-                        ) : (
-                            <>
-                                {entry._id !== focusedEntryId && <IconButton
-                                    aria-label="Focus"
-                                    color="primary"
-                                    disabled={isSubmitting}
-                                    onClick={() => handleFocus(entry._id)}
-                                >
-                                    <FocusIcon />
-                                </IconButton>
-                                }
-                                <IconButton
-                                    aria-label="Edit"
-                                    color="edit"
-                                    disabled={isSubmitting}
-                                    onClick={() => handleEdit(entry._id)}
-                                >
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                    aria-label="Delete"
-                                    color="danger"
-                                    disabled={isSubmitting}
-                                    onClick={() => handleDelete(entry._id)}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </>
-                        )}
-                    </Box>
-                ))}
-            </Box>
+                                <Typography noWrap variant="body2">{entry.content}</Typography>
+                            </Box>
+                            {editing && editedEntryId === entry._id ? (
+                                <>
+                                    <TextField
+                                        autoFocus
+                                        disabled={isSubmitting}
+                                        error={Boolean(validationError)}
+                                        fullWidth
+                                        helperText={validationError}
+                                        label="Edit your thought."
+                                        maxRows={6}
+                                        minRows={3}
+                                        multiline
+                                        onChange={handleEditing}
+                                        onKeyDown={handleEnterKeyPress}
+                                        value={editedData.content}
+                                        variant="filled"
+                                    />
+                                    {isSubmitting && <LinearProgress />}
+                                    <Box display="flex" justifyContent="flex-end" marginTop={2}>
+                                        <Button
+                                            color="primary"
+                                            disabled={Boolean(validationError) || isSubmitting}
+                                            onClick={handleSaveEdit}
+                                            variant="contained"
+                                        >
+                                            Save
+                                        </Button>
+                                        <Button
+                                            color="cancel"
+                                            disabled={isSubmitting}
+                                            onClick={handleCancelEdit}
+                                            style={{ marginLeft: 8 }}
+                                            variant="contained"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Box>
+                                </>
+                            ) : (
+                                <>
+                                    {entry._id !== focusedEntryId && <IconButton
+                                        aria-label="Focus"
+                                        color="primary"
+                                        disabled={isSubmitting}
+                                        onClick={() => handleFocus(entry._id)}
+                                    >
+                                        <FocusIcon />
+                                    </IconButton>
+                                    }
+                                    <IconButton
+                                        aria-label="Edit"
+                                        color="edit"
+                                        disabled={isSubmitting}
+                                        onClick={() => handleEdit(entry._id)}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        aria-label="Delete"
+                                        color="danger"
+                                        disabled={isSubmitting}
+                                        onClick={() => handleDelete(entry._id)}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </>
+                            )}
+                        </Box>
+                    ))}
+                </Box>
+            </Collapse>
         </Item>
     );
 }
