@@ -1,0 +1,49 @@
+name: Deploy Frontend
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14' # Update this to your project's Node.js version
+
+    - name: Install Dependencies
+      run: npm install
+      working-directory: ./frontend
+
+    - name: Build
+      env:
+        VITE_ACCESS_URL: ${{ secrets.VITE_ACCESS_URL }}
+        VITE_ENTRIES_URL: ${{ secrets.VITE_ENTRIES_URL }}
+      run: npm run build
+      working-directory: ./frontend
+
+    - name: Deploy to EC2
+      env:
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        TARGET: /home/ubuntu/client/deploy/
+      run: |
+        mkdir -p ~/.ssh
+        echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        scp -o StrictHostKeyChecking=no -r ./frontend/dist/* $EC2_HOST:$TARGET
+      working-directory: ./
+
+    - name: Clean up SSH Keys
+      if: always()
+      run: rm -rf ~/.ssh/
+
+    - name: Deployment Success Message
+      run: echo "Deployment successful!"
