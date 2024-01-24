@@ -1,6 +1,6 @@
 import './Thoughts.css'
 
-import { Box, Button, CircularProgress, Collapse, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Collapse, Divider, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, ArrowDropDown as DownIcon, Edit as EditIcon, AspectRatio as FocusIcon, ArrowDropUp as UpIcon } from '@mui/icons-material';
 
 import { Item } from '../../../styles/components';
@@ -189,6 +189,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     </Typography>
                 </Grid>
             </Grid>
+            {isCollapsed && <Divider fullWidth />}
             <Collapse in={!isCollapsed} timeout="auto" unmountOnExit>
                 <Box sx={{ height: '100vh', overflow: 'auto' }}>
                     {allEntries.map((entry) => (
