@@ -12,7 +12,11 @@ import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './styles/theme.jsx'
 
+import { usePageTracking } from './hooks/usePageTracking';
+
 export default function App() {
+  usePageTracking();
+
   return (
     <>
       <CssBaseline />

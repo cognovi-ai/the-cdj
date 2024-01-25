@@ -11,7 +11,12 @@ import Home from './routes/Home';
 import Index from './routes/entries';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import ReactGA from 'react-ga4';
 import Root from './routes/root';
+
+if (import.meta.env.VITE_NODE_ENV === 'production') {
+  ReactGA.initialize(import.meta.env.VITE_GA_TRACKING_ID);
+}
 
 const router = createBrowserRouter([
   {
