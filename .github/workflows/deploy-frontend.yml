@@ -29,6 +29,7 @@ jobs:
       env:
         VITE_NODE_ENV: ${{ secrets.VITE_NODE_ENV }}
         VITE_RELEASE_PHASE: ${{ secrets.VITE_RELEASE_PHASE }}
+        VITE_GA_TRACKING_ID: ${{ secrets.VITE_GA_TRACKING_ID }}
         VITE_ACCESS_URL: ${{ secrets.VITE_ACCESS_URL }}
         VITE_ENTRIES_URL: ${{ secrets.VITE_ENTRIES_URL }}
       run: npm run build
