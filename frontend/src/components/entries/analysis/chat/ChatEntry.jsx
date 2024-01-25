@@ -4,7 +4,7 @@ import { Send as SendIcon } from '@mui/icons-material';
 import { useEntries } from '../../../../hooks/useEntries';
 import { useState } from 'react';
 
-export default function ChatEntry({ focusedEntryId, chat, setChat, setHasSent }) {
+export default function ChatEntry({ focusedEntryId, chat, setChat, setHasSent, setIsFocused }) {
     const [newChat, setNewChat] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
@@ -81,7 +81,9 @@ export default function ChatEntry({ focusedEntryId, chat, setChat, setHasSent })
                     maxRows={6}
                     minRows={3}
                     multiline
+                    onBlur={() => setIsFocused(false)}
                     onChange={handleNewChatChange}
+                    onFocus={() => setIsFocused(true)}
                     onKeyDown={handleEnterKeyPress}
                     value={newChat}
                     variant="filled"

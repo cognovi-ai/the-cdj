@@ -12,20 +12,26 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
 
     const [hasSent, setHasSent] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
     useEffect(() => {
         if (messagesEndRef.current) {
-            if (hasSent) {
-                lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
-                alignChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
-            } else {
-                messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
-            }
+            if (hasSent) alignChat();
+            else messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
         }
     }, [chat]);
 
+    useEffect(() => {
+        if (isFocused) alignChat();
+    }, [isFocused]);
+
     const handleCollapse = () => {
         setIsCollapsed(!isCollapsed);
+    }
+
+    const alignChat = () => {
+        lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        alignChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     }
 
     return (
@@ -71,6 +77,7 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
                     journalId={journalId}
                     setChat={setChat}
                     setHasSent={setHasSent}
+                    setIsFocused={setIsFocused}
                 />
             </Collapse>
         </Box>
