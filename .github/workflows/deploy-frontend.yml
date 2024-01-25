@@ -27,6 +27,7 @@ jobs:
 
     - name: Build
       env:
+        VITE_NODE_ENV: ${{ secrets.VITE_NODE_ENV }}
         VITE_RELEASE_PHASE: ${{ secrets.VITE_RELEASE_PHASE }}
         VITE_ACCESS_URL: ${{ secrets.VITE_ACCESS_URL }}
         VITE_ENTRIES_URL: ${{ secrets.VITE_ENTRIES_URL }}
