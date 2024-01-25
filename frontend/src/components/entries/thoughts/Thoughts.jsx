@@ -191,7 +191,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             </Grid>
             {isCollapsed && <Divider fullWidth />}
             <Collapse in={!isCollapsed} timeout="auto" unmountOnExit>
-                <Box sx={{ height: '100vh', overflow: 'auto' }}>
+                <Box sx={{ maxHeight: '100vh', overflow: 'auto' }}>
                     {allEntries.map((entry) => (
                         <Box
                             className={entry._id === focusedEntryId ? 'focused' : ''}
