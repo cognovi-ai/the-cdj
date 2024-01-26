@@ -29,8 +29,19 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
         setIsCollapsed(!isCollapsed);
     }
 
+    const isElementInView = (el) => {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
     const alignChat = () => {
-        lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        if (lastMessageRef.current && !isElementInView(lastMessageRef.current))
+            lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 
         // Ensure previous scroll has finished
         setTimeout(() => {
