@@ -45,7 +45,8 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
         >
             <InputLabel
                 htmlFor="new-message"
-                sx={{ color: 'inherit' }}>
+                sx={{ color: 'inherit' }}
+            >
                 <Typography variant="h2" >
                     Chat
                     <IconButton aria-label="Collapse" color="primary" onClick={handleCollapse} size="small">
@@ -53,9 +54,14 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
                     </IconButton>
                 </Typography>
             </InputLabel >
-            <Typography mb="1.5em" onClick={handleCollapse} variant="body1">
-                Talk about <i>{focusedData?.entry?.title}</i>.
-            </Typography>
+            <InputLabel
+                htmlFor="new-message"
+                sx={{ color: 'inherit' }}
+            >
+                <Typography mb="1.5em" variant="body1">
+                    Talk about <i>{focusedData?.entry?.title}</i>.
+                </Typography>
+            </InputLabel>
             {isCollapsed && <Divider />}
             <Collapse in={!isCollapsed} timeout="auto" unmountOnExit>
                 {chat.messages &&
