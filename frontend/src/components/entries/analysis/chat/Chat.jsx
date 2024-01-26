@@ -46,9 +46,9 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
             <InputLabel
                 htmlFor="new-message"
                 sx={{ color: 'inherit' }}>
-                <Typography onClick={handleCollapse} variant="h2" >
+                <Typography variant="h2" >
                     Chat
-                    <IconButton aria-label="Collapse" color="primary" size="small">
+                    <IconButton aria-label="Collapse" color="primary" onClick={handleCollapse} size="small">
                         {isCollapsed ? <DownIcon /> : <UpIcon />}
                     </IconButton>
                 </Typography>
