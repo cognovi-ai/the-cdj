@@ -12,7 +12,9 @@ const entrySchema = new Schema({
   privacy_settings: {
     public: { type: Boolean, default: false },
     shared_with: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-  }
+  },
+  analysis: { type: Schema.Types.ObjectId, ref: 'EntryAnalysis' },
+  conversation: { type: Schema.Types.ObjectId, ref: 'EntryConversation' }
 });
 
 entrySchema.statics.joi = Joi.object({

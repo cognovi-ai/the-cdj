@@ -10,13 +10,7 @@ import { useState } from 'react';
 
 export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, setFocusedEntryId, editedEntryId, setEditedEntryId, setTypeWrittenId, isSubmitting, setIsSubmitting }) {
     const [editing, setEditing] = useState(false);
-    const [editedData, setEditedData] = useState({
-        title: '',
-        content: '',
-        mood: '',
-        tags: [],
-        privacy_settings: {},
-    });
+    const [editedData, setEditedData] = useState({});
     const [validationError, setValidationError] = useState('');
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -57,14 +51,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             const entryData = await entries(`/${ entryId }`, 'GET');
 
             setEditing(true);
-            setEditedData({
-                title: entryData.title,
-                content: entryData.content,
-                mood: entryData.mood,
-                tags: entryData.tags,
-                privacy_settings: entryData.privacy_settings,
-            });
+            setEditedData(entryData);
             setEditedEntryId(entryId);
+            setTypeWrittenId('');
         } catch (error) {
             console.error(error);
         }
@@ -95,7 +84,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                 `/${ editedEntryId }`,
                 'PUT',
                 { 'Content-Type': 'application/json' },
-                editedData
+                { content: editedData.content }
             );
 
             // Update the entries state with the edited data

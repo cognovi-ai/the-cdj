@@ -32,18 +32,18 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                     return
                 }
 
-                const entryAnalysisData = await entries(`/${ focusedEntryId }/analysis`, 'GET');
+                const entryData = await entries(`/${ focusedEntryId }`, 'GET');
 
-                setFocusedData(entryAnalysisData);
-                setEditedData(entryAnalysisData.entry.content);
+                // Data displayed in this component
+                setFocusedData(entryData);
+                setEditedData(entryData.content);
 
-                const chatData = await entries(`/${ focusedEntryId }/chat`, 'GET');
-
-                setChat(chatData);
+                // Render child Chat component
+                setChat(entryData.conversation?.messages ? entryData.conversation : {});
 
                 setTypedAnalysis('');
                 if (typeWrittenId) {
-                    typeWriter(entryAnalysisData.analysis_content, setTypedAnalysis, 10);
+                    typeWriter(entryData.analysis?.analysis_content, setTypedAnalysis, 10);
                 }
 
             } catch (error) {
@@ -170,7 +170,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
     return (
         <Item>
             <Typography lineHeight="2em" mb="0.5em" variant="h2">
-                {focusedData?.entry?.title}
+                {focusedData?.title}
             </Typography>
             <Box sx={{ maxHeight: '45vh', overflow: 'auto', pr: '1em' }}>
                 <Grid container spacing={2}>
@@ -198,7 +198,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                                     sx={{ cursor: 'pointer' }}
                                     variant="body1"
                                 >
-                                    {focusedData?.entry?.content}
+                                    {focusedData?.content}
                                 </Typography>
                             </Tooltip>
                         )}
@@ -217,7 +217,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                             </>
                         ) : (
                             <Typography variant="body2">
-                                {typeWrittenId ? typedAnalysis : focusedData?.analysis_content}
+                                {typeWrittenId ? typedAnalysis : focusedData?.analysis?.analysis_content}
                             </Typography>
                         )}
                         <Tooltip title="Generate a new analysis.">

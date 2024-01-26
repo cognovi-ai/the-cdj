@@ -44,6 +44,9 @@ export const createEntry = async (req, res, next) => {
     const newEntry = new Entry({ journal: journalId, ...entryData });
     const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
 
+    // Associate the entry with the analysis
+    newEntry.analysis = newAnalysis._id;
+
     // Get the analysis content for the entry
     try {
       const response = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
@@ -70,14 +73,19 @@ export const createEntry = async (req, res, next) => {
 };
 
 /**
- * Get an entry by ID.
+ * Get an entry and all associated documents by ID.
  */
 export const getAnEntry = async (req, res) => {
   const { entryId } = req.params;
 
-  const entry = await Entry.findById(entryId);
+  try {
+    const entry = await Entry.findById(entryId).populate('analysis conversation');
 
-  res.status(200).json(entry);
+    res.status(200).json(entry);
+  } catch (err) {
+    req.flash('info', err.message);
+    return next(err);
+  }
 };
 
 /**
@@ -253,11 +261,15 @@ export const createEntryConversation = async (req, res, next) => {
   // Get the config from the journal
   const journal = await Journal.findById(journalId);
 
-  // Get the analysis associated with the entry
-  const analysis = await EntryAnalysis.findOne({ entry: entryId });
+  // Get an entry with the analysis
+  const entry = await Entry.findById(entryId).populate('analysis');
+
+  // Associate the conversation with the entry
+  entry.conversation = newConversation._id;
+  await entry.save();
 
   try {
-    const llmResponse = await newConversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content);
+    const llmResponse = await newConversation.getChatContent(journal.config, entry.analysis._id, messageData.messages[0].message_content);
 
     // If the chat is not empty, update the llm_response
     if (llmResponse) {
