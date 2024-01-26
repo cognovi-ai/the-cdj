@@ -43,17 +43,16 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
             ref={alignChatRef}
             sx={{ display: 'flex', flexDirection: 'column' }}
         >
-            <InputLabel
-                htmlFor="new-message"
-                sx={{ color: 'inherit' }}
-            >
-                <Typography variant="h2" >
-                    Chat
-                    <IconButton aria-label="Collapse" color="primary" onClick={handleCollapse} size="small">
-                        {isCollapsed ? <DownIcon /> : <UpIcon />}
-                    </IconButton>
-                </Typography>
-            </InputLabel >
+            <Box alignItems="center" display="flex">
+                <InputLabel htmlFor="new-message" sx={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
+                    <Typography component="span" variant="h2">
+                        Chat
+                    </Typography>
+                </InputLabel>
+                <IconButton aria-label="Collapse" color="primary" onClick={handleCollapse} size="small">
+                    {isCollapsed ? <DownIcon /> : <UpIcon />}
+                </IconButton>
+            </Box>
             <InputLabel
                 htmlFor="new-message"
                 sx={{ color: 'inherit' }}
