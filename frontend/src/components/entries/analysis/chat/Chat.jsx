@@ -31,7 +31,11 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
 
     const alignChat = () => {
         lastMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
-        alignChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+
+        // Ensure previous scroll has finished
+        setTimeout(() => {
+            alignChatRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        }, 50);
     }
 
     return (
