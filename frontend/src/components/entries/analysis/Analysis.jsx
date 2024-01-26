@@ -32,18 +32,18 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                     return
                 }
 
-                const entryAnalysisData = await entries(`/${ focusedEntryId }/analysis`, 'GET');
+                const entryData = await entries(`/${ focusedEntryId }`, 'GET');
 
-                setFocusedData(entryAnalysisData);
-                setEditedData(entryAnalysisData.entry.content);
+                // Data displayed in this component
+                setFocusedData({ entry: entryData.entry, analysis_content: entryData.analysis.analysis_content });
+                setEditedData(entryData.entry.content);
 
-                const chatData = await entries(`/${ focusedEntryId }/chat`, 'GET');
-
-                setChat(chatData);
+                // Render child Chat component
+                setChat(entryData.chat?.messages ? entryData.chat : {});
 
                 setTypedAnalysis('');
                 if (typeWrittenId) {
-                    typeWriter(entryAnalysisData.analysis_content, setTypedAnalysis, 10);
+                    typeWriter(entryData.analysis?.analysis_content, setTypedAnalysis, 10);
                 }
 
             } catch (error) {

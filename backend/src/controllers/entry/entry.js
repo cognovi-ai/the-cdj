@@ -70,14 +70,21 @@ export const createEntry = async (req, res, next) => {
 };
 
 /**
- * Get an entry by ID.
+ * Get an entry and all associated documents by ID.
  */
 export const getAnEntry = async (req, res) => {
   const { entryId } = req.params;
 
-  const entry = await Entry.findById(entryId);
+  try {
+    const entry = await Entry.findById(entryId);
+    const analysis = await EntryAnalysis.findOne({ entry: entryId });
+    const chat = await EntryConversation.findOne({ entry: entryId });
 
-  res.status(200).json(entry);
+    res.status(200).json({ entry, analysis, chat });
+  } catch (err) {
+    req.flash('info', err.message);
+    return next(err);
+  }
 };
 
 /**
