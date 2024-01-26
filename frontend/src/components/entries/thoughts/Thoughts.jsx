@@ -51,8 +51,9 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
             const entryData = await entries(`/${ entryId }`, 'GET');
 
             setEditing(true);
-            setEditedData({ ...entryData.entry });
+            setEditedData(entryData);
             setEditedEntryId(entryId);
+            setTypeWrittenId('');
         } catch (error) {
             console.error(error);
         }
@@ -83,7 +84,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                 `/${ editedEntryId }`,
                 'PUT',
                 { 'Content-Type': 'application/json' },
-                editedData
+                { content: editedData.content }
             );
 
             // Update the entries state with the edited data

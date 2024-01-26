@@ -69,7 +69,7 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
                 sx={{ color: 'inherit' }}
             >
                 <Typography mb="1.5em" variant="body1">
-                    Talk about <i>{focusedData?.entry?.title}</i>.
+                    Talk about <i>{focusedData?.title}</i>.
                 </Typography>
             </InputLabel>
             {isCollapsed && <Divider />}
