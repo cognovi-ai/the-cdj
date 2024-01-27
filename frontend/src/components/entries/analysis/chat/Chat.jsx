@@ -19,7 +19,7 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
             if (hasSent) alignChat();
             else messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
         }
-    }, [chat, isCollapsed]);
+    }, [chat, isCollapsed, hasSent]);
 
     useEffect(() => {
         if (isFocused) alignChat();
