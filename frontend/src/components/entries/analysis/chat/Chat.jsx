@@ -64,14 +64,11 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
                     {isCollapsed ? <DownIcon /> : <UpIcon />}
                 </IconButton>
             </Box>
-            <InputLabel
-                htmlFor="new-message"
-                sx={{ color: 'inherit' }}
-            >
-                <Typography mb="1.5em" variant="body1">
+            <Typography mb="1.5em" variant="body1">
+                <label htmlFor="new-message" style={{ cursor: 'pointer' }}>
                     Talk about <i>{focusedData?.title}</i>.
-                </Typography>
-            </InputLabel>
+                </label>
+            </Typography>
             {isCollapsed && <Divider />}
             <Collapse in={!isCollapsed} timeout="auto" unmountOnExit>
                 {chat.messages &&
