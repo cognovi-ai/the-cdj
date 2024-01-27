@@ -170,7 +170,7 @@ export default function Thoughts({ allEntries, setAllEntries, focusedEntryId, se
                     {!editing && isSubmitting && <CircularProgress color="edit" size={20} sx={{ mt: '25px', mr: '15px' }} />}
                 </Grid>
                 <Grid item>
-                    <Typography mt="-2em" onClick={handleCollapse} variant="h2">
+                    <Typography onClick={handleCollapse} sx={{ cursor: 'pointer', mt: '-2em' }} variant="h2">
                         Recent Thoughts
                         <IconButton aria-label="Collapse" color="primary" size="small">
                             {isCollapsed ? <DownIcon /> : <UpIcon />}
