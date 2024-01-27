@@ -1,4 +1,4 @@
-import { Box, Collapse, Divider, IconButton, InputLabel, Typography } from '@mui/material';
+import { Box, Collapse, Divider, IconButton, Typography } from '@mui/material';
 import { ArrowDropDown as DownIcon, ArrowDropUp as UpIcon } from '@mui/icons-material';
 import { useEffect, useRef, useState } from 'react';
 
