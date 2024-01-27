@@ -25,7 +25,7 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
 
         # SSH commands to update and restart the backend
-        ssh -T -o StrictHostKeyChecking=no $EC2_HOST << 'EOSSH'
+        ssh -T -o StrictHostKeyChecking=no $EC2_HOST << "EOSSH"
           cd $TARGET
           git checkout main
           git pull
