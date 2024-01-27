@@ -55,11 +55,9 @@ export default function Chat({ journalId, focusedEntryId, focusedData, chat, set
             sx={{ display: 'flex', flexDirection: 'column' }}
         >
             <Box alignItems="center" display="flex">
-                <InputLabel htmlFor="new-message" sx={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
-                    <Typography component="span" variant="h2">
-                        Chat
-                    </Typography>
-                </InputLabel>
+                <Typography onClick={handleCollapse} sx={{ cursor: 'pointer' }} variant="h2">
+                    Chat
+                </Typography>
                 <IconButton aria-label="Collapse" color="primary" onClick={handleCollapse} size="small">
                     {isCollapsed ? <DownIcon /> : <UpIcon />}
                 </IconButton>
