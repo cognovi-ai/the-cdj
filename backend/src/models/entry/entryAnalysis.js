@@ -50,13 +50,19 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   cdGpt.seedAnalysisMessages();
   cdGpt.addUserMessage({ analysis: content });
 
-  const response = await cdGpt.getAnalysisCompletion();
+  const analysisCompletion = await cdGpt.getAnalysisCompletion();
 
-  if (response.error) {
-    throw new Error(response.error.message);
+  if (analysisCompletion.error) {
+    throw new Error(analysisCompletion.error.message);
   }
 
-  return response.choices[0].message.content;
+  const response = JSON.parse(analysisCompletion.choices[0].message.content);
+
+  const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
+
+  if (!isHealthy) { response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation; } else response.analysis_content = affirmation;
+
+  return response;
 };
 
 export default model('EntryAnalysis', entryAnalysisSchema);
