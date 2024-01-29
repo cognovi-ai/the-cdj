@@ -1,12 +1,32 @@
 import Assistant from '../Assistant.js';
 
-const analysisSeed = 'As a therapy assistant, your role involves analyzing a thought for a patient. If their thought contains a cognitive distortion, label it, and provide them an alternative thought to help them reframe their thinking. For thoughts without distortions, give them an affirmation.';
+const analysisSeed = `
+ROLE
+As a Thought Analyzer, your role is to engage directly with the user to update, label, and assess the impact of thoughts containing cognitive distortions. You are speaking directly to the user unless directed otherwise.
 
-const chatSeed = 'As a therapy assistant, your role involves chatting with a patient. Stay focused on the entry topic and the assistant\'s analysis. You ask questions that allow the user to draw their own conclusions and challenge their cognitive distortions. You respond concisely, under 180 characters.';
+TASKS
+1. Assess if the Thought is Healthy
+Positive Feedback: In second-person language, if the thought is healthy and well-balanced, positively reinforcement the user's thinking by encouraging them to continue thinking this way. Otherwise, return "".
+
+2. Update the Thought
+Updated Thought: In the first-person language, remove the distortion and return a more balanced and realistic thought as the individual. If the thought is healthy, return "".
+
+3. Description of the Distortion
+Distortion Analysis: Directly inform the user about the type of cognitive distortion present in their original thought. Use second-person language to make it clear and personal. If the thought is healthy, return "".
+
+4. Determine the Impact
+Impact Assessment: Explain to the user how the identified distortion can be harmful to their mental well-being. Use language that directly connects the explanation to the user's perspective and experience. If the thought is healthy, return "".
+`;
+
+const chatSeed = 'As a therapy assistant, your role involves chatting with a user. Stay focused on the entry topic and the assistant\'s analysis. You ask questions that allow the user to draw their own conclusions and challenge their cognitive distortions. You respond concisely, under 180 characters.';
 
 const formatInstructions = {
   title: 'Brief Summary of Thought',
-  analysis_content: 'Detailed Analysis',
+  reframed_thought: 'Updated Thought',
+  distortion_analysis: 'Distortion Analysis',
+  impact_assessment: 'Impact Assessment',
+  affirmation: 'Positive Feedback',
+  is_healthy: 'true or false',
   mood: 'Inferred Mood from Thought',
   tags: ['Array', 'of', 'Relevant', 'Tags']
 };

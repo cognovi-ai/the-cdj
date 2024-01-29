@@ -49,9 +49,7 @@ export const createEntry = async (req, res, next) => {
 
     // Get the analysis content for the entry
     try {
-      const response = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
-      // Parse the response
-      const analysis = JSON.parse(response);
+      const analysis = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
 
       // Complete the entry and analysis with the analysis content if available
       if (analysis) {
@@ -114,9 +112,7 @@ export const updateEntry = async (req, res, next) => {
     const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
     try {
-      const response = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
-      // Parse the response
-      const analysis = JSON.parse(response);
+      const analysis = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
 
       if (analysis) {
         updatedEntry.title = analysis.title;
@@ -211,9 +207,7 @@ export const updateEntryAnalysis = async (req, res, next) => {
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
   try {
-    const response = await entryAnalysis.getAnalysisContent(journal.config, entry.content);
-    // Parse the response
-    const analysis = JSON.parse(response);
+    const analysis = await entryAnalysis.getAnalysisContent(journal.config, entry.content);
 
     // Complete the entry and analysis with the analysis content if available
     if (analysis) {
