@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 const entrySchema = new Schema({
   journal: { type: Schema.Types.ObjectId, ref: 'Journal', required: true },
-  title: { type: String, required: true },
+  title: { type: String, default: 'Untitled' },
   content: { type: String, required: true },
   mood: { type: String },
   tags: [{ type: String }],
