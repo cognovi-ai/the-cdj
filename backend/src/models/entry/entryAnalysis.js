@@ -8,7 +8,7 @@ import Joi from 'joi';
 
 const entryAnalysisSchema = new Schema({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
-  analysis_content: { type: String, required: true },
+  analysis_content: { type: String, default: 'Analysis not available' },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });
@@ -60,7 +60,13 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
 
   const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
 
-  if (!isHealthy) { response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation; } else response.analysis_content = affirmation;
+  if (!isHealthy) {
+    if (!analysis || !impact || !reframing) {
+      throw new Error('Analysis content is not available.');
+    }
+
+    response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation;
+  } else response.analysis_content = affirmation;
 
   return response;
 };
