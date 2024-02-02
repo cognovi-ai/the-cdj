@@ -310,7 +310,7 @@ userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
   const denialUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-denial?token=${ token }`;
 
   // Recipient address (support email)
-  const to = process.env.SUPPORT_INBOX;
+  const to = process.env.ADMIN_INBOX;
   const subject = 'ALERT: User Forgot Password Abuse';
   const text = `${ this.fname } ${ this.lname } <${ this.email }> has attempted to abuse the forgot password feature. This can happen when a user is trying to gain access to an account that is not theirs or they are trying to gain access in a closed ${ process.env.RELEASE_PHASE } release.\n\nIf in a closed release, use the following tokenized links to deny or approve them.\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`;
 
