@@ -105,27 +105,32 @@ export const updateEntry = async (req, res, next) => {
     const entryData = req.body;
     const updatedEntry = await Entry.findById(entryId);
 
-    // Update the entry with the new data
-    updatedEntry.content = entryData.content;
+    if (entryData.content) {
+      // Update the entry with the new data
+      updatedEntry.content = entryData.content;
 
-    // Update the analysis content for the entry with a new analysis
-    const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
+      // Update the analysis content for the entry with a new analysis
+      const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
-    try {
-      const analysis = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
+      try {
+        const analysis = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
 
-      if (analysis) {
-        updatedEntry.title = analysis.title;
-        updatedEntry.mood = analysis.mood;
-        updatedEntry.tags = analysis.tags;
+        if (analysis) {
+          updatedEntry.title = analysis.title;
+          updatedEntry.mood = analysis.mood;
+          updatedEntry.tags = analysis.tags;
 
-        oldAnalysis.analysis_content = analysis.analysis_content;
+          oldAnalysis.analysis_content = analysis.analysis_content;
+        }
+      } catch (err) {
+        req.flash('info', err.message);
+      } finally {
+        await updatedEntry.save();
+        await oldAnalysis.save();
       }
-    } catch (err) {
-      req.flash('info', err.message);
-    } finally {
+    } else if (entryData.title) {
+      updatedEntry.title = entryData.title;
       await updatedEntry.save();
-      await oldAnalysis.save();
     }
 
     req.flash('success', 'Successfully updated entry.');

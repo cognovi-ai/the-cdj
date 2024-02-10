@@ -13,9 +13,12 @@ import { v4 as uuid } from 'uuid';
 
 export default function Analysis({ journalId, focusedEntryId, editedEntryId, setAllEntries, typeWrittenId, setTypeWrittenId, setIsSubmitting }) {
     const [focusedData, setFocusedData] = useState({});
-    const [editedData, setEditedData] = useState('');
-    const [editing, setEditing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
+    const [editedEntry, setEditedEntry] = useState('');
+    const [editedTitle, setEditedTitle] = useState('');
+    const [editingEntry, setEditingEntry] = useState(false);
+    const [editingTitle, setEditingTitle] = useState(false);
+    const [isSavingEntry, setIsSavingEntry] = useState(false);
+    const [isSavingTitle, setIsSavingTitle] = useState(false);
     const [validationError, setValidationError] = useState('');
     const [regenerating, setRegenerating] = useState(false);
     const [chat, setChat] = useState({});
@@ -36,7 +39,8 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
 
                 // Data displayed in this component
                 setFocusedData(entryData);
-                setEditedData(entryData.content);
+                setEditedEntry(entryData.content);
+                setEditedTitle(entryData.title);
 
                 // Render child Chat component
                 setChat(entryData.conversation?.messages ? entryData.conversation : {});
@@ -54,17 +58,17 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
         makeRequest();
     }, [focusedEntryId, editedEntryId, typeWrittenId]);
 
-    const handleSave = () => {
-        if (!editedData.length) {
+    const handleEntrySave = () => {
+        if (!editedEntry.length) {
             setValidationError('This field is required.');
             return;
-        } else if (editedData === focusedData?.entry?.content) {
+        } else if (editedEntry === focusedData?.entry?.content) {
             setValidationError('');
-            setEditing(false);
+            setEditingEntry(false);
             return;
         }
 
-        setIsSaving(true);
+        setIsSavingEntry(true);
         setIsSubmitting(true);
 
         const makeRequest = async () => {
@@ -74,7 +78,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                     `/${ focusedEntryId }`,
                     'PUT',
                     { 'Content-Type': 'application/json' },
-                    { content: editedData }
+                    { content: editedEntry }
                 );
 
                 // Get the entry analysis data
@@ -94,8 +98,8 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
             } catch (error) {
                 console.error(error);
             } finally {
-                setEditing(false);
-                setIsSaving(false);
+                setEditingEntry(false);
+                setIsSavingEntry(false);
                 setIsSubmitting(false);
             }
         }
@@ -103,24 +107,84 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
         makeRequest();
     }
 
-    const handleEditing = (event) => {
+    const handleTitleSave = () => {
+        if (!editedTitle.length) {
+            setValidationError('This field is required.');
+            return;
+        } else if (editedTitle === focusedData?.title) {
+            setValidationError('');
+            setEditingTitle(false);
+            return;
+        }
+
+        setIsSavingTitle(true);
+        setIsSubmitting(true);
+
+        const makeRequest = async () => {
+            try {
+                // Update the entry on the server
+                await entries(
+                    `/${ focusedEntryId }`,
+                    'PUT',
+                    { 'Content-Type': 'application/json' },
+                    { title: editedTitle }
+                );
+
+                // Re-render this component
+                setFocusedData({ ...focusedData, title: editedTitle });
+
+                // Side-effect re-renders sibling Thoughts component
+                setAllEntries(allEntries => allEntries.map(entry =>
+                    entry._id === focusedEntryId ? { ...focusedData, title: editedTitle } : entry
+                ));
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setEditingTitle(false);
+                setIsSavingTitle(false);
+                setIsSubmitting(false);
+            }
+        }
+
+        makeRequest();
+    }
+
+    const handleEditingEntry = (event) => {
         // Update the edited data
-        setEditedData(event.target.value);
+        setEditedEntry(event.target.value);
+    }
+
+    const handleEditingTitle = (event) => {
+        // Update the edited title
+        setEditedTitle(event.target.value);
     }
 
     const handleOnBlur = () => {
         setIsSubmitting(false);
-        setEditing(false);
+        setEditingEntry(false);
+        setEditingTitle(false);
     }
 
-    const handleKeyPress = (event) => {
+    const handleEditEntryKeyPress = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            handleSave();
+            handleEntrySave();
         } else if (event.key === 'Escape') {
-            setEditedData(focusedData?.entry?.content);
+            setEditedEntry(focusedData?.entry?.content);
             setValidationError('');
-            setEditing(false);
+            setEditingEntry(false);
+        }
+    }
+
+    const handleEditTitleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleTitleSave();
+        } else if (event.key === 'Escape') {
+            setEditedTitle(focusedData?.title);
+            setValidationError('');
+            setEditingTitle(false);
         }
     }
 
@@ -169,32 +233,58 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
 
     return (
         <Item>
-            <Typography lineHeight="2em" mb="0.5em" variant="h2">
-                {focusedData?.title}
-            </Typography>
+            {editingTitle ? (
+                <TextField
+                    autoFocus
+                    disabled={isSavingEntry}
+                    error={Boolean(validationError)}
+                    fullWidth
+                    helperText={validationError}
+                    label="Edit your thought."
+                    multiline
+                    onBlur={handleOnBlur}
+                    onChange={handleEditingTitle}
+                    onKeyDown={handleEditTitleKeyPress}
+                    value={editedTitle}
+                    variant="outlined"
+                />
+            ) : (
+                <Tooltip title="Click to edit your title.">
+                    <Typography
+                        lineHeight="2em"
+                        mb="0.5em"
+                        onClick={() => setEditingTitle(true)}
+                        sx={{ cursor: 'pointer' }}
+                        variant="h2"
+                    >
+                        {focusedData?.title}
+                    </Typography>
+                </Tooltip>
+            )}
+            {isSavingTitle && <LinearProgress />}
             <Box sx={{ maxHeight: '45vh', overflow: 'auto', pr: '1em' }}>
                 <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
-                        {editing ? (
+                        {editingEntry ? (
                             <TextField
                                 autoFocus
-                                disabled={isSaving}
+                                disabled={isSavingEntry}
                                 error={Boolean(validationError)}
                                 fullWidth
                                 helperText={validationError}
                                 label="Edit your thought."
                                 multiline
                                 onBlur={handleOnBlur}
-                                onChange={handleEditing}
-                                onKeyDown={handleKeyPress}
+                                onChange={handleEditingEntry}
+                                onKeyDown={handleEditEntryKeyPress}
                                 sx={{ mt: '0.5em' }}
-                                value={editedData}
+                                value={editedEntry}
                                 variant="outlined"
                             />
                         ) : (
                             <Tooltip title="Click to edit your thought.">
                                 <Typography
-                                    onClick={() => setEditing(true)}
+                                    onClick={() => setEditingEntry(true)}
                                     sx={{ cursor: 'pointer' }}
                                     variant="body1"
                                 >
@@ -202,7 +292,7 @@ export default function Analysis({ journalId, focusedEntryId, editedEntryId, set
                                 </Typography>
                             </Tooltip>
                         )}
-                        {isSaving && <LinearProgress />}
+                        {isSavingEntry && <LinearProgress />}
                     </Grid>
                     <Grid item md={6} xs={12}>
                         {regenerating ? (

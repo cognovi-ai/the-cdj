@@ -26,8 +26,7 @@ entrySchema.statics.joi = Joi.object({
     .default('Untitled'),
   content: Joi.string()
     .min(4)
-    .max(1000)
-    .required(),
+    .max(1000),
   mood: Joi.string(),
   tags: Joi.array().items(Joi.string()),
   privacy_settings: Joi.object({
