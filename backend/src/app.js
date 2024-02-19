@@ -11,6 +11,7 @@ import flash from 'connect-flash';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import passport from 'passport';
+import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 
 const app = express();
@@ -76,6 +77,21 @@ app.use(passport.authenticate('session'));
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+// use rate limit middleware
+app.use(rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: (req) => req.isAuthenticated() ? 500 : 50,
+  keyGenerator: (req) => {
+    if (req.isAuthenticated()) {
+      return req.user.id;
+    } else {
+      return req.ip + ':' + (req.sessionID || 'unauth');
+    }
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+}));
 
 // log requests
 app.use(morgan('dev'));
