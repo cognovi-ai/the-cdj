@@ -8,6 +8,7 @@ import connectStore from './store.js';
 import cors from 'cors';
 import express from 'express';
 import flash from 'connect-flash';
+import helmet from 'helmet';
 import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session';
@@ -18,6 +19,26 @@ const app = express();
 if (process.env.NODE_ENV !== 'test') {
   connectDB('cdj').catch(err => console.log(err));
 }
+
+// use helmet middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ['"self"'],
+      baseUri: ['"self"'],
+      blockAllMixedContent: [],
+      fontSrc: ['"self"', 'https:', 'data:'],
+      frameAncestors: ['"self"'],
+      imgSrc: ['"self"', 'data:'],
+      objectSrc: ['"none"'],
+      scriptSrc: ['"self"'],
+      scriptSrcAttr: ['"none"'],
+      styleSrc: ['"self"', 'https:', '"unsafe-inline"'],
+      upgradeInsecureRequests: []
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
 
 // use cors middleware
 app.use(cors({
