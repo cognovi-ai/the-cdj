@@ -81,7 +81,7 @@ passport.deserializeUser(User.deserializeUser());
 // use rate limit middleware
 app.use(rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: (req) => req.isAuthenticated() ? 500 : 50,
+  max: (req) => req.isAuthenticated() ? 500 : 10,
   keyGenerator: (req) => {
     if (req.isAuthenticated()) {
       return req.user.id;
@@ -90,7 +90,11 @@ app.use(rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  message: 'Too many requests, please try again after 10 minutes.',
+  handler: function (req, res, next) {
+    next(new ExpressError(this.message, 429));
+  }
 }));
 
 // log requests
