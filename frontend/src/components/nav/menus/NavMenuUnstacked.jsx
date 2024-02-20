@@ -22,7 +22,7 @@ export default function NavMenuUnstacked({ navItems = {}, handleCloseNavMenu }) 
     }, [journalId, navItems.pages]);
 
     return (
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'space-between', alignItems: 'center', m: '0 10em 0 10em' }}>
             {navItems.pages.map((page) => (
                 visibleLinks[page.name] && (
                     <Button

@@ -2,6 +2,7 @@ import './index.css'
 
 import { Account, ForgotPassword, Login, Logout, Register, ResetPassword, VerifyEmail } from './routes/access';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Dashboard } from './routes/reports';
 
 import ErrorPage from './components/utils/ErrorPage'
 
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
             element: <Index />
           },
         ],
+      },
+      {
+        path: '/reports',
+        element: <Dashboard />,
       },
       {
         path: '/account',

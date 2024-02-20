@@ -15,7 +15,8 @@ const navItems = {
     navMenu: {
         pages: [
             { name: 'Home', visibility: '' },
-            { name: 'Entries', visibility: 'private' }]
+            { name: 'Entries', visibility: 'private' },
+            { name: 'Reports', visibility: 'private' }],
     },
     accessMenu: {
         pages: [
