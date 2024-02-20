@@ -1,4 +1,4 @@
-import { access, entry } from './routes/index.js';
+import { access, entry, reports } from './routes/index.js';
 
 import ExpressError from './utils/ExpressError.js';
 import User from './models/user.js';
@@ -103,6 +103,7 @@ app.use(morgan('dev'));
 // routes
 app.use('/journals/:journalId/entries', entry);
 app.use('/access', access);
+app.use('/journals/:journalId/reports', reports);
 
 // 404 handler
 app.use('*', (req, res, next) => {
