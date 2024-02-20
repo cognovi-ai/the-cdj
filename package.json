@@ -22,5 +22,8 @@
   "devDependencies": {
     "concurrently": "^8.2.2",
     "jsdoc": "^4.0.2"
+  },
+  "dependencies": {
+    "express-rate-limit": "^7.1.5"
   }
 }
