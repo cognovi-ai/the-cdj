@@ -42,7 +42,7 @@ const createNameValidation = (isRequired = false) => {
 // Utility function for email validation
 const createEmailValidation = (isRequired = false) => {
   const validator = Joi.string()
-    .email({ tlds: { allow: ['com', 'net', 'org', 'edu', 'gov', 'io', 'tech', 'uk', 'de', 'in'] } })
+    .email({ tlds: { allow: ['com', 'net', 'org', 'edu', 'gov', 'io', 'app', 'ai', 'tech', 'uk', 'de', 'in'] } })
     .max(100)
     .lowercase()
     .messages({
