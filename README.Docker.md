@@ -3,7 +3,12 @@
 When you're ready, start your application by running:
 `docker compose up --build`.
 
-Your application will be available at http://localhost:3000.
+Wait for the mongodb container to start running. Once it's up,
+run `node backend/data/seed.js` to seed the container.
+This only needs to be run once because the service uses
+a volume to persist data on the host.
+
+Your application will be available at http://localhost:5173.
 
 ### Deploying your application to the cloud
 
@@ -20,3 +25,4 @@ docs for more detail on building and pushing.
 
 ### References
 * [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+

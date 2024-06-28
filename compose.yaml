@@ -11,15 +11,17 @@ services:
   backend:
     build:
       context: ./backend
+    env_file: ./backend/.env
     environment:
       - NODE_ENV=dev
-      - MONGO_URI=mongodb://mongo:27017/mydatabase
+      - MONGO_URI=mongodb://mongo:27017
     ports:
       - 3000:3000
 
   frontend:
     build:
       context: ./frontend
+    env_file: ./frontend/.env
     environment:
       - NODE_ENV=dev
     ports:
