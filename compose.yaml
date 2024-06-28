@@ -16,7 +16,15 @@ services:
       - MONGO_URI=mongodb://mongo:27017/mydatabase
     ports:
       - 3000:3000
-  
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      - NODE_ENV=dev
+    ports:
+      - 5173:5173
+
   mongo:
     image: mongo:latest
     ports:

@@ -4,15 +4,14 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/go/dockerfile-reference/
 
+# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+
 ARG NODE_VERSION=20.14.0
 
 FROM node:${NODE_VERSION}-alpine AS dev-build
 
 # Use production node environment by default.
 ENV NODE_ENV=dev
-
-# nodemon for dev environment only
-RUN npm install -g nodemon
 
 WORKDIR /usr/src/app
 
@@ -30,11 +29,11 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \
     npm ci
 
-# Copy the rest of the source files into the image and change owner to node
+# Copy the rest of the source files into the image.
 COPY --chown=node:node . .
 
 # Expose the port that the application listens on.
-EXPOSE 3000
+EXPOSE 5173
 
 # Run the application.
-CMD ["npx", "nodemon"]
+CMD ["npx", "vite"]
