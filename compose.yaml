@@ -17,6 +17,11 @@ services:
       - MONGO_URI=mongodb://mongo:27017
     ports:
       - 3000:3000
+    command: node --watch-path ./src index.js
+    volumes:
+      - ./backend/src:/usr/src/app/src
+      - ./backend/tests:/usr/src/app/tests
+      - ./backend/index.js:/usr/src/app/index.js
 
   frontend:
     build:
@@ -26,11 +31,18 @@ services:
       - NODE_ENV=dev
     ports:
       - 5173:5173
+    volumes:
+      - ./frontend/public:/usr/src/app/public
+      - ./frontend/src:/usr/src/app/src
+      - ./frontend/index.html:/usr/src/app/index.html
+      - ./frontend/vite.config.js:/usr/src/app/vite.config.js
 
   mongo:
     image: mongo:latest
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=cdj
     volumes:
       - mongo-data:/data/db
 

@@ -36,5 +36,6 @@ COPY --chown=node:node . .
 # Expose the port that the application listens on.
 EXPOSE 3000
 
-# Run the application.
-CMD ["npx", "nodemon"]
+# Run the application. -L for legacy mode to enable hot changes in container
+# https://github.com/remy/nodemon?tab=readme-ov-file#application-isnt-restarting
+CMD ["nodemon", "-L"]
