@@ -2,12 +2,14 @@
 services:
   mongo:
     image: mongo:latest
+    container_name: mongo-cdj
     restart: always
-    command: --logpath /var/log/mongodb/mongod.log --replSet rs0 --bind_ip localhost,mongo
+    command: --logpath /var/log/mongodb/mongod.log --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_DATABASE=cdj
+      
     volumes:
       - mongo-data:/data/db
       - mongo-log:/var/log/mongodb
@@ -17,25 +19,14 @@ services:
         max-size: "200m"
         max-file: "10"
 
-  mongosetup:
-    image: mongo:latest
-    depends_on:
-      - mongo
-    restart: no
-    environment:
-      - REPL_ID=rs0
-      - HOST=mongo
-      - PORT=27017
-    volumes:
-      - .docker/mongo_setup:/scripts
-    entrypoint: [ "bash", "/scripts/mongo_setup.sh"]
-    
   backend:
     build:
       context: ./backend
+    container_name: backend-cdj
     env_file: ./backend/.env
     environment:
       - NODE_ENV=dev
+      - MONGO_URI=mongodb://mongo-cdj:27017
     ports:
       - 3000:3000
     depends_on:
@@ -48,6 +39,7 @@ services:
   frontend:
     build:
       context: ./frontend
+    container_name: frontend-cdj
     env_file: ./frontend/.env
     environment:
       - NODE_ENV=dev

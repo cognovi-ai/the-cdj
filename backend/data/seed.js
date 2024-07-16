@@ -27,11 +27,9 @@ async function seedConfigs() {
 export async function seedDatabase() {
   try {
     // only connect if not testing otherwise connect to test db
-    if (process.env.NODE_ENV !== 'test') {
-      await mongoose.connect('mongodb://localhost:27017/cdj');
-    } else {
-      await mongoose.connect('mongodb://localhost:27017/cdj-test');
-    }
+    let mongoURI = process.env.MONGO_URI + "/cdj"; // pulled from compose.yaml env vars 
+    if (process.env.NODE_ENV === 'test') { mongoURI = mongoURI + '-test'; }
+    await mongoose.connect(mongoURI);
 
     // Remove existing data
     await Promise.all([
