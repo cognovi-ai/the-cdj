@@ -1,76 +1,122 @@
-### Building and running your application
-These are the instructions for deploying the CDJ to your local development environment.
+# Launching the CDJ with Docker Compose
 
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Clone the Repository](#clone-the-repository)
+3. [Configuration](#configuration)
+4. [Docker Compose File Overview](#docker-compose-file-overview)
+5. [Launching the Application](#launching-the-application)
+6. [Accessing the Application](#accessing-the-application)
+7. [Stopping the Application](#stopping-the-application)
+8. [Troubleshooting](#troubleshooting)
+9. [Additional Resources](#additional-resources)
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+## Clone the Repository
+
+First, clone the repository containing the Docker Compose configuration and application files:
+
+```sh
 git clone https://github.com/hiyaryan/the-cdj
-
-## Install Dependencies
-```sh
-cd the-cdj/backend
-npm install
+cd the-cdj
 ```
 
-If you encounter an error, ensure that Node.js and npm are installed correctly. See [Install Node.js and npm](#1-install-nodejs-and-npm) for instructions on how to install Node.js and npm.
+## Configuration
 
-## Create Frontend `.env` 
-Create a file named `.env` in the frontend directory and add the following environment variables:
+Check [README.md](https://github.com/hiyaryan/the-cdj/blob/main/README.md) for .env file templates.
+
+## Docker Compose File Overview
+
+The CDJ is setup as 3 microservices:
+- mongo: the MongoDB server
+- backend: middleware for connecting to mongo
+- frontend: UI components
+
+Mongo is run as a replica set with a single instance for local development, and all logs are written to a log file in the mongo-log volume instead of the console.
+
+Frontend and backend are configured to hot reload on changes to the source code.
+
+## Launching the Application
+
+### Initializing the Application
+
+When running the CDJ for the first time, or after removing the mongo-data volume, you must initiate the MongoDB replica set and seed the database. First, run the following command in the root of the project directory to buidl the images for the frontend and backend and launch the containers:
+
 ```sh
-VITE_RELEASE_PHASE=beta # Determines which code paths to execute based on the release phase
-VITE_ACCESS_URL=http://localhost:3000/access # Used for API requests
-VITE_ENTRIES_URL=http://localhost:3000/journals/ # Used for API requests
+docker compose up --build
 ```
 
-## Create Backend `.env`
-Create a file named `.env` in the backend directory and add the following environment variables:
-
-*Ensure you replace items in angle brackets '<>' with your own values.*
+Once they are up, run the `cdj_init.sh` script which initiates the database with the following command:
 
 ```sh
-NODE_ENV=development # Default environment is development
-RELEASE_PHASE=beta # Determines which code paths to execute based on the release phase
-DOMAIN=<LAN_IPv4_ADDRESS> # (or localhost) Used to construct magic link URLs
-PORT=3000 # Used to construct magic link URLs
-ORIGIN_SELF=http://frontend:5173 # Used for CORS
-ORIGIN_LOCAL=http://<LAN_IPv4_ADDRESS>:5173 # Used for CORS
-TOKENIZED_URL=http://<LAN_IPv4_ADDRESS>:5173 # Used to construct magic link URLs
-MONGODB_URI=mongodb://mongo:27017 # Used for connecting to MongoDB
-OPENAI_API_URL=https://api.openai.com/v1 # Used for requests to OpenAI completions API
-OPENAI_API_KEY=<OPENAI_API_KEY> # Used for requests to OpenAI completions API
-SESSION_SECRET=<SESSION_SECRET> # Used for session management
-JWT_SECRET=<JWT_SECRET> # Used for JWT authentication
-SMTP_HOST=smtp.gmail.com # Used for sending emails (see below for Gmail setup)
-SMTP_USER=<SMTP_USER> # Username for SMTP_HOST
-SMTP_PASS=<SMTP_PASS> # Password for SMTP_USER
-SMTP_NAME=<SMTP_NAME> # Name for emails sent from SMTP_USER
-ADMIN_INBOX=<ADMIN_INBOX> # Email address for admin inbox
-SUPPORT_INBOX=<SUPPORT_INBOX> # Email address for support inbox
-SYSTEM_INBOX=<SYSTEM_INBOX> # Email address for system inbox
-REDIS_HOST=localhost # Used for session management
-REDIS_PORT=6379 # Used for session management
+bash cdj_init.sh
 ```
 
-When you're ready, cd to the project root directory and start the application by running:
-`docker compose up --build`.
+You should see output similar to the following:
+```
+{ ok: 1 }
 
-Wait for the mongodb container to start running. Once it's up,
-run `node backend/data/seed.js` to seed the container.
-This only needs to be run once because the service uses
-a volume to persist data on the host.
+Database has been seeded successfully.
+```
 
-Your application will be available at http://localhost:5173.
+The backend container may have timed out waiting for a connection with the database. If this happens, make a whitespace change in a file in the `backend/src` directory, or run `docker compose restart`.
 
-### Deploying your application to the cloud
+On a success, you should see the following log messages in the terminal:
+```
+...
+backend-cdj   | EXPRESS Listening on port 3000
+backend-cdj   | Connected to local MongoDB: mongodb://mongo-cdj:27017/cdj
+```
 
-First, build your image, e.g.: `docker build -t myapp .`.
-If your cloud uses a different CPU architecture than your development
-machine (e.g., you are on a Mac M1 and your cloud provider is amd64),
-you'll want to build the image for that platform, e.g.:
-`docker build --platform=linux/amd64 -t myapp .`.
+### Running the Application
+After initializing the CDJ for the first time, you can simply run `docker compose up` to start the containers
 
-Then, push it to your registry, e.g. `docker push myregistry.com/myapp`.
+## Accessing the Application
 
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
+Once the containers are up and running, you can access the CDJ at `http://localhost:5173` (or the port specified in the `compose.yaml` file).
 
-### References
-* [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+### Accessing Other Services
 
+- **Database**: You can access the MongoDB database using a database client at `localhost:27017` with the directConnection option set to true.
+
+## Stopping the Application
+
+To stop the running containers, use the following command:
+
+```sh
+docker compose down
+```
+
+This command stops and removes the containers and networks defined in the `compose.yaml` file.
+
+## Troubleshooting
+
+### Common Issues
+
+- **Container Fails to Start**: Check the logs for the specific container using:
+  ```sh
+  docker-compose logs <service_name>
+  ```
+  Database logs will be found in the mongod.log file in the mongo-log volume.
+- **Port Conflicts**: Ensure the ports specified in the `compose.yaml` file are not in use by other applications.
+- **Environment Variables**: Verify that all required environment variables are correctly set in the `.env` file or `compose.yaml`.
+
+### Additional Logs
+
+To view the logs of a specific service, use:
+```sh
+docker compose logs <service_name>
+```
+
+## Additional Resources
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)

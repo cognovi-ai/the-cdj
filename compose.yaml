@@ -9,7 +9,6 @@ services:
       - "27017:27017"
     environment:
       - MONGO_INITDB_DATABASE=cdj
-      
     volumes:
       - mongo-data:/data/db
       - mongo-log:/var/log/mongodb
