@@ -34,12 +34,12 @@ Check [README.md](https://github.com/hiyaryan/the-cdj/blob/main/README.md) for .
 
 ## Docker Compose File Overview
 
-The CDJ is setup as 3 microservices:
-- mongo: the MongoDB server
-- backend: middleware for connecting to mongo
-- frontend: UI components
+The CDJ is set up as three microservices:
+- **mongo**: The MongoDB server
+- **backend**: Middleware for connecting to MongoDB
+- **frontend**: UI components
 
-Mongo is run as a replica set with a single instance for local development, and all logs are written to a log file in the mongo-log volume instead of the console.
+MongoDB is run as a replica set with a single instance for local development, and all logs are written to a log file in the `mongo-log` volume instead of the console.
 
 Frontend and backend are configured to hot reload on changes to the source code.
 
@@ -47,36 +47,25 @@ Frontend and backend are configured to hot reload on changes to the source code.
 
 ### Initializing the Application
 
-When running the CDJ for the first time, or after removing the mongo-data volume, you must initiate the MongoDB replica set and seed the database. First, run the following command in the root of the project directory to buidl the images for the frontend and backend and launch the containers:
-
-```sh
-docker compose up --build
-```
-
-Once they are up, run the `cdj_init.sh` script which initiates the database with the following command:
+When running the CDJ for the first time, or after removing the `mongo-data` volume, you must initiate the MongoDB replica set and seed the database. You can do this by running the `cdj_init.sh` script with the following command:
 
 ```sh
 bash cdj_init.sh
 ```
 
-You should see output similar to the following:
-```
-{ ok: 1 }
+You should see output similar to the following on a successful init:
 
+```
+Waiting for mongodb container to start
+Initializing replica set
+{ ok: 1 }
+...
 Database has been seeded successfully.
 ```
 
-The backend container may have timed out waiting for a connection with the database. If this happens, make a whitespace change in a file in the `backend/src` directory, or run `docker compose restart`.
-
-On a success, you should see the following log messages in the terminal:
-```
-...
-backend-cdj   | EXPRESS Listening on port 3000
-backend-cdj   | Connected to local MongoDB: mongodb://mongo-cdj:27017/cdj
-```
-
 ### Running the Application
-After initializing the CDJ for the first time, you can simply run `docker compose up` to start the containers
+
+After initializing the CDJ for the first time, you can simply run `docker compose up` to start the containers.
 
 ## Accessing the Application
 
@@ -84,7 +73,7 @@ Once the containers are up and running, you can access the CDJ at `http://localh
 
 ### Accessing Other Services
 
-- **Database**: You can access the MongoDB database using a database client at `localhost:27017` with the directConnection option set to true.
+- **Database**: You can access the MongoDB database using a database client at `localhost:27017` with the `directConnection` option set to `true`.
 
 ## Stopping the Application
 
@@ -102,15 +91,16 @@ This command stops and removes the containers and networks defined in the `compo
 
 - **Container Fails to Start**: Check the logs for the specific container using:
   ```sh
-  docker-compose logs <service_name>
+  docker compose logs <service_name>
   ```
-  Database logs will be found in the mongod.log file in the mongo-log volume.
+  Database logs will be found in the `mongod.log` file in the `mongo-log` volume.
 - **Port Conflicts**: Ensure the ports specified in the `compose.yaml` file are not in use by other applications.
 - **Environment Variables**: Verify that all required environment variables are correctly set in the `.env` file or `compose.yaml`.
 
 ### Additional Logs
 
 To view the logs of a specific service, use:
+
 ```sh
 docker compose logs <service_name>
 ```
@@ -119,4 +109,4 @@ docker compose logs <service_name>
 
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+- [Docker's Node.js Guide](https://docs.docker.com/language/nodejs/)

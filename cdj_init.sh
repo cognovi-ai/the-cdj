@@ -12,6 +12,7 @@ docker exec -it mongo-cdj mongosh --eval "rs.initiate({
  ]
 })"
 
+echo "Seeding db"
 docker compose up -d --build
 docker exec -it backend-cdj node data/seed.js
 
