@@ -27,7 +27,7 @@ async function seedConfigs() {
 export async function seedDatabase() {
   try {
     // only connect if not testing otherwise connect to test db
-    let mongoURI = process.env.MONGO_URI + "/cdj"; // pulled from compose.yaml env vars 
+    let mongoURI = process.env.MONGO_URI + "/cdj"; // pulled from compose.yaml env vars
     if (process.env.NODE_ENV === 'test') { mongoURI = mongoURI + '-test'; }
     await mongoose.connect(mongoURI);
 
