@@ -1,0 +1,55 @@
+# Dev environment compose file, configured for hot reloads
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-cdj
+    restart: always
+    command: --logpath /var/log/mongodb/mongod.log --replSet rs0 --bind_ip_all
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=cdj
+    volumes:
+      - mongo-data:/data/db
+      - mongo-log:/var/log/mongodb
+    logging:
+      driver: json-file
+      options:
+        max-size: "200m"
+        max-file: "10"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend-cdj
+    env_file: ./backend/.env
+    environment:
+      - NODE_ENV=dev
+      - MONGO_URI=mongodb://mongo-cdj:27017
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend/src:/usr/src/app/src
+      - ./backend/tests:/usr/src/app/tests
+      - ./backend/index.js:/usr/src/app/index.js
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend-cdj
+    env_file: ./frontend/.env
+    environment:
+      - NODE_ENV=dev
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend/public:/usr/src/app/public
+      - ./frontend/src:/usr/src/app/src
+      - ./frontend/index.html:/usr/src/app/index.html
+      - ./frontend/vite.config.js:/usr/src/app/vite.config.js
+
+volumes:
+  mongo-data:
+  mongo-log:
