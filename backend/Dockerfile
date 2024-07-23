@@ -6,9 +6,6 @@ FROM node:${NODE_VERSION}-alpine AS dev-build
 
 ENV NODE_ENV=dev
 
-# nodemon for dev environment only
-RUN npm install -g nodemon
-
 WORKDIR /usr/src/app
 
 # Run the application as a non-root user.
@@ -27,4 +24,4 @@ EXPOSE 3000
 
 # Run the application. -L for legacy mode to enable hot changes in container
 # https://github.com/remy/nodemon?tab=readme-ov-file#application-isnt-restarting
-CMD ["nodemon", "-L"]
+CMD ["npm", "run", "dev"]

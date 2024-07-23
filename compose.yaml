@@ -33,7 +33,7 @@ services:
     volumes:
       - ./backend/src:/usr/src/app/src
       - ./backend/tests:/usr/src/app/tests
-      - ./backend/index.js:/usr/src/app/index.js
+      - ./backend/index.ts:/usr/src/app/index.ts
 
   frontend:
     build:
