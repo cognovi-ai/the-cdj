@@ -18,7 +18,6 @@ describe('access router', () => {
   ];
 
   it.each(routes)('should have all routes defined in access.ts', (route) => {
-    // single line arrow functions without braces implicitly return
     expect(router.stack.some((s) => s.route.path === route.path)).toBe(true);
     expect(router.stack.some((s) => Object.keys(s.route.methods).includes(route.method))).toBe(true);
   });
