@@ -1,4 +1,4 @@
-import { connect } from 'mongoose';
+import mongoose, { connect } from 'mongoose';
 
 export default async function connectDB(dbName) {
   // Define the local URI for development and testing
@@ -26,3 +26,5 @@ export default async function connectDB(dbName) {
     process.exit(1);
   }
 }
+
+export { mongoose as db };

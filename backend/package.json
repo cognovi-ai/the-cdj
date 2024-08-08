@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "npm install && tsx watch src/index.ts",
+    "dev": "npm install && tsc --watch",
     "test": "NODE_ENV=test jest --coverage --detectOpenHandles",
     "lint": "eslint .",
     "build": "tsc",
@@ -35,6 +35,9 @@
   "devDependencies": {
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
     "babel-jest": "^29.7.0",
     "eslint": "^8.54.0",
     "eslint-config-standard": "^17.1.0",
@@ -42,9 +45,10 @@
     "eslint-plugin-n": "^16.3.1",
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.0.0",
     "pm2": "^5.4.1",
     "supertest": "^6.3.3",
-    "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }

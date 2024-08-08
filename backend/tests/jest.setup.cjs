@@ -1,11 +1,8 @@
 module.exports = async () => {
-  console.log('\nSetup: Seeding and connecting to test database');
-  const seedModule = await import('../data/seed.js');
-  await seedModule.seedDatabase();
-
-  // Connect to test database
-  const dbModule = await import('../src/db.js');
-  await dbModule.default('cdj');
+  console.log('\nSetup: Seeding and connecting to test database...');
+  
+  // Connect to and seed the in-memory test database
+  (await import('../data/seed.js')).seedDatabase();
 
   // Retrieve a test journal ID
   const journalModule = await import('../src/models/journal.js');

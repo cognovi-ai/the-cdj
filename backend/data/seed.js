@@ -9,6 +9,9 @@ import journalTitles from './journalData.js';
 import mongoose from 'mongoose';
 import users from './userData.js';
 
+import { MongoMemoryServer } from 'mongodb-memory-server';
+const memoryMongo = (process.env.NODE_ENV === 'test') ? new MongoMemoryServer() : null;
+
 async function seedUsers() {
   for (const userData of users) {
     await User.register({ email: userData.email, fname: userData.fname, lname: userData.lname }, userData.password);
@@ -26,9 +29,16 @@ async function seedConfigs() {
 // Seed function
 export async function seedDatabase() {
   try {
-    // only connect if not testing otherwise connect to test db
-    let mongoURI = process.env.MONGO_URI + "/cdj"; // pulled from compose.yaml env vars
-    if (process.env.NODE_ENV === 'test') { mongoURI = mongoURI + '-test'; }
+    // Set the URI for the database
+    let mongoURI = process.env.MONGO_URI + "/cdj";
+
+    // If testing, use the in-memory database
+    if (memoryMongo) { 
+      console.log("Setting up in-memory database...")
+      await memoryMongo.start();
+      mongoURI = memoryMongo.getUri();
+     }
+
     await mongoose.connect(mongoURI);
 
     // Remove existing data
@@ -82,22 +92,22 @@ export async function seedDatabase() {
   } catch (error) {
     console.error('Error while seeding database:', error);
   } finally {
-    await mongoose.disconnect();
+    !memoryMongo && await mongoose.disconnect();
   }
 };
 
 // Teardown database
 export async function teardownDatabase() {
   try {
-    // clear contents of database
+    // Clear contents of database
     const collections = await mongoose.connection.db.collections();
-
     for (const collection of collections) {
       await collection.drop();
     }
 
-    // close connection
+    // Close connections
     await mongoose.disconnect();
+    memoryMongo && await memoryMongo.stop();
 
     console.log('Database has been torn down successfully.');
   } catch (error) {
