@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npm install && tsc --watch",
-    "test": "NODE_ENV=test jest --coverage --detectOpenHandles",
+    "test": "tsc --project tsconfig.test.json && jest --coverage --detectOpenHandles",
     "lint": "eslint .",
     "build": "tsc",
     "start": "pm2 start dist/index.js --name the-cdj",
