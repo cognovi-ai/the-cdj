@@ -37,7 +37,7 @@ export async function seedDatabase() {
       console.log("Setting up in-memory database...")
       await memoryMongo.start();
       mongoURI = memoryMongo.getUri();
-     }
+    }
 
     await mongoose.connect(mongoURI);
 
