@@ -1,3 +1,13 @@
+/*
+ * This script is used to seed the database with dummy data. It is run by
+ * executing the command `npm run seed`. The application itself does not need 
+ * to be running but there must be a MongoDB server running.
+ * 
+ * For testing purposes, the script will use an in-memory database. This is 
+ * done by using the `mongodb-memory-server` package. The in-memory database 
+ * is used to avoid modifying the actual database during testing.
+ */
+
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../src/models/index.js';
 
 import analyses from './analysisData.js';
@@ -12,6 +22,9 @@ import users from './userData.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 const memoryMongo = (process.env.NODE_ENV === 'test') ? new MongoMemoryServer() : null;
 
+/**
+ * Seed the database with users using passport-local-mongoose's register method.
+ */
 async function seedUsers() {
   for (const userData of users) {
     await User.register({ email: userData.email, fname: userData.fname, lname: userData.lname }, userData.password);
@@ -20,13 +33,18 @@ async function seedUsers() {
   return await User.find({});
 }
 
+/**
+ * Seed the database with journal configurations.
+ */
 async function seedConfigs() {
   await Config.insertMany(configData);
 
   return await Config.find({});
 }
 
-// Seed function
+/**
+ * Seed the database with dummy data.
+ */
 export async function seedDatabase() {
   try {
     // Set the URI for the database
@@ -92,11 +110,14 @@ export async function seedDatabase() {
   } catch (error) {
     console.error('Error while seeding database:', error);
   } finally {
-    !memoryMongo && await mongoose.disconnect();
+    if (!memoryMongo) await mongoose.disconnect();
   }
 };
 
-// Teardown database
+/**
+ * Tear down the database by dropping all collections and closing the 
+ * connection.
+ */
 export async function teardownDatabase() {
   try {
     // Clear contents of database
@@ -107,7 +128,7 @@ export async function teardownDatabase() {
 
     // Close connections
     await mongoose.disconnect();
-    memoryMongo && await memoryMongo.stop();
+    if (memoryMongo) await memoryMongo.stop();
 
     console.log('Database has been torn down successfully.');
   } catch (error) {

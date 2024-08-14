@@ -1,12 +1,12 @@
 global.console.log = jest.fn();
 
 import { server } from '../src/index.ts';
-import { db } from '../src/db.js';
+import mongoose from 'mongoose';
 
 describe('Server startup', () => {
   afterAll(async () => {
     server.close();
-    await db.connection.close();
+    await mongoose.connection.close();
   });
 
   it('should start the server in non-production mode', (done) => {
