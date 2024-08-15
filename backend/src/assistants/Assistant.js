@@ -1,7 +1,7 @@
 export default class Assistant {
   constructor(bearer, model = '', temperature = 0.7) {
     this.baseUrl = process.env.OPENAI_API_URL;
-    this.bearer = `Bearer ${ bearer }`;
+    this.bearer = `Bearer ${bearer}`;
     this.model = model;
     this.temperature = temperature;
   }
@@ -10,14 +10,11 @@ export default class Assistant {
    * Test the connection is authenticated.
    */
   async testConnection() {
-    const response = await fetch(
-      this.baseUrl + '/models',
-      {
-        headers: {
-          Authorization: this.bearer
-        }
-      }
-    );
+    const response = await fetch(this.baseUrl + '/models', {
+      headers: {
+        Authorization: this.bearer,
+      },
+    });
 
     return await response.json();
   }
@@ -26,8 +23,8 @@ export default class Assistant {
    * Test the model availability.
    */
   testModelAvailability(models) {
-    const filteredModel = models.filter((model) =>
-      model.id === this.model.toLowerCase()
+    const filteredModel = models.filter(
+      (model) => model.id === this.model.toLowerCase()
     );
 
     return filteredModel.length > 0 ? filteredModel : models;

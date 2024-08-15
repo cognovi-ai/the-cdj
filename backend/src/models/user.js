@@ -21,33 +21,46 @@ const userSchema = new Schema({
   emailVerified: { type: Boolean, default: false },
   betaAccessToken: { type: String, default: undefined },
   betaAccessTokenExpires: { type: Date, default: undefined },
-  betaAccess: { type: Boolean, default: undefined }
+  betaAccess: { type: Boolean, default: undefined },
 });
 
 // Utility functions
 // Utility function for first name and last name validation
 const createNameValidation = (isRequired = false) => {
-  const validator = Joi.string()
-    .alphanum()
-    .min(1)
-    .max(50)
-    .messages({
-      'string.alphanum': 'Name must contain only alphanumeric characters.',
-      'string.min': 'Name must be at least 1 character long.',
-      'string.max': 'Name must be less than or equal to 50 characters long.'
-    });
+  const validator = Joi.string().alphanum().min(1).max(50).messages({
+    'string.alphanum': 'Name must contain only alphanumeric characters.',
+    'string.min': 'Name must be at least 1 character long.',
+    'string.max': 'Name must be less than or equal to 50 characters long.',
+  });
   return isRequired ? validator.required() : validator;
 };
 
 // Utility function for email validation
 const createEmailValidation = (isRequired = false) => {
   const validator = Joi.string()
-    .email({ tlds: { allow: ['com', 'net', 'org', 'edu', 'gov', 'io', 'app', 'ai', 'tech', 'uk', 'de', 'in'] } })
+    .email({
+      tlds: {
+        allow: [
+          'com',
+          'net',
+          'org',
+          'edu',
+          'gov',
+          'io',
+          'app',
+          'ai',
+          'tech',
+          'uk',
+          'de',
+          'in',
+        ],
+      },
+    })
     .max(100)
     .lowercase()
     .messages({
       'string.email': 'Please provide a valid email address.',
-      'string.max': 'Email must be less than or equal to 100 characters long.'
+      'string.max': 'Email must be less than or equal to 100 characters long.',
     });
   return isRequired ? validator.required() : validator;
 };
@@ -59,7 +72,8 @@ const createPasswordValidation = (isRequired = false) => {
     .pattern(/^[a-zA-Z0-9_!]{8,30}$/)
     .messages({
       'string.min': 'Password must be at least 8 characters long.',
-      'string.pattern.base': 'Password must contain only alphanumeric characters, underscores, and exclamation points.'
+      'string.pattern.base':
+        'Password must contain only alphanumeric characters, underscores, and exclamation points.',
     });
   return isRequired ? validator.required() : validator;
 };
@@ -70,7 +84,8 @@ const modelFieldValidation = Joi.string()
   .allow('')
   .max(50)
   .messages({
-    'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
+    'string.pattern.base':
+      'Field must only contain alphanumeric characters, hyphens, and periods.',
   });
 
 // Validation schemas
@@ -78,18 +93,18 @@ const modelFieldValidation = Joi.string()
 userSchema.statics.baseJoi = Joi.object({
   email: createEmailValidation(true),
   password: createPasswordValidation(true),
-  remember: Joi.boolean()
+  remember: Joi.boolean(),
 });
 
 // Registration Joi validation schema
 userSchema.statics.registrationJoi = userSchema.statics.baseJoi.keys({
   fname: createNameValidation(true),
-  lname: createNameValidation(true)
+  lname: createNameValidation(true),
 });
 
 // New password Joi validation schema
 userSchema.statics.passwordJoi = Joi.object({
-  newPassword: createPasswordValidation(true)
+  newPassword: createPasswordValidation(true),
 });
 
 // Account Joi validation schema (fields are not required here)
@@ -101,8 +116,8 @@ userSchema.statics.accountJoi = Joi.object({
   newPassword: createPasswordValidation(),
   model: Joi.object({
     chat: modelFieldValidation,
-    analysis: modelFieldValidation
-  })
+    analysis: modelFieldValidation,
+  }),
 });
 
 // Mongoose schema indices and plugins
@@ -119,8 +134,8 @@ userSchema.plugin(passportLocalMongoose, {
     IncorrectPasswordError: 'Incorrect login credentials.',
     IncorrectUsernameError: 'Incorrect login credentials.',
     MissingUsernameError: 'No email was given.',
-    UserExistsError: 'The email address provided cannot be used.'
-  }
+    UserExistsError: 'The email address provided cannot be used.',
+  },
 });
 
 // Mongoose middleware
@@ -134,7 +149,7 @@ userSchema.pre('save', function (next) {
 // Compare passwords for re-authentication
 userSchema.methods.comparePassword = function (candidatePassword) {
   return new Promise((resolve, reject) => {
-    this.authenticate(candidatePassword, (err, user, passwordError) => {
+    this.authenticate(candidatePassword, (err, user) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -214,16 +229,16 @@ userSchema.methods.sendMail = async function (content) {
     port: 587,
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+      pass: process.env.SMTP_PASS,
+    },
   });
 
   // Insert the email content
   const message = {
-    from: `"${ process.env.SMTP_NAME }" <${ process.env.SYSTEM_INBOX }>`,
+    from: `"${process.env.SMTP_NAME}" <${process.env.SYSTEM_INBOX}>`,
     to,
     subject,
-    text
+    text,
   };
 
   // Send the email
@@ -233,12 +248,12 @@ userSchema.methods.sendMail = async function (content) {
 // Send a password reset email
 userSchema.methods.sendPasswordResetEmail = async function (token) {
   // Construct the password reset URL
-  const resetUrl = `${ process.env.TOKENIZED_URL }/reset-password?token=${ token }`;
+  const resetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Password Reset Request';
-  const text = `Dear ${ this.fname },\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${ resetUrl }\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${this.fname},\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${resetUrl}\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -248,7 +263,7 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Password Reset Confirmation';
-  const text = `Dear ${ this.fname },\n\nYour password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${this.fname},\n\nYour password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -256,12 +271,12 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
 // Send beta request confirmation email
 userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
   // Construct the verification URL
-  const verificationUrl = `${ process.env.TOKENIZED_URL }/verify-email?token=${ token }`;
+  const verificationUrl = `${process.env.TOKENIZED_URL}/verify-email?token=${token}`;
 
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Beta Access Email Verification';
-  const text = `Dear ${ this.fname },\n\nYou have requested beta access for The Cognitive Distortion Journal. After you verify your email address, you will receive an email when your request is reviewed with instructions. Thank you for your interest in the app!\n\nPlease click the link to verify your email address.\n\n${ verificationUrl }\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${this.fname},\n\nYou have requested beta access for The Cognitive Distortion Journal. After you verify your email address, you will receive an email when your request is reviewed with instructions. Thank you for your interest in the app!\n\nPlease click the link to verify your email address.\n\n${verificationUrl}\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -269,13 +284,13 @@ userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
 // Send beta request email to support
 userSchema.methods.sendBetaRequestEmail = async function (token) {
   // Construct the approval and denial URLs
-  const approvalUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-approval?token=${ token }`;
-  const denialUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-denial?token=${ token }`;
+  const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
+  const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
 
   // Recipient address (support email)
   const to = process.env.SUPPORT_INBOX;
   const subject = 'User Request Beta Access';
-  const text = `${ this.fname } ${ this.lname } <${ this.email }> has requested beta access. Use the following tokenized links to approve or deny them.\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`;
+  const text = `${this.fname} ${this.lname} <${this.email}> has requested beta access. Use the following tokenized links to approve or deny them.\n\nTo APPROVE ${this.fname} click: ${approvalUrl}\n\nTo DENY ${this.fname} click: ${denialUrl}\n\n${this.fname} ${this.lname} will be notified of your decision.`;
 
   this.sendMail({ to, subject, text });
 };
@@ -283,12 +298,12 @@ userSchema.methods.sendBetaRequestEmail = async function (token) {
 // Send beta approval email
 userSchema.methods.sendBetaApprovalEmail = async function (token) {
   // Construct the password reset URL
-  const passwordResetUrl = `${ process.env.TOKENIZED_URL }/reset-password?token=${ token }`;
+  const passwordResetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Beta Access Approved';
-  const text = `Dear ${ this.fname },\n\nYour request for beta access has been approved. Please click the following link to complete your registration. You will be prompted to set a password for your account.\n\n${ passwordResetUrl }\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${this.fname},\n\nYour request for beta access has been approved. Please click the following link to complete your registration. You will be prompted to set a password for your account.\n\n${passwordResetUrl}\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -298,7 +313,9 @@ userSchema.methods.sendBetaDenialEmail = async function () {
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Beta Access Denied';
-  const text = `Dear ${ this.fname },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${ this.betaAccessTokenExpires.toLocaleDateString() }. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${
+    this.fname
+  },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -306,13 +323,13 @@ userSchema.methods.sendBetaDenialEmail = async function () {
 // Send admin alert for forgot password abuse
 userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
   // Construct the approval and denial URLs
-  const approvalUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-approval?token=${ token }`;
-  const denialUrl = `${ process.env.DOMAIN }:${ process.env.PORT }/access/beta-denial?token=${ token }`;
+  const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
+  const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
 
   // Recipient address (support email)
   const to = process.env.ADMIN_INBOX;
   const subject = 'ALERT: User Forgot Password Abuse';
-  const text = `${ this.fname } ${ this.lname } <${ this.email }> has attempted to abuse the forgot password feature. This can happen when a user is trying to gain access to an account that is not theirs or they are trying to gain access in a closed ${ process.env.RELEASE_PHASE } release.\n\nIf in a closed release, use the following tokenized links to deny or approve them.\n\nTo DENY ${ this.fname } click: ${ denialUrl }\n\nTo APPROVE ${ this.fname } click: ${ approvalUrl }\n\n${ this.fname } ${ this.lname } will be notified of your decision.`;
+  const text = `${this.fname} ${this.lname} <${this.email}> has attempted to abuse the forgot password feature. This can happen when a user is trying to gain access to an account that is not theirs or they are trying to gain access in a closed ${process.env.RELEASE_PHASE} release.\n\nIf in a closed release, use the following tokenized links to deny or approve them.\n\nTo DENY ${this.fname} click: ${denialUrl}\n\nTo APPROVE ${this.fname} click: ${approvalUrl}\n\n${this.fname} ${this.lname} will be notified of your decision.`;
 
   this.sendMail({ to, subject, text });
 };

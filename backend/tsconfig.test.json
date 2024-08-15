@@ -6,7 +6,5 @@
     "allowImportingTsExtensions": true,
     "rootDir": "./"
   },
-  "include": [
-    "tests/**/*.ts"
-  ]
+  "include": ["tests/**/*.ts"]
 }
