@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import request from 'supertest';
-import app from '../../../src/app';
+import app from '../../../src/app.js';
 jest.mock('../../../src/controllers/access/access.js');
 
 describe('access router for /access paths', () => {
