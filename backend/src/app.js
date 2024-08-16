@@ -16,91 +16,106 @@ import session from 'express-session';
 
 const app = express();
 
-// connect to database if not testing
+// Connect to database if not testing
 if (process.env.NODE_ENV !== 'test') {
-  connectDB('cdj').catch(err => console.log(err));
+  connectDB('cdj').catch((err) => console.log(err));
 }
 
-// use helmet middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ['"self"'],
-      baseUri: ['"self"'],
-      blockAllMixedContent: [],
-      fontSrc: ['"self"', 'https:', 'data:'],
-      frameAncestors: ['"self"'],
-      imgSrc: ['"self"', 'data:'],
-      objectSrc: ['"none"'],
-      scriptSrc: ['"self"'],
-      scriptSrcAttr: ['"none"'],
-      styleSrc: ['"self"', 'https:', '"unsafe-inline"'],
-      upgradeInsecureRequests: []
-    }
-  },
-  crossOriginEmbedderPolicy: false
-}));
+// Use helmet middleware
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ['self'],
+        baseUri: ['self'],
+        blockAllMixedContent: [],
+        fontSrc: ['self', 'https:', 'data:'],
+        frameAncestors: ['self'],
+        imgSrc: ['self', 'data:'],
+        objectSrc: ['none'],
+        scriptSrc: ['self'],
+        scriptSrcAttr: ['none'],
+        styleSrc: ['self', 'https:', 'unsafe-inline'],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-// use cors middleware
-app.use(cors({
-  origin: [process.env.ORIGIN_SELF, process.env.ORIGIN_LOCAL, process.env.ORIGIN_PUBLIC, process.env.ORIGIN_DOMAIN],
-  credentials: true
-}));
+// Use cors middleware
+app.use(
+  cors({
+    origin: [
+      process.env.ORIGIN_SELF,
+      process.env.ORIGIN_LOCAL,
+      process.env.ORIGIN_PUBLIC,
+      process.env.ORIGIN_DOMAIN,
+    ],
+    credentials: true,
+  })
+);
 
-// use json middleware
+// Use json middleware
 app.use(express.json());
 
-// use session middleware
-app.use(session({
-  store: connectStore(process.env.NODE_ENV === 'production' ? 'redis' : 'memory'),
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
-  }
-}));
+// Use session middleware
+app.use(
+  session({
+    store: connectStore(
+      process.env.NODE_ENV === 'production' ? 'redis' : 'memory'
+    ),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    },
+  })
+);
 
-// use flash
+// Use flash
 app.use(flash());
 
-// use passport middleware
+// Use passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(passport.authenticate('session'));
 
-// passport config
+// Passport config
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// use rate limit middleware
-app.use(rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: (req) => req.isAuthenticated() ? 500 : 10,
-  keyGenerator: (req) => {
-    if (req.isAuthenticated()) {
-      return req.user.id;
-    } else {
-      return req.ip + ':' + (req.sessionID || 'unauth');
-    }
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests, please try again after 10 minutes.',
-  handler: function (req, res, next) {
-    next(new ExpressError(this.message, 429));
-  }
-}));
+// Use rate limit middleware
+app.use(
+  rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: (req) => (req.isAuthenticated() ? 500 : 10),
+    keyGenerator: (req) => {
+      if (req.isAuthenticated()) {
+        return req.user.id;
+      } else {
+        return req.ip + ':' + (req.sessionID || 'unauth');
+      }
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests, please try again after 10 minutes.',
+    handler: function (req, res, next) {
+      next(new ExpressError(this.message, 429));
+    },
+  })
+);
 
-// log requests
+// Log requests
 app.use(morgan('dev'));
 
-// routes
+// Routes
 app.use('/journals/:journalId/entries', entry);
 app.use('/access', access);
 
@@ -109,8 +124,8 @@ app.use('*', (req, res, next) => {
   next(new ExpressError('Page Not Found.', 404));
 });
 
-// error handler
-app.use((err, req, res, next) => {
+// Error handler
+app.use((err, req, res) => {
   const { statusCode = 500, message = 'Something went wrong.' } = err;
 
   if (statusCode >= 500) {

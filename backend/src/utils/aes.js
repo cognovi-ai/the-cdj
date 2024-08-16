@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const { ENCRYPTION_KEY } = process.env;
 const IV_LENGTH = 16;
 
 export function encrypt(text) {
