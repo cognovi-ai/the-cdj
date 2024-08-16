@@ -35,6 +35,7 @@ Check [README.md](https://github.com/hiyaryan/the-cdj/blob/main/README.md) for .
 ## Docker Compose File Overview
 
 The CDJ is set up as three microservices:
+
 - **mongo**: The MongoDB server
 - **backend**: Middleware for connecting to MongoDB
 - **frontend**: UI components

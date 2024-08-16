@@ -7,7 +7,7 @@ import catchAsync from '../../utils/catchAsync.js';
 
 import { accessController as controller } from '../../controllers/index.js';
 
-// root path: /access
+// Root path: /access
 const router = Router({ mergeParams: true });
 
 router.route('/journal/:journalId')

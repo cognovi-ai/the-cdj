@@ -5,9 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "npm install && tsx watch src/index.ts",
-    "test": "NODE_ENV=test jest --coverage --detectOpenHandles",
-    "lint": "eslint .",
+    "dev": "npm install && tsc --watch",
+    "test": "tsc --project tsconfig.test.json && jest --coverage --detectOpenHandles",
+    "lint": "npx eslint . --fix",
     "build": "tsc",
     "start": "pm2 start dist/index.js --name the-cdj",
     "start:prod": "npm run build && npm run start"
@@ -35,19 +35,23 @@
   "devDependencies": {
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
+    "@babel/preset-typescript": "^7.24.7",
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.9.0",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
-    "@types/supertest": "^6.0.2",
     "babel-jest": "^29.7.0",
-    "eslint": "^8.54.0",
+    "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-n": "^16.3.1",
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.0.0",
     "pm2": "^5.4.1",
     "supertest": "^6.3.3",
-    "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }

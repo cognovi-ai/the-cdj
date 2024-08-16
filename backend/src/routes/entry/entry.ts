@@ -7,7 +7,7 @@ import catchAsync from '../../utils/catchAsync.js';
 import { entryController as controller } from '../../controllers/index.js';
 import { isAuthenticated } from '../../middleware/access.js';
 
-// root path: /journals/:journalId/entries
+// Root path: /journals/:journalId/entries
 const router = Router({ mergeParams: true });
 
 // Apply isAuthenticated middleware to all routes in this router

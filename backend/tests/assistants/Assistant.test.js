@@ -14,7 +14,7 @@ describe('Chat Assistant Tests', () => {
     );
     const response = await assistant.testConnection();
     const model = assistant.testModelAvailability(response.data);
-    expect(model.length).toBe(1);
+    expect(model).toHaveLength(1);
   });
 
   it('should return a list of models', async () => {
