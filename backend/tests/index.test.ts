@@ -1,17 +1,16 @@
+import mongoose from 'mongoose';
+import { server } from '../src/index.ts';
+
 global.console.log = jest.fn();
 
-import { server } from "../src/index.ts";
-import mongoose from "mongoose";
-
-describe("Server startup", () => {
+describe('Server startup', () => {
   afterAll(async () => {
     server.close();
     await mongoose.connection.close();
   });
 
-  it("should start the server in non-production mode", (done) => {
-    process.env.NODE_ENV = "development";
-    require("../src/index");
+  it('should start the server in non-production mode', (done) => {
+    process.env.NODE_ENV = 'development';
     setTimeout(() => {
       expect(console.log).toHaveBeenCalledWith(
         `\nExpress listening on port ${process.env.PORT}`

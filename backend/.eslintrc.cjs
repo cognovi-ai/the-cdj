@@ -1,10 +1,17 @@
 module.exports = {
   root: true,
   env: { node: true, es6: true, "jest/globals": true },
-  extends: ["eslint:recommended"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+  ],
   ignorePatterns: ["dist", "*.cjs"],
-  parserOptions: { ecmaVersion: "latest", sourceType: "module" },
-  plugins: ["jest"],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
+  plugins: ["jest", "@typescript-eslint"],
   rules: {
     "capitalized-comments": [1, "always"],
     "dot-notation": 1,
@@ -26,6 +33,7 @@ module.exports = {
     "jest/no-focused-tests": "error",
     "jest/no-identical-title": "error",
     "jest/prefer-to-have-length": "warn",
-    "jest/valid-expect": "error"
+    "jest/valid-expect": "error",
+    "@typescript-eslint/no-unused-vars": ["error"],
   },
 };
