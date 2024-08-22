@@ -6,10 +6,10 @@ FROM node:${NODE_VERSION}-alpine AS dev-build
 
 ENV NODE_ENV=dev
 
-WORKDIR /usr/src/app
+WORKDIR /usr/app
 
 # Run the application as a non-root user.
-RUN chown node:node /usr/src/app
+RUN chown node:node /usr/app
 
 USER node
 
