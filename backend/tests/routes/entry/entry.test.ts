@@ -1,4 +1,4 @@
-import app from '../../../src/app';
+import app from '../../../src/app.js';
 import request from 'supertest';
 
 describe('Journal Entry API Tests', () => {
