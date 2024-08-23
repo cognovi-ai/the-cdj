@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "npm install && tsc --watch",
+    "dev": "npm install && tsx ./src/index.ts",
     "test": "tsc --project tsconfig.test.json && jest --coverage --detectOpenHandles",
     "lint": "npx eslint . --fix",
     "build": "tsc",
@@ -55,6 +55,7 @@
     "pm2": "^5.4.1",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
+    "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   }
 }
