@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { encrypt, decrypt } from '../../src/utils/aes.js';
+import { decrypt, encrypt } from '../../src/utils/aes.js';
 
 describe('AES tests', () => {
   const originalKey = process.env.ENCRYPTION_KEY;
@@ -13,7 +13,7 @@ describe('AES tests', () => {
 
   afterAll(() => {
     process.env.ENCRYPTION_KEY = originalKey;
-  })
+  });
 
   it('throws error when encryption key not set', () => {
     process.env.ENCRYPTION_KEY = '';
@@ -82,7 +82,7 @@ describe('AES tests', () => {
 
     process.env.ENCRYPTION_KEY = 'a'.repeat(32);
     expect(() => {
-      decrypt(encrypted)
+      decrypt(encrypted);
     }).toThrow();
   });
 
@@ -90,7 +90,7 @@ describe('AES tests', () => {
     const invalidCiphertext = 'invalidCiphertext';
 
     expect(() => {
-      decrypt(invalidCiphertext)
+      decrypt(invalidCiphertext);
     }).toThrow();
   });
 
