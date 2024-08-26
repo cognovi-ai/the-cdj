@@ -1,14 +1,19 @@
-import mongoose from 'mongoose';
 import { server } from '../src/index.ts';
+import { seedDatabase, teardownDatabase } from '../data/seed.js';
 
 global.console.log = jest.fn();
 
-describe('Server startup', () => {
-  afterAll(async () => {
-    server.close();
-    await mongoose.connection.close();
-  });
+beforeAll(async () => {
+  await seedDatabase();
+});
 
+afterAll(async () => {
+  console.log('Teardown: Dropping test database...');
+  await teardownDatabase();
+  server.close();
+});
+
+describe('Server startup', () => {
   it('should start the server in non-production mode', (done) => {
     process.env.NODE_ENV = 'development';
     setTimeout(() => {

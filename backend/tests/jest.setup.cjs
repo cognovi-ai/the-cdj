@@ -1,30 +1,20 @@
+require('dotenv').config();
+const MongoMemoryServer = require('mongodb-memory-server').MongoMemoryServer;
+const mongoose = require('mongoose');
+
 module.exports = async () => {
-  console.log('\nSetup: Seeding and connecting to test database...');
-
-  // Connect to and seed the in-memory test database
-  (await import('../data/seed.js')).seedDatabase();
-
-  // Retrieve a test journal ID
-  const journalModule = await import('../src/models/journal.js');
-  const Journal = journalModule.default;
-  const journal = await Journal.findOne({});
-
-  // Retrieve a test entry ID
-  const entryModule = await import('../src/models/entry/entry.js');
-  const Entry = entryModule.default;
-  const entries = await Entry.find({});
-
-  // Retrieve a test entry analysis ID
-  const entryAnalysisModule = await import(
-    '../src/models/entry/entryAnalysis.js'
-  );
-  const EntryAnalysis = entryAnalysisModule.default;
-  const entryAnalysis = await EntryAnalysis.findOne({});
-
-  // Set environment variables
-  if (journal || entries.length > 0) {
-    process.env.TEST_JOURNAL_ID = journal._id.toString();
-    process.env.TEST_ENTRY_ID = entries[0]._id.toString();
-    process.env.TEST_ENTRY_ANALYSIS_ID = entryAnalysis._id.toString();
+  console.log('\nSetup: config mongodb for testing...');
+  // https://typegoose.github.io/mongodb-memory-server/docs/guides/integration-examples/test-runners/
+  if (process.env.MEMORY === "True") { // Config to decide if an mongodb-memory-server instance should be used
+    // it's needed in global space, because we don't want to create a new instance every test-suite
+    const instance = await MongoMemoryServer.create();
+    const uri = instance.getUri();
+    global.__MONGOINSTANCE = instance;
+    process.env.MONGO_URI = uri.slice(0, uri.lastIndexOf('/'));
   }
+
+  // The following is to make sure the database is clean before a test suite starts
+  const conn = await mongoose.connect(`${process.env.MONGO_URI}/cdj`);
+  await conn.connection.db.dropDatabase();
+  await mongoose.disconnect();
 };

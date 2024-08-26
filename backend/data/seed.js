@@ -27,8 +27,7 @@ import journalTitles from './journalData.js';
 import mongoose from 'mongoose';
 import users from './userData.js';
 
-const memoryMongo =
-  process.env.NODE_ENV === 'test' ? new MongoMemoryServer() : null;
+const mongoURI = process.env.MONGO_URI + '/cdj';
 
 /**
  * Seed the database with users using passport-local-mongoose's register method.
@@ -58,16 +57,6 @@ async function seedConfigs() {
  */
 export async function seedDatabase() {
   try {
-    // Set the URI for the database
-    let mongoURI = process.env.MONGO_URI + '/cdj';
-
-    // If testing, use the in-memory database
-    if (memoryMongo) {
-      console.log('Setting up in-memory database...');
-      await memoryMongo.start();
-      mongoURI = memoryMongo.getUri();
-    }
-
     await mongoose.connect(mongoURI);
 
     // Remove existing data
@@ -126,12 +115,11 @@ export async function seedDatabase() {
 
       configIndex = (configIndex + 1) % configs.length;
     }
+    await mongoose.disconnect();
 
     console.log('Database has been seeded successfully.');
   } catch (error) {
     console.error('Error while seeding database:', error);
-  } finally {
-    if (!memoryMongo) await mongoose.disconnect();
   }
 }
 
@@ -142,6 +130,7 @@ export async function seedDatabase() {
 export async function teardownDatabase() {
   try {
     // Clear contents of database
+    await mongoose.connect(mongoURI);
     const collections = await mongoose.connection.db.collections();
     for (const collection of collections) {
       await collection.drop();
@@ -149,7 +138,6 @@ export async function teardownDatabase() {
 
     // Close connections
     await mongoose.disconnect();
-    if (memoryMongo) await memoryMongo.stop();
 
     console.log('Database has been torn down successfully.');
   } catch (error) {
