@@ -3,7 +3,7 @@ import { access, entry } from './routes/index.js';
 import ExpressError from './utils/ExpressError.js';
 import User from './models/user.js';
 
-import connectDB from './db.js';
+import connectDB from './db';
 import connectStore from './store.js';
 import cors from 'cors';
 import express from 'express';
