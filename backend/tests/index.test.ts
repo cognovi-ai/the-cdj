@@ -1,5 +1,5 @@
-import { server } from '../src/index.ts';
 import { seedDatabase, teardownDatabase } from '../data/seed.js';
+import { server } from '../src/index.ts';
 
 global.console.log = jest.fn();
 
