@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npm install && tsx ./src/index.ts",
-    "test": "tsc --project tsconfig.test.json && node -r ts-node/register ./node_modules/.bin/jest --coverage --detectOpenHandles --port=3001",
+    "test": "tsc --project tsconfig.test.json && jest --coverage --detectOpenHandles",
     "lint": "npx eslint . --fix",
     "build": "tsc",
     "start": "pm2 start dist/index.js --name the-cdj",

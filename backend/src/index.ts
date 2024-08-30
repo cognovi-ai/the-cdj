@@ -10,8 +10,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import yargs from 'yargs';
-
 import app from './app.js';
 import fs from 'fs';
 import https from 'https';
@@ -20,13 +18,9 @@ import { Server } from 'http';
 const port = process.env.PORT;
 export let server: Server<never, never>;
 
-const { argv } = yargs(process.argv.slice(2)).options({
-  port: { type: 'number', default: port },
-});
-
 if (process.env.NODE_ENV !== 'production') {
   // Start the server in development or test mode
-  server = app.listen(argv, () => {
+  server = app.listen(port, () => {
     console.log(`\nExpress listening on port ${port}`);
   });
 } else {
