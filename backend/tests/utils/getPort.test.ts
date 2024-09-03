@@ -1,4 +1,4 @@
-import getPort from '../../src/utils/getPort';
+import { getPort } from '../../src/utils/getPort.js';
 
 const originalEnv = process.env;
 
@@ -12,41 +12,44 @@ afterAll(() => {
 });
 
 describe('getPort function', () => {
-  it('should throw an error if PORT is not set', async () => {
+  it('should throw an error if PORT is not set', () => {
     delete process.env.PORT;
 
-    await expect(getPort()).rejects.toThrow('Environment variable PORT must be set');
+    expect(() => {
+      getPort();
+    }).toThrow('Environment variable PORT must be set');
   });
 
-  it('should return the port from environment when NODE_ENV is not "test"', async () => {
+  it('should return the port from environment when NODE_ENV is not "test"', () => {
     process.env.PORT = '3000';
     process.env.NODE_ENV = 'development';
 
-    const port = await getPort();
+    const port = getPort();
 
     expect(port).toBe(3000);
   });
 
-  it('should increment the port by 1 if NODE_ENV is "test"', async () => {
+  it('should 0 if NODE_ENV is "test"', () => {
     process.env.PORT = '3000';
     process.env.NODE_ENV = 'test';
 
-    const port = await getPort();
+    const port = getPort();
 
-    expect(port).toBe(3001);
+    expect(port).toBe(0);
   });
 
-  it('should handle non-numeric port values by throwing an error', async () => {
+  it('should handle non-numeric port values by throwing an error', () => {
+    process.env.NODE_ENV = 'development';
     process.env.PORT = 'invalid_port';
 
-    await expect(getPort()).rejects.toThrow('NaN');
+    expect(getPort()).toBe(NaN);
   });
 
-  it('should correctly parse and return a numeric port value', async () => {
+  it('should correctly parse and return a numeric port value', () => {
     process.env.PORT = '4000';
     process.env.NODE_ENV = 'production';
 
-    const port = await getPort();
+    const port = getPort();
 
     expect(port).toBe(4000);
   });

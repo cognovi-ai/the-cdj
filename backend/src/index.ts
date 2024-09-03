@@ -7,24 +7,28 @@
 
 /* eslint-disable sort-imports */
 
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
 
 import app from './app.js';
 import fs from 'fs';
-import getPort from './utils/getPort.js';
+import { getPort } from './utils/getPort.js';
 import https from 'https';
 import { Server } from 'http';
 
 export let server: Server;
 
-async function startServer() {
-  const port = await getPort();
+function startServer() {
+  let port = getPort();
 
   if (process.env.NODE_ENV !== 'production') {
-  // Start the server in development or test mode
+    // Start the server in development or test mode
     server = app.listen(port, () => {
-      console.log(`\nExpress listening on port ${port}`);
+      const address = server.address();
+      if (address && typeof address !== 'string') {
+        console.log(`\nExpress listening on port ${address.port}`);
+      } else {
+        console.log(`\nExpress listening on non-IP socket ${address}`);
+      }
     });
   } else {
   // Start the server in production mode
