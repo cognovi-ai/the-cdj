@@ -11,27 +11,43 @@ import 'dotenv/config';
 
 import app from './app.js';
 import fs from 'fs';
-import { getPort } from './utils/getPort.js';
+import http from 'http';
 import https from 'https';
-import { Server } from 'http';
 
-export let server: Server;
+// Start the server.
+export const server: http.Server | https.Server| undefined = startServer();
 
-function startServer() {
-  let port = getPort();
+// Shutdown the server on ctrl+C signal
+process.on('SIGINT', closeServer);
+
+// Shutdown the server on server kill signal
+process.on('SIGTERM', closeServer);
+
+/**
+ * Start the server.
+ */
+export function startServer(): http.Server | https.Server | undefined {
+  const port = process.env.NODE_ENV !== 'test' ? process.env.PORT : '0';
+  
+  if (port === undefined) {
+    throw new Error('Environment variable PORT must be set');
+  }
 
   if (process.env.NODE_ENV !== 'production') {
     // Start the server in development or test mode
-    server = app.listen(port, () => {
-      const address = server.address();
+    const httpServer = app.listen(port, () => {
+      const address = httpServer.address();
+
       if (address && typeof address !== 'string') {
-        console.log(`\nExpress listening on port ${address.port}`);
+        console.log(`\nHTTP Express listening on port ${address.port}`);
       } else {
-        console.log(`\nExpress listening on non-IP socket ${address}`);
+        throw new Error(`\nHTTP Express listening on non-IP socket ${address}`);
       }
     });
+
+    return httpServer;
   } else {
-  // Start the server in production mode
+    // Start the server in production mode
     const { PRIVATE_KEY_PATH, CERTIFICATE_PATH, CA_PATH } = process.env;
 
     if (!PRIVATE_KEY_PATH || !CERTIFICATE_PATH || !CA_PATH) {
@@ -50,8 +66,16 @@ function startServer() {
       const httpsServer = https.createServer(credentials, app);
 
       httpsServer.listen(port, () => {
-        console.log(`\nHTTPS listening on port ${port}`);
+        const address = httpsServer.address();
+        
+        if (address && typeof address !== 'string') {
+          console.log(`\nHTTPS Express listening on port ${address.port}`);
+        } else {
+          throw new Error(`\nHTTPS Express listening on non-IP socket ${address}`);
+        }
       });
+
+      return httpsServer;
     } catch (error) {
       console.error('HTTPS server error:', error);
     }
@@ -59,19 +83,15 @@ function startServer() {
 }
 
 /**
- * Gracefully shutdown the server
+ * Gracefully shutdown the server.
  */
-function closeServer() {
-  const server = app.locals.server as Server;
-  server.close(() => {
+export function closeServer() {
+  server?.close(() => {
     throw new Error('Server shutdown complete');
   });
+
+  // Force shutdown after 10 seconds.
+  setTimeout(() => {
+    throw new Error('Server shutdown timed out');
+  }, 10000);
 }
-
-// Listen for SIGINT signal (Ctrl+C)
-process.on('SIGINT', closeServer);
-
-// Listen for SIGTERM signal (system shutdown)
-process.on('SIGTERM', closeServer);
-
-startServer();
