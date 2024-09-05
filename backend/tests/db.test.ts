@@ -1,10 +1,9 @@
 /* eslint-disable jest/no-disabled-tests */
 /* eslint-disable sort-imports */
 
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
 
-import connectDB from '../src/db.ts';
+import connectDB from '../src/db.js';
 import mongoose from 'mongoose';
 
 // Mock the mongoose module
