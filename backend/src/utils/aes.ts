@@ -2,8 +2,8 @@
  * AES encryption/decryption.
  */
 
-import crypto from 'crypto';
 import 'dotenv/config';
+import crypto from 'crypto';
 
 const IV_LENGTH = 16;
 

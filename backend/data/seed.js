@@ -17,8 +17,6 @@ import {
   User,
 } from '../src/models/index.js';
 
-import { MongoMemoryServer } from 'mongodb-memory-server';
-
 import analyses from './analysisData.js';
 import configData from './configData.js';
 import conversations from './conversationData.js';
