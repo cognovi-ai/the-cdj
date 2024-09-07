@@ -4,8 +4,8 @@ import ExpressError from './utils/ExpressError.js';
 import User from './models/user.js';
 
 import connectDB from './db.js';
-import connectStore from './store.js';
 import cors from 'cors';
+import { createStore } from './store.js';
 import express from 'express';
 import flash from 'connect-flash';
 import helmet from 'helmet';
@@ -62,7 +62,7 @@ app.use(express.json());
 // Use session middleware
 app.use(
   session({
-    store: connectStore(
+    store: createStore(
       process.env.NODE_ENV === 'production' ? 'redis' : 'memory'
     ),
     secret: process.env.SESSION_SECRET,
