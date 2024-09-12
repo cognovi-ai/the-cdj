@@ -10,15 +10,24 @@ import {
 import ExpressError from '../../utils/ExpressError.js';
 
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import passport from 'passport';
 
 import { validateJournal } from '../../middleware/validation.js';
+import { NextFunction, Request, Response } from 'express';
+
+interface TokenRequest extends Request {
+  token: UserToken;
+}
+
+interface UserToken extends JwtPayload {
+  id: string;
+}
 
 /**
  * Update the journal by accepted fields.
  */
-export const updateJournal = async (req, res, next) => {
+export const updateJournal = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
   const { title } = req.body;
 
@@ -48,7 +57,7 @@ export const updateJournal = async (req, res, next) => {
 /**
  * Get the user associated with a journal.
  */
-export const getAccount = async (req, res, next) => {
+export const getAccount = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
 
   try {
@@ -74,7 +83,7 @@ export const getAccount = async (req, res, next) => {
 /**
  * Update the User and Config models by journalId.
  */
-export const updateAccount = async (req, res, next) => {
+export const updateAccount = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
 
   try {
@@ -166,7 +175,7 @@ export const updateAccount = async (req, res, next) => {
 /**
  * Delete an item from the account endpoint of a journal.
  */
-export const deleteItem = async (req, res, next) => {
+export const deleteItem = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
   const { deletionItem } = req.query;
 
@@ -229,8 +238,9 @@ export const deleteItem = async (req, res, next) => {
 /**
  * Login a user.
  */
-export const login = async (req, res, next) => {
-  passport.authenticate('local', async (err, user, info) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+  //TODO: user and info need to be defined by us as model I think, otherwise leave as any
+  passport.authenticate('local', async (err: Error, user: any, info: any) => {
     if (err) {
       return next(err);
     }
@@ -275,13 +285,17 @@ export const login = async (req, res, next) => {
     }
 
     // Generate a token if the user wants to be remembered
-    let token;
+    let token: string;
     if (req.body.remember) {
       try {
-        token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        let JWT_SECRET = process.env.JWT_SECRET;
+        if (JWT_SECRET === undefined) {
+          throw new Error('JWT secret not defined');
+        }
+        token = jwt.sign({ id: user._id }, JWT_SECRET, {
           expiresIn: '7d',
         });
-      } catch (err) {
+      } catch (err: any) {
         req.flash('error', err.message);
       }
     }
@@ -338,9 +352,9 @@ export const login = async (req, res, next) => {
 /**
  * Login a user with a token.
  */
-export const tokenLogin = async (req, res, next) => {
-  if (req.token) {
-    const { token } = req;
+export const tokenLogin = async (req: Request, res: Response, next: NextFunction) => {
+  if ((req as TokenRequest).token) {
+    const { token } = req as TokenRequest;
 
     // Retrieve the user's journal
     const journal = await Journal.findOne({ user: token.id }).populate('user');
@@ -365,8 +379,13 @@ export const tokenLogin = async (req, res, next) => {
       }
 
       // Show info message only for first 12 hours by iat timestamp
-      if (token.iat + 43200 > Date.now() / 1000)
+      if (token.iat === undefined) {
+        // TODO: Intended behavior here? Currently backdate jwt by 30 seconds if undefined
+        token.iat = Math.floor(Date.now() / 1000) - 30;
+      }
+      if (token.iat + 43200 > Date.now() / 1000) {
         req.flash('info', 'Logging out will prevent automatic future logins.');
+      }
 
       req.flash(
         'success',
@@ -387,12 +406,13 @@ export const tokenLogin = async (req, res, next) => {
 /**
  * Forgot password.
  */
-export const forgotPassword = async (req, res, next) => {
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   // Search for user by email
   const { email } = req.body;
 
   // Search for user by email
-  User.findByUsername(email, async (err, user) => {
+  // TODO: not sure what selectHashSaltFields should be set to
+  User.findByUsername(email, false, async (err, user) => {
     if (err) return next(err);
 
     // If user doesn't exist, return error
@@ -448,7 +468,7 @@ export const forgotPassword = async (req, res, next) => {
 /**
  * Reset password.
  */
-export const resetPassword = async (req, res, next) => {
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
   const { newPassword, token } = req.body;
 
   try {
@@ -495,7 +515,7 @@ export const resetPassword = async (req, res, next) => {
 /**
  * Logout a user.
  */
-export const logout = (req, res, next) => {
+export const logout = (req: Request, res: Response, next: NextFunction) => {
   req.logout((err) => {
     if (err) return next(err);
   });
@@ -509,7 +529,7 @@ export const logout = (req, res, next) => {
 /**
  * Register a new user.
  */
-export const register = async (req, res, next) => {
+export const register = async (req: Request, res: Response, next: NextFunction) => {
   const { fname, lname, email, password } = req.body;
 
   try {
@@ -523,7 +543,7 @@ export const register = async (req, res, next) => {
     if (!newUser) return;
 
     // Call validateJournal middleware
-    validateJournal(req, res, async (err) => {
+    validateJournal(req, res, async (err: ExpressError) => {
       if (err) return next(err); // Handle validation errors
 
       // Create default config
@@ -568,7 +588,7 @@ export const register = async (req, res, next) => {
 /**
  * Validate a user's email address.
  */
-export const verifyEmail = async (req, res, next) => {
+export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   const { token } = req.body;
 
   try {
@@ -620,7 +640,9 @@ export const verifyEmail = async (req, res, next) => {
 /**
  * Approve a user for beta access.
  */
-export const betaApproval = async (req, res, next) => {
+export const betaApproval = async (req: Request, res: Response, next: NextFunction) => {
+  // Token isn't JWt. This is a beta access token, or maybe email verification token. see models/user.js
+  // TODO: create type for beta access tokens
   const { token } = req.query;
 
   if (process.env.RELEASE_PHASE !== 'beta')
@@ -635,6 +657,9 @@ export const betaApproval = async (req, res, next) => {
 
   try {
     // Hash the incoming token
+    if (typeof token !== 'string') {
+      return next(new ExpressError('Missing beta access token', 500));
+    }
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token
@@ -676,7 +701,9 @@ export const betaApproval = async (req, res, next) => {
 /**
  * Deny a user for beta access.
  */
-export const betaDenial = async (req, res, next) => {
+export const betaDenial = async (req: Request, res: Response, next: NextFunction) => {
+  // TODO: this is a beta access token, or maybe email verification token. see models/user.js
+  // Token isn't JWT
   const { token } = req.query;
 
   if (process.env.RELEASE_PHASE !== 'beta')
@@ -691,6 +718,9 @@ export const betaDenial = async (req, res, next) => {
 
   try {
     // Hash the incoming token
+    if (typeof token !== 'string') {
+      return next(new ExpressError('Missing beta access token', 500));
+    }
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token

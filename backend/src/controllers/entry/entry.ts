@@ -10,11 +10,12 @@ import ExpressError from '../../utils/ExpressError.js';
 import mongoose from 'mongoose';
 
 import { validateEntryAnalysis } from '../../middleware/validation.js';
+import { NextFunction, Request, Response } from 'express';
 
 /**
  * Get all entries in a specific journal.
  */
-export const getAllEntries = async (req, res) => {
+export const getAllEntries = async (req: Request, res: Response) => {
   const { journalId } = req.params;
 
   const entries = await Entry.find({ journal: journalId });
@@ -29,7 +30,7 @@ export const getAllEntries = async (req, res) => {
 /**
  * Create a new entry and analysis in a specific journal.
  */
-export const createEntry = async (req, res, next) => {
+export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
 
   // Ensure that the journal exists
@@ -38,7 +39,7 @@ export const createEntry = async (req, res, next) => {
     return next(new ExpressError('Journal not found.', 404));
   }
 
-  validateEntryAnalysis(req, res, async (err) => {
+  validateEntryAnalysis(req, res, async (err: ExpressError) => {
     if (err) {
       return next(err); // Handle any validation errors
     }
@@ -70,8 +71,8 @@ export const createEntry = async (req, res, next) => {
 
         newAnalysis.analysis_content = analysis.analysis_content;
       }
-    } catch (err) {
-      req.flash('info', err.message);
+    } catch (analysisError: any) {
+      req.flash('info', analysisError.message);
     } finally {
       await newEntry.save();
       await newAnalysis.save();
@@ -86,7 +87,7 @@ export const createEntry = async (req, res, next) => {
 /**
  * Get an entry and all associated documents by ID.
  */
-export const getAnEntry = async (req, res, next) => {
+export const getAnEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId } = req.params;
 
   try {
@@ -95,7 +96,7 @@ export const getAnEntry = async (req, res, next) => {
     );
 
     res.status(200).json(entry);
-  } catch (err) {
+  } catch (err: any) {
     req.flash('info', err.message);
     return next(err);
   }
@@ -104,7 +105,7 @@ export const getAnEntry = async (req, res, next) => {
 /**
  * Update an entry by ID.
  */
-export const updateEntry = async (req, res, next) => {
+export const updateEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId, journalId } = req.params;
 
   const journal = await Journal.findById(journalId);
@@ -112,7 +113,7 @@ export const updateEntry = async (req, res, next) => {
     return next(new ExpressError('Journal not found.', 404));
   }
 
-  validateEntryAnalysis(req, res, async (err) => {
+  validateEntryAnalysis(req, res, async (err: ExpressError) => {
     if (err) {
       return next(err);
     }
@@ -140,8 +141,8 @@ export const updateEntry = async (req, res, next) => {
 
           oldAnalysis.analysis_content = analysis.analysis_content;
         }
-      } catch (err) {
-        req.flash('info', err.message);
+      } catch (analysisError: any) {
+        req.flash('info', analysisError.message);
       } finally {
         await updatedEntry.save();
         await oldAnalysis.save();
@@ -159,7 +160,7 @@ export const updateEntry = async (req, res, next) => {
 /**
  * Delete an entry by ID and all associated documents.
  */
-export const deleteEntry = async (req, res, next) => {
+export const deleteEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId } = req.params;
 
   // Start a session and transaction for atomicity
@@ -201,7 +202,7 @@ export const deleteEntry = async (req, res, next) => {
 /**
  * Get an entry and its analysis by ID.
  */
-export const getEntryAnalysis = async (req, res, next) => {
+export const getEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   // Const { journalId, entryId } = req.params;
   const { entryId } = req.params;
 
@@ -219,7 +220,7 @@ export const getEntryAnalysis = async (req, res, next) => {
 /**
  * Update the analysis of an entry by entry ID.
  */
-export const updateEntryAnalysis = async (req, res, next) => {
+export const updateEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId, journalId } = req.params;
 
   // Ensure that the journal exists
@@ -254,7 +255,7 @@ export const updateEntryAnalysis = async (req, res, next) => {
       entry.save();
       req.flash('success', 'Successfully generated a new analysis.');
     }
-  } catch (err) {
+  } catch (err: any) {
     req.flash('info', err.message);
   }
 
@@ -266,7 +267,7 @@ export const updateEntryAnalysis = async (req, res, next) => {
 /**
  * Get a conversation for a specific entry.
  */
-export const getEntryConversation = async (req, res) => {
+export const getEntryConversation = async (req: Request, res: Response) => {
   const { entryId } = req.params;
 
   const response = await EntryConversation.findOne({ entry: entryId });
@@ -280,7 +281,7 @@ export const getEntryConversation = async (req, res) => {
 /**
  * Create a conversation for a specific entry.
  */
-export const createEntryConversation = async (req, res, next) => {
+export const createEntryConversation = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
@@ -302,7 +303,7 @@ export const createEntryConversation = async (req, res, next) => {
   try {
     const llmResponse = await newConversation.getChatContent(
       journal.config,
-      entry.analysis._id,
+      entry.analysis._id, // TODO: there's a bug in this line. I think entry.analysis doesn't exist for seeded entries
       messageData.messages[0].message_content
     );
 
@@ -326,7 +327,7 @@ export const createEntryConversation = async (req, res, next) => {
 /**
  * Update a conversation for a specific entry.
  */
-export const updateEntryConversation = async (req, res, next) => {
+export const updateEntryConversation = async (req: Request, res: Response, next: NextFunction) => {
   const { chatId, journalId } = req.params;
   const messageData = req.body;
 
