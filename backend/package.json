@@ -14,6 +14,10 @@
   },
   "license": "ISC",
   "dependencies": {
+    "@types/connect-flash": "^0.0.40",
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9",
+    "@types/passport": "^1.0.16",
     "connect-flash": "^0.1.1",
     "connect-redis": "^7.1.0",
     "cors": "^2.8.5",
