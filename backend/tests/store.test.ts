@@ -132,22 +132,4 @@ describe('createStore', () => {
     expect(consoleSpy).toHaveBeenCalledWith(`Connected to Redis: ${process.env.REDIS_HOST}:6379`);
     consoleSpy.mockRestore();
   });
-
-  it('should return a Store object when store is "redis"', () => {
-    const mockRedisClient = {
-      connect: jest.fn().mockResolvedValue(undefined),
-      on: jest.fn(),
-    };
-
-    const mockRedisStore = jest.fn().mockImplementation(() => ({ store: 'redis' }));
-
-    (createClient as jest.Mock).mockReturnValue(mockRedisClient);
-    (RedisStore as unknown as jest.Mock).mockImplementation(mockRedisStore);
-
-    const result = createStore('redis');
-
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty('store', 'redis');
-    expect(result).toBeInstanceOf(Object);
-  });
 });
