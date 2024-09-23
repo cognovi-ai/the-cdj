@@ -1,4 +1,6 @@
+import { ChatCompletionResponse, ChatMessage, Message, Prompt } from '../../interfaces/entry/EntryConversation.js';
 import Assistant from '../Assistant.js';
+import { EntryAnalysis } from '../../interfaces/entry/EntryAnalysis.js';
 
 const analysisSeed: string = `
 ROLE
@@ -42,51 +44,6 @@ const formatInstructions: FormatInstructions = {
   mood: 'Inferred Mood from Thought',
   tags: ['Array', 'of', 'Relevant', 'Tags'],
 };
-
-export interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-export interface Entry {
-  content: string;
-}
-
-export interface EntryAnalysis {
-  entry: Entry;
-  analysis_content: string;
-}
-
-export interface ChatMessage {
-  message_content: string;
-  llm_response: string;
-}
-
-export interface Prompt {
-  analysis?: string;
-  chat?: string;
-}
-
-export interface ChatCompletionChoice {
-  index: number;
-  message: Message;
-  finish_reason: string;
-}
-
-export interface ChatCompletionUsage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-}
-
-export interface ChatCompletionResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: ChatCompletionChoice[];
-  usage: ChatCompletionUsage;
-}
 
 /**
  * CDGPT Chat Assistant

@@ -1,32 +1,4 @@
-export interface Permission {
-  id: string;
-  object: string;
-  created: number;
-  allow_create_engine: boolean;
-  allow_sampling: boolean;
-  allow_logprobs: boolean;
-  allow_search_indices: boolean;
-  allow_view: boolean;
-  allow_fine_tuning: boolean;
-  organization: string;
-  group?: string | null;
-  is_blocking: boolean;
-}
-
-export interface Model {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  permission: Permission[];
-  root: string;
-  parent?: string | null;
-}
-
-export interface ModelsResponse {
-  object: string;
-  data: Model[];
-}
+import { Model, ModelsResponse } from '../interfaces/assistants/Model.js';
 
 export default class Assistant {
   baseUrl: string;
