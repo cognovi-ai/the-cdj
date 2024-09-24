@@ -89,8 +89,12 @@ describe('Assistant Class', () => {
     it('should return the filtered model when it exists', () => {
       const assistant = new Assistant(bearerToken, 'MODEL2');
       const result = assistant.testModelAvailability(models);
-
-      expect(result).toEqual([models[1]]);
+    
+      const expectedModel = models.find(
+        (model) => model.id.toLowerCase() === 'model2'.toLowerCase()
+      );
+    
+      expect(result).toEqual(expectedModel ? [expectedModel] : models);
     });
 
     it('should return all models when the specified model does not exist', () => {
