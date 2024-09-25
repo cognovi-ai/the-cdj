@@ -1,4 +1,9 @@
-import { Entry, EntryAnalysis, EntryConversation, Journal } from '../../models/index.js';
+import {
+  Entry,
+  EntryAnalysis,
+  EntryConversation,
+  Journal,
+} from '../../models/index.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 
@@ -42,14 +47,20 @@ export const createEntry = async (req, res, next) => {
     const entryData = req.body;
 
     const newEntry = new Entry({ journal: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({ entry: newEntry._id, analysis_content: entryData.analysis_content });
+    const newAnalysis = new EntryAnalysis({
+      entry: newEntry._id,
+      analysis_content: entryData.analysis_content,
+    });
 
     // Associate the entry with the analysis
     newEntry.analysis = newAnalysis._id;
 
     // Get the analysis content for the entry
     try {
-      const analysis = await newAnalysis.getAnalysisContent(journal.config, newEntry.content);
+      const analysis = await newAnalysis.getAnalysisContent(
+        journal.config,
+        newEntry.content
+      );
 
       // Complete the entry and analysis with the analysis content if available
       if (analysis) {
@@ -66,18 +77,22 @@ export const createEntry = async (req, res, next) => {
       await newAnalysis.save();
     }
 
-    res.status(201).json({ ...(await newEntry.save())._doc, flash: req.flash() });
+    res
+      .status(201)
+      .json({ ...(await newEntry.save())._doc, flash: req.flash() });
   });
 };
 
 /**
  * Get an entry and all associated documents by ID.
  */
-export const getAnEntry = async (req, res) => {
+export const getAnEntry = async (req, res, next) => {
   const { entryId } = req.params;
 
   try {
-    const entry = await Entry.findById(entryId).populate('analysis conversation');
+    const entry = await Entry.findById(entryId).populate(
+      'analysis conversation'
+    );
 
     res.status(200).json(entry);
   } catch (err) {
@@ -113,7 +128,10 @@ export const updateEntry = async (req, res, next) => {
       const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
       try {
-        const analysis = await oldAnalysis.getAnalysisContent(journal.config, updatedEntry.content);
+        const analysis = await oldAnalysis.getAnalysisContent(
+          journal.config,
+          updatedEntry.content
+        );
 
         if (analysis) {
           updatedEntry.title = analysis.title;
@@ -134,7 +152,7 @@ export const updateEntry = async (req, res, next) => {
     }
 
     req.flash('success', 'Successfully updated entry.');
-    res.status(200).json({ ...(updatedEntry)._doc, flash: req.flash() });
+    res.status(200).json({ ...updatedEntry._doc, flash: req.flash() });
   });
 };
 
@@ -165,7 +183,12 @@ export const deleteEntry = async (req, res, next) => {
   } catch (error) {
     // If an error occurs, abort the transaction
     await session.abortTransaction();
-    return next(new ExpressError('An error occurred while attempting to delete the entry.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to delete the entry.',
+        500
+      )
+    );
   } finally {
     // End the session
     session.endSession();
@@ -179,10 +202,12 @@ export const deleteEntry = async (req, res, next) => {
  * Get an entry and its analysis by ID.
  */
 export const getEntryAnalysis = async (req, res, next) => {
-  // const { journalId, entryId } = req.params;
+  // Const { journalId, entryId } = req.params;
   const { entryId } = req.params;
 
-  const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId }).populate('entry');
+  const entryAnalysis = await EntryAnalysis.findOne({
+    entry: entryId,
+  }).populate('entry');
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found.', 404));
@@ -212,7 +237,10 @@ export const updateEntryAnalysis = async (req, res, next) => {
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId });
 
   try {
-    const analysis = await entryAnalysis.getAnalysisContent(journal.config, entry.content);
+    const analysis = await entryAnalysis.getAnalysisContent(
+      journal.config,
+      entry.content
+    );
 
     // Complete the entry and analysis with the analysis content if available
     if (analysis) {
@@ -230,7 +258,9 @@ export const updateEntryAnalysis = async (req, res, next) => {
     req.flash('info', err.message);
   }
 
-  res.status(200).json({ ...(entryAnalysis)._doc, entry: entry._doc, flash: req.flash() });
+  res
+    .status(200)
+    .json({ ...entryAnalysis._doc, entry: entry._doc, flash: req.flash() });
 };
 
 /**
@@ -240,7 +270,9 @@ export const getEntryConversation = async (req, res) => {
   const { entryId } = req.params;
 
   const response = await EntryConversation.findOne({ entry: entryId });
-  const entryConversation = response ? { ...response._doc, chatId: response._id } : {};
+  const entryConversation = response
+    ? { ...response._doc, chatId: response._id }
+    : {};
 
   res.status(200).json(entryConversation);
 };
@@ -254,7 +286,7 @@ export const createEntryConversation = async (req, res, next) => {
 
   const newConversation = new EntryConversation({
     entry: entryId,
-    ...messageData
+    ...messageData,
   });
 
   // Get the config from the journal
@@ -268,7 +300,11 @@ export const createEntryConversation = async (req, res, next) => {
   await entry.save();
 
   try {
-    const llmResponse = await newConversation.getChatContent(journal.config, entry.analysis._id, messageData.messages[0].message_content);
+    const llmResponse = await newConversation.getChatContent(
+      journal.config,
+      entry.analysis._id,
+      messageData.messages[0].message_content
+    );
 
     // If the chat is not empty, update the llm_response
     if (llmResponse) {
@@ -304,7 +340,12 @@ export const updateEntryConversation = async (req, res, next) => {
   const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
 
   try {
-    const llmResponse = await conversation.getChatContent(journal.config, analysis._id, messageData.messages[0].message_content, conversation.messages);
+    const llmResponse = await conversation.getChatContent(
+      journal.config,
+      analysis._id,
+      messageData.messages[0].message_content,
+      conversation.messages
+    );
 
     // If the chat is not empty, update the llm_response
     if (llmResponse) {
@@ -318,11 +359,11 @@ export const updateEntryConversation = async (req, res, next) => {
     { _id: chatId },
     {
       $push: {
-        ...messageData
-      }
+        ...messageData,
+      },
     },
     { new: true }
   );
 
-  res.status(200).json({ ...(response)._doc, flash: req.flash() });
+  res.status(200).json({ ...response._doc, flash: req.flash() });
 };
