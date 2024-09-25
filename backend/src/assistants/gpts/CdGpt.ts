@@ -1,6 +1,6 @@
 import Assistant from '../Assistant.js';
 
-const analysisSeed = `
+const analysisSeed: string = `
 ROLE
 As a Thought Analyzer, your role is to engage directly with the user to update, label, and assess the impact of thoughts containing cognitive distortions. You are speaking directly to the user unless directed otherwise.
 
@@ -18,10 +18,21 @@ Distortion Analysis: Directly inform the user about the type of cognitive distor
 Impact Assessment: Explain to the user how the identified distortion can be harmful to their mental well-being. Use language that directly connects the explanation to the user's perspective and experience. If the thought is healthy, return "".
 `;
 
-const chatSeed =
+const chatSeed: string =
   'As a therapy assistant, your role involves chatting with a user. Stay focused on the entry topic and the assistant\'s analysis. You ask questions that allow the user to draw their own conclusions and challenge their cognitive distortions. You respond concisely, under 180 characters.';
 
-const formatInstructions = {
+interface FormatInstructions {
+  title: string;
+  reframed_thought: string;
+  distortion_analysis: string;
+  impact_assessment: string;
+  affirmation: string;
+  is_healthy: string;
+  mood: string;
+  tags: string[];
+}
+
+const formatInstructions: FormatInstructions = {
   title: 'Brief Summary of Thought',
   reframed_thought: 'Updated Thought',
   distortion_analysis: 'Distortion Analysis',
@@ -32,11 +43,67 @@ const formatInstructions = {
   tags: ['Array', 'of', 'Relevant', 'Tags'],
 };
 
+export interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface Entry {
+  content: string;
+}
+
+export interface EntryAnalysis {
+  entry: Entry;
+  analysis_content: string;
+}
+
+export interface ChatMessage {
+  message_content: string;
+  llm_response: string;
+}
+
+export interface Prompt {
+  analysis?: string;
+  chat?: string;
+}
+
+export interface ChatCompletionChoice {
+  index: number;
+  message: Message;
+  finish_reason: string;
+}
+
+export interface ChatCompletionUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface ChatCompletionResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: ChatCompletionChoice[];
+  usage: ChatCompletionUsage;
+}
+
 /**
  * CDGPT Chat Assistant
  */
 export default class CdGpt extends Assistant {
-  constructor(bearer, model, persona = '', temperature) {
+  method: string;
+  contentType: string;
+  persona: string;
+  analysisMessages: Message[];
+  chatMessages: Message[];
+
+  constructor(
+    bearer: string,
+    model: string,
+    persona: string = '',
+    temperature: number
+  ) {
     super(bearer, model, temperature);
     this.method = 'POST';
     this.contentType = 'application/json';
@@ -48,7 +115,7 @@ export default class CdGpt extends Assistant {
   /**
    * Seed the analysis completion messages to provide context.
    */
-  seedAnalysisMessages(messages = []) {
+  seedAnalysisMessages(messages: Message[] = []): void {
     // Set the context
     this.analysisMessages.push({ role: 'system', content: analysisSeed });
 
@@ -77,10 +144,13 @@ export default class CdGpt extends Assistant {
   /**
    * Seed the chat completion messages to provide context.
    *
-   * @param {Object} entryAnalysis the entry and analysis content
-   * @param {Array} messages existing messages in the conversation
+   * @param entryAnalysis the entry and analysis content
+   * @param messages existing messages in the conversation
    */
-  seedChatMessages(entryAnalysis, messages = []) {
+  seedChatMessages(
+    entryAnalysis: EntryAnalysis,
+    messages: ChatMessage[] = []
+  ): void {
     // Set the context
     this.chatMessages.push({ role: 'system', content: chatSeed });
 
@@ -122,7 +192,7 @@ export default class CdGpt extends Assistant {
   /**
    * Add a user message to the messages.
    */
-  addUserMessage(prompt) {
+  addUserMessage(prompt: Prompt): void {
     const { analysis, chat } = prompt;
 
     if (analysis) {
@@ -133,9 +203,9 @@ export default class CdGpt extends Assistant {
   }
 
   /**
-   * Get the chat completion.
+   * Get the analysis completion.
    */
-  async getAnalysisCompletion() {
+  async getAnalysisCompletion(): Promise<ChatCompletionResponse> {
     const body = {
       model: this.model,
       response_format: { type: 'json_object' },
@@ -143,7 +213,7 @@ export default class CdGpt extends Assistant {
       messages: this.analysisMessages,
     };
 
-    const response = await fetch(this.baseUrl + '/chat/completions', {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       headers: {
         'Content-Type': this.contentType,
         Authorization: this.bearer,
@@ -152,17 +222,21 @@ export default class CdGpt extends Assistant {
       body: JSON.stringify(body),
     });
 
-    return await response.json();
+    const data: ChatCompletionResponse = await response.json();
+    return data;
   }
 
-  async getChatCompletion() {
+  /**
+   * Get the chat completion.
+   */
+  async getChatCompletion(): Promise<ChatCompletionResponse> {
     const body = {
       model: this.model,
       temperature: this.temperature,
       messages: this.chatMessages,
     };
 
-    const response = await fetch(this.baseUrl + '/chat/completions', {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       headers: {
         'Content-Type': this.contentType,
         Authorization: this.bearer,
@@ -171,6 +245,7 @@ export default class CdGpt extends Assistant {
       body: JSON.stringify(body),
     });
 
-    return await response.json();
+    const data: ChatCompletionResponse = await response.json();
+    return data;
   }
 }
