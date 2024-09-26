@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, InferSchemaType } from 'mongoose';
 
 import CdGpt from '../../assistants/gpts/CdGpt.js';
 
@@ -13,25 +13,29 @@ const entryAnalysisSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
-entryAnalysisSchema.statics.joi = Joi.object({
-  analysis_content: Joi.string()
-    .allow('')
-    .trim()
-    .empty('')
-    .default('Analysis not available')
-});
+entryAnalysisSchema.statics.joi = function (obj) {
+  const entryAnalysisJoiSchema = Joi.object({
+    analysis_content: Joi.string()
+      .allow('')
+      .trim()
+      .empty('')
+      .default('Analysis not available')
+  });
+  return entryAnalysisJoiSchema.validate(obj);
+}
 
 // As analyses are tied to specific entries, this will speed up retrieval.
 entryAnalysisSchema.index({ entry: 1 });
 
 // Set new updated_at value on update
 entryAnalysisSchema.pre('save', function (next) {
-  this.updated_at = Date.now();
+  this.updated_at = new Date(Date.now());
   next();
 });
 
+// TODO: is this the best place for this method? Should it be moved to a service module?
 // Get the analysis content for an entry
-entryAnalysisSchema.methods.getAnalysisContent = async function (configId, content) {
+entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string) {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -41,7 +45,11 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
       // Remove an API key from a legacy config
       await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
     } catch (err) {
-      throw new Error(err);
+      if (typeof err === "string") {
+        throw new Error(err);
+      } else if (err instanceof Error) {
+        throw err;
+      }
     }
   }
 
@@ -71,4 +79,5 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId, conte
   return response;
 };
 
+export type EntryAnalysisType = InferSchemaType<typeof entryAnalysisSchema>;
 export default model('EntryAnalysis', entryAnalysisSchema);

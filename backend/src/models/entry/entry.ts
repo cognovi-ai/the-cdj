@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, InferSchemaType } from 'mongoose';
 import Joi from 'joi';
 
 const entrySchema = new Schema({
@@ -17,23 +17,27 @@ const entrySchema = new Schema({
   conversation: { type: Schema.Types.ObjectId, ref: 'EntryConversation' }
 });
 
-entrySchema.statics.joi = Joi.object({
-  title: Joi.string()
-    .allow('')
-    .max(100)
-    .trim()
-    .empty('')
-    .default('Untitled'),
-  content: Joi.string()
-    .min(4)
-    .max(1000),
-  mood: Joi.string(),
-  tags: Joi.array().items(Joi.string()),
-  privacy_settings: Joi.object({
-    public: Joi.boolean(),
-    shared_with: Joi.array().items(Joi.string())
-  })
-}).default(); // Apply defaults for the entire object
+// TODO: check with ryan the intent of this and where it's used
+entrySchema.statics.joi = function (obj) {
+  const joiEntrySchema = Joi.object({
+    title: Joi.string()
+      .allow('')
+      .max(100)
+      .trim()
+      .empty('')
+      .default('Untitled'),
+    content: Joi.string()
+      .min(4)
+      .max(1000),
+    mood: Joi.string(),
+    tags: Joi.array().items(Joi.string()),
+    privacy_settings: Joi.object({
+      public: Joi.boolean(),
+      shared_with: Joi.array().items(Joi.string())
+    })
+  }).default(); // Apply defaults for the entire object
+  return joiEntrySchema.validate(obj);
+}
 
 // For retrieving entries in a journal, sorted by the creation date.
 entrySchema.index({ journal: 1, created_at: -1 });
@@ -50,4 +54,5 @@ entrySchema.pre('save', function (next) {
   next();
 });
 
+export type EntryType = InferSchemaType<typeof entrySchema>;
 export default model('Entry', entrySchema);
