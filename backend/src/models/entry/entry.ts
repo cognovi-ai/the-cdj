@@ -1,7 +1,27 @@
-import { Schema, model, InferSchemaType } from 'mongoose';
+import { Schema, model, InferSchemaType, Model, Types } from 'mongoose';
 import Joi from 'joi';
 
-const entrySchema = new Schema({
+export interface EntryType {
+  journal: Types.ObjectId,
+  title?: string,
+  content: string,
+  mood?: string,
+  tags?: string[],
+  created_at?: Date,
+  updated_at?: Date,
+  privacy_settings?: {
+    public?: boolean,
+    shared_with?: Types.ObjectId,
+  },
+  analysis?: Types.ObjectId,
+  conversation?: Types.ObjectId,
+}
+
+interface EntryStatics extends Model<EntryType> {
+  joi(obj: any, options: object): Joi.ValidationResult<any>,
+}
+
+const entrySchema = new Schema<EntryType, EntryStatics>({
   journal: { type: Schema.Types.ObjectId, ref: 'Journal', required: true },
   title: { type: String, default: 'Untitled' },
   content: { type: String, required: true },
@@ -17,7 +37,7 @@ const entrySchema = new Schema({
   conversation: { type: Schema.Types.ObjectId, ref: 'EntryConversation' }
 });
 
-entrySchema.statics.joi = function (obj, options) {
+entrySchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
   const joiEntrySchema = Joi.object({
     title: Joi.string()
       .allow('')
@@ -53,5 +73,4 @@ entrySchema.pre('save', function (next) {
   next();
 });
 
-export type EntryType = InferSchemaType<typeof entrySchema>;
-export default model<EntryType>('Entry', entrySchema);
+export default model<EntryType, EntryStatics>('Entry', entrySchema);

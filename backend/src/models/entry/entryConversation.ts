@@ -1,12 +1,29 @@
 import { Config, EntryAnalysis } from '../index.js';
-import { Schema, model, InferSchemaType } from 'mongoose';
+import { Schema, model, Model, Types } from 'mongoose';
 
-import CdGpt from '../../assistants/gpts/CdGpt.js';
+import CdGpt, { ChatMessage } from '../../assistants/gpts/CdGpt.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
-const entryConversationSchema = new Schema({
+export interface EntryConversationType {
+  entry: Types.ObjectId,
+  messages: [{
+    message_content: string,
+    llm_response?: string,
+    created_at?: Date,
+  }],
+}
+
+interface EntryConversationMethods {
+  getChatContent(configId: string, analysisId: string, content: string, messages: []): Promise<string>,
+}
+
+interface EntryConversationStatics extends Model<EntryConversationType, {}, EntryConversationMethods> {
+  joi(obj: any, options: object): Joi.ValidationResult<any>,
+}
+
+const entryConversationSchema = new Schema<EntryConversationType, EntryConversationStatics, EntryConversationMethods>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
   messages: [{
     message_content: { type: String, required: true },
@@ -15,7 +32,7 @@ const entryConversationSchema = new Schema({
   }]
 });
 
-entryConversationSchema.statics.joi = function (obj, options) {
+entryConversationSchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
   const entryConversationJoiSchema = Joi.object({
     messages: Joi.array().items(Joi.object({
       message_content: Joi.string()
@@ -39,8 +56,9 @@ entryConversationSchema.index({ entry: 1 });
 // To order messages within a conversation by time.
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
+//TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
-entryConversationSchema.methods.getChatContent = async function (configId: string, analysisId: string, content: string, messages = []) {
+entryConversationSchema.methods.getChatContent = async function (configId: string, analysisId: string, content: string, messages: ChatMessage[] = []): Promise<string> {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -54,7 +72,7 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
         throw new ExpressError(err, 500);
       } else if (err instanceof Error) {
         throw new ExpressError(err.message, 500);
-      } 
+      }
     }
   }
 
@@ -78,5 +96,4 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
   return response.choices[0].message.content;
 };
 
-export type EntryConversationType = InferSchemaType<typeof entryConversationSchema>;
-export default model<EntryConversationType>('EntryConversation', entryConversationSchema);
+export default model<EntryConversationType, EntryConversationStatics>('EntryConversation', entryConversationSchema);
