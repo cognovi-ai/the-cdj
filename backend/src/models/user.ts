@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Model, Schema, model } from 'mongoose';
 
 import Joi from 'joi';
 
@@ -9,7 +9,45 @@ import passportLocalMongoose from 'passport-local-mongoose';
 
 if (process.env.NODE_ENV !== 'production') dotenv.config();
 
-const userSchema = new Schema({
+export interface UserType {
+  fname: string,
+  lname: string,
+  created_at?: Date,
+  updated_at?: Date,
+  resetPasswordToken?: string,
+  resetPasswordExpires?: Date,
+  verifyEmailToken?: string,
+  verifyEmailTokenExpires?: Date,
+  emailVerified?: boolean,
+  betaAccessToken?: string,
+  betaAccessTokenExpires?: Date,
+  betaAccess?: boolean,
+}
+
+interface UserMethods {
+  comparePassword(candidatePassword: string): Promise<any>,
+  checkEmail(email: string): Promise<any>,
+  generatePasswordResetToken(): string,
+  generateEmailVerificationToken(): string,
+  generateBetaAccessToken(): string,
+  sendMail(content: any): void,
+  sendPasswordResetEmail(token: string): void,
+  sendPasswordResetConfirmationEmail(): void,
+  sendBetaAccessVerificationEmail(token: string): void,
+  sendBetaRequestEmail(token: string): void,
+  sendBetaApprovalEmail(token: string): void,
+  sendBetaDenialEmail(): void,
+  sendAlertForForgotPasswordAbuse(token: string): void,
+}
+
+interface UserStatics extends Model<UserType, {}, UserMethods> {
+  baseJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  registrationJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  passwordJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
+}
+
+const userSchema = new Schema<UserType, UserStatics, UserMethods>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
@@ -88,37 +126,50 @@ const modelFieldValidation = Joi.string()
       'Field must only contain alphanumeric characters, hyphens, and periods.',
   });
 
-// Validation schemas
-// Base Joi validation schema
-userSchema.statics.baseJoi = Joi.object({
+const baseUserJoiSchema = Joi.object({
   email: createEmailValidation(true),
   password: createPasswordValidation(true),
   remember: Joi.boolean(),
 });
 
+// Validation schemas
+// Base Joi validation schema
+userSchema.statics.baseJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+  return baseUserJoiSchema.validate(obj, options);
+}
+
 // Registration Joi validation schema
-userSchema.statics.registrationJoi = userSchema.statics.baseJoi.keys({
-  fname: createNameValidation(true),
-  lname: createNameValidation(true),
-});
+userSchema.statics.registrationJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+  const registrationJoiSchema = baseUserJoiSchema.keys({
+    fname: createNameValidation(true),
+    lname: createNameValidation(true),
+  });
+  return registrationJoiSchema.validate(obj, options);
+}
 
 // New password Joi validation schema
-userSchema.statics.passwordJoi = Joi.object({
-  newPassword: createPasswordValidation(true),
-});
+userSchema.statics.passwordJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+  const passwordJoiSchema = Joi.object({
+    newPassword: createPasswordValidation(true),
+  });
+  return passwordJoiSchema.validate(obj, options);
+}
 
 // Account Joi validation schema (fields are not required here)
-userSchema.statics.accountJoi = Joi.object({
-  fname: createNameValidation(),
-  lname: createNameValidation(),
-  email: createEmailValidation(),
-  oldPassword: createPasswordValidation(),
-  newPassword: createPasswordValidation(),
-  model: Joi.object({
-    chat: modelFieldValidation,
-    analysis: modelFieldValidation,
-  }),
-});
+userSchema.statics.accountJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+  const accountJoiSchema = Joi.object({
+    fname: createNameValidation(),
+    lname: createNameValidation(),
+    email: createEmailValidation(),
+    oldPassword: createPasswordValidation(),
+    newPassword: createPasswordValidation(),
+    model: Joi.object({
+      chat: modelFieldValidation,
+      analysis: modelFieldValidation,
+    }),
+  });
+  return accountJoiSchema.validate(obj, options);
+}
 
 // Mongoose schema indices and plugins
 // Assuming users will often be queried by email and it must be unique.
@@ -149,7 +200,7 @@ userSchema.pre('save', function (next) {
 // Compare passwords for re-authentication
 userSchema.methods.comparePassword = function (candidatePassword) {
   return new Promise((resolve, reject) => {
-    this.authenticate(candidatePassword, (err, user) => {
+    this.authenticate(candidatePassword, (err: any, user: any) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -160,7 +211,7 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 // Check if there is a user with the given email
 userSchema.statics.checkEmail = function (email) {
   return new Promise((resolve, reject) => {
-    this.findByUsername(email, (err, user) => {
+    this.findByUsername(email, (err: any, user: any) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -180,7 +231,7 @@ userSchema.methods.generatePasswordResetToken = function () {
     .digest('hex');
 
   // Set an expiry time of 10 minutes
-  this.resetPasswordExpires = Date.now() + 600000;
+  this.set({ resetPasswordExpires: Date.now() + 600000 });
 
   return resetToken;
 };
@@ -197,7 +248,7 @@ userSchema.methods.generateEmailVerificationToken = function () {
     .digest('hex');
 
   // Set an expiry time of 1 week
-  this.verifyEmailTokenExpires = Date.now() + 604800000;
+  this.set({ verifyEmailTokenExpires: Date.now() + 604800000 });
 
   return verificationToken;
 };
@@ -214,7 +265,7 @@ userSchema.methods.generateBetaAccessToken = function () {
     .digest('hex');
 
   // Set an expiry time of 1 week
-  this.betaAccessTokenExpires = Date.now() + 604800000;
+  this.set({ betaAccessTokenExpires: Date.now() + 604800000 });
 
   return betaAccessToken;
 };
@@ -311,11 +362,13 @@ userSchema.methods.sendBetaApprovalEmail = async function (token) {
 // Send beta denial email
 userSchema.methods.sendBetaDenialEmail = async function () {
   // Recipient address (user's email)
+  if (this.betaAccessTokenExpires === undefined) { // TODO: probably want to change default rather than have this case
+    this.betaAccessTokenExpires = new Date(Date.now() + 604800000);
+  }
   const to = this.email;
   const subject = 'Beta Access Denied';
-  const text = `Dear ${
-    this.fname
-  },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
+  const text = `Dear ${this.fname
+    },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
@@ -334,4 +387,4 @@ userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
   this.sendMail({ to, subject, text });
 };
 
-export default model('User', userSchema);
+export default model<UserType, UserStatics>('User', userSchema);

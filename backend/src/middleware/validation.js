@@ -11,7 +11,7 @@ import ExpressError from '../utils/ExpressError.js';
  * Validate the request body for login data.
  */
 export const validateLogin = (req, res, next) => {
-  const { error, value } = User.baseJoi.validate(req.body, {
+  const { error, value } = User.baseJoi(req.body, {
     allowUnknown: true,
     stripUnknown: true,
     abortEarly: true,
@@ -30,7 +30,7 @@ export const validateLogin = (req, res, next) => {
  * Validate new password.
  */
 export const validateNewPassword = (req, res, next) => {
-  const { error } = User.passwordJoi.validate(req.body, {
+  const { error } = User.passwordJoi(req.body, {
     allowUnknown: true,
     stripUnknown: true,
     abortEarly: false,
@@ -48,7 +48,7 @@ export const validateNewPassword = (req, res, next) => {
  * Validate the request body for registration data.
  */
 export const validateRegistration = (req, res, next) => {
-  const { error, value } = User.registrationJoi.validate(req.body, {
+  const { error, value } = User.registrationJoi(req.body, {
     allowUnknown: true,
     stripUnknown: true,
     abortEarly: true,
@@ -69,7 +69,7 @@ export const validateRegistration = (req, res, next) => {
 export const validateAccount = (req, res, next) => {
   const { profile, password, config } = req.body;
 
-  const { error } = User.accountJoi.validate(
+  const { error } = User.accountJoi(
     { ...profile, ...password, ...config },
     {
       abortEarly: false,
@@ -88,7 +88,7 @@ export const validateAccount = (req, res, next) => {
  * Validate the request body for a journal.
  */
 export const validateJournal = (req, res, next) => {
-  const { error, value } = Journal.joi.validate(req.body, {
+  const { error, value } = Journal.joi(req.body, {
     allowUnknown: true,
   });
 
