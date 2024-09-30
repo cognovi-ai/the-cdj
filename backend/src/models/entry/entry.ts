@@ -17,8 +17,7 @@ const entrySchema = new Schema({
   conversation: { type: Schema.Types.ObjectId, ref: 'EntryConversation' }
 });
 
-// TODO: check with ryan the intent of this and where it's used
-entrySchema.statics.joi = function (obj) {
+entrySchema.statics.joi = function (obj, options) {
   const joiEntrySchema = Joi.object({
     title: Joi.string()
       .allow('')
@@ -36,7 +35,7 @@ entrySchema.statics.joi = function (obj) {
       shared_with: Joi.array().items(Joi.string())
     })
   }).default(); // Apply defaults for the entire object
-  return joiEntrySchema.validate(obj);
+  return joiEntrySchema.validate(obj, options);
 }
 
 // For retrieving entries in a journal, sorted by the creation date.
@@ -55,4 +54,4 @@ entrySchema.pre('save', function (next) {
 });
 
 export type EntryType = InferSchemaType<typeof entrySchema>;
-export default model('Entry', entrySchema);
+export default model<EntryType>('Entry', entrySchema);

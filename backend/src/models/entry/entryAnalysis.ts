@@ -13,7 +13,7 @@ const entryAnalysisSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
-entryAnalysisSchema.statics.joi = function (obj) {
+entryAnalysisSchema.statics.joi = function (obj, options) {
   const entryAnalysisJoiSchema = Joi.object({
     analysis_content: Joi.string()
       .allow('')
@@ -21,7 +21,7 @@ entryAnalysisSchema.statics.joi = function (obj) {
       .empty('')
       .default('Analysis not available')
   });
-  return entryAnalysisJoiSchema.validate(obj);
+  return entryAnalysisJoiSchema.validate(obj, options);
 }
 
 // As analyses are tied to specific entries, this will speed up retrieval.
@@ -33,7 +33,6 @@ entryAnalysisSchema.pre('save', function (next) {
   next();
 });
 
-// TODO: is this the best place for this method? Should it be moved to a service module?
 // Get the analysis content for an entry
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string) {
   const config = await Config.findById(configId);
@@ -80,4 +79,4 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
 };
 
 export type EntryAnalysisType = InferSchemaType<typeof entryAnalysisSchema>;
-export default model('EntryAnalysis', entryAnalysisSchema);
+export default model<EntryAnalysisType>('EntryAnalysis', entryAnalysisSchema);

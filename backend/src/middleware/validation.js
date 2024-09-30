@@ -105,7 +105,7 @@ export const validateJournal = (req, res, next) => {
  * Validate the request body for an entry.
  */
 export const validateEntry = (req, res, next) => {
-  const { error, value } = Entry.joi.validate(req.body);
+  const { error, value } = Entry.joi(req.body);
 
   if (error) {
     const msg = error.details.map((el) => el.message).join(' ');
@@ -120,7 +120,7 @@ export const validateEntry = (req, res, next) => {
  * Validate the request body for an entry analysis.
  */
 export const validateEntryAnalysis = (req, res, next) => {
-  const { error, value } = EntryAnalysis.joi.validate(req.body, {
+  const { error, value } = EntryAnalysis.joi(req.body, {
     allowUnknown: true,
   });
 
@@ -137,7 +137,7 @@ export const validateEntryAnalysis = (req, res, next) => {
  * Validate the request body for an entry conversation.
  */
 export const validateEntryConversation = (req, res, next) => {
-  const { error, value } = EntryConversation.joi.validate(req.body);
+  const { error, value } = EntryConversation.joi(req.body);
 
   if (error) {
     const msg = error.details.map((el) => el.message).join(' ');

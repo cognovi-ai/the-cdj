@@ -15,7 +15,7 @@ const entryConversationSchema = new Schema({
   }]
 });
 
-entryConversationSchema.statics.joi = function (obj) {
+entryConversationSchema.statics.joi = function (obj, options) {
   const entryConversationJoiSchema = Joi.object({
     messages: Joi.array().items(Joi.object({
       message_content: Joi.string()
@@ -30,7 +30,7 @@ entryConversationSchema.statics.joi = function (obj) {
       created_at: Joi.date()
     }))
   });
-  return entryConversationJoiSchema.validate(obj);
+  return entryConversationJoiSchema.validate(obj, options);
 }
 
 // For quickly fetching conversations related to an entry.
@@ -79,4 +79,4 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
 };
 
 export type EntryConversationType = InferSchemaType<typeof entryConversationSchema>;
-export default model('EntryConversation', entryConversationSchema);
+export default model<EntryConversationType>('EntryConversation', entryConversationSchema);
