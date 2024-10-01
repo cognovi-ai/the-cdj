@@ -1,6 +1,5 @@
 import {
   Document,
-  Model,
   PassportLocalDocument,
   PassportLocalModel,
   PassportLocalSchema,
@@ -31,29 +30,21 @@ export interface UserType extends PassportLocalDocument {
   betaAccessToken?: string,
   betaAccessTokenExpires?: Date,
   betaAccess?: boolean,
-}
 
-interface UserMethods {
+  // Instance Methods
   comparePassword(candidatePassword: string): Promise<any>,
   checkEmail(email: string): Promise<any>,
   generatePasswordResetToken(): string,
   generateEmailVerificationToken(): string,
   generateBetaAccessToken(): string,
-  sendMail(content: any): void,
-  sendPasswordResetEmail(token: string): void,
-  sendPasswordResetConfirmationEmail(): void,
-  sendBetaAccessVerificationEmail(token: string): void,
-  sendBetaRequestEmail(token: string): void,
-  sendBetaApprovalEmail(token: string): void,
-  sendBetaDenialEmail(): void,
-  sendAlertForForgotPasswordAbuse(token: string): void,
-}
-
-interface UserStatics extends Model<UserType, {}, UserMethods> {
-  baseJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  registrationJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  passwordJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  sendMail(content: any): Promise<void>,
+  sendPasswordResetEmail(token: string): Promise<void>,
+  sendPasswordResetConfirmationEmail(): Promise<void>,
+  sendBetaAccessVerificationEmail(token: string): Promise<void>,
+  sendBetaRequestEmail(token: string): Promise<void>,
+  sendBetaApprovalEmail(token: string): Promise<void>,
+  sendBetaDenialEmail(): Promise<void>,
+  sendAlertForForgotPasswordAbuse(token: string): Promise<void>,
 }
 
 interface UserModel<T extends Document> extends PassportLocalModel<T> {
@@ -63,7 +54,7 @@ interface UserModel<T extends Document> extends PassportLocalModel<T> {
   accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
 }
 
-const userSchema = new Schema<UserType, UserModel<UserType>, UserMethods>({
+const userSchema = new Schema<UserType, UserModel<UserType>>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
   email: { type: String, default: undefined },
@@ -77,7 +68,7 @@ const userSchema = new Schema<UserType, UserModel<UserType>, UserMethods>({
   betaAccessToken: { type: String, default: undefined },
   betaAccessTokenExpires: { type: Date, default: undefined },
   betaAccess: { type: Boolean, default: undefined },
-}) as PassportLocalSchema<UserType, UserModel<UserType>, UserMethods>;
+}) as PassportLocalSchema<UserType, UserModel<UserType>>;
 
 // Add passport-local-mongoose to User schema.
 userSchema.plugin(passportLocalMongoose, {
@@ -216,7 +207,7 @@ userSchema.pre('save', function (next) {
 
 // User schema methods and statics
 // Compare passwords for re-authentication
-userSchema.methods.comparePassword = function (candidatePassword) {
+userSchema.methods.comparePassword = function (candidatePassword: string): Promise<any> {
   return new Promise((resolve, reject) => {
     this.authenticate(candidatePassword, (err: any, user: any) => {
       if (err) return reject(err);
@@ -227,7 +218,7 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 };
 
 // Check if there is a user with the given email
-userSchema.statics.checkEmail = function (email) {
+userSchema.statics.checkEmail = function (email: string): Promise<any> {
   return new Promise((resolve, reject) => {
     this.findByUsername(email, false, (err: any, user: any) => {
       if (err) return reject(err);
@@ -238,7 +229,7 @@ userSchema.statics.checkEmail = function (email) {
 };
 
 // Generate a password reset token
-userSchema.methods.generatePasswordResetToken = function () {
+userSchema.methods.generatePasswordResetToken = function (): string {
   // Generate a token
   const resetToken = crypto.randomBytes(20).toString('hex');
 
@@ -255,7 +246,7 @@ userSchema.methods.generatePasswordResetToken = function () {
 };
 
 // Generate an email confirmation token
-userSchema.methods.generateEmailVerificationToken = function () {
+userSchema.methods.generateEmailVerificationToken = function (): string {
   // Generate a token
   const verificationToken = crypto.randomBytes(20).toString('hex');
 
@@ -272,7 +263,7 @@ userSchema.methods.generateEmailVerificationToken = function () {
 };
 
 // Generate a beta access token
-userSchema.methods.generateBetaAccessToken = function () {
+userSchema.methods.generateBetaAccessToken = function (): string {
   // Generate a token
   const betaAccessToken = crypto.randomBytes(20).toString('hex');
 
@@ -289,7 +280,7 @@ userSchema.methods.generateBetaAccessToken = function () {
 };
 
 // Utility function for sending emails
-userSchema.methods.sendMail = async function (content) {
+userSchema.methods.sendMail = async function (content: any): Promise<void> {
   const { to, subject, text } = content;
 
   // Configure your SMTP transporter
@@ -315,7 +306,7 @@ userSchema.methods.sendMail = async function (content) {
 };
 
 // Send a password reset email
-userSchema.methods.sendPasswordResetEmail = async function (token) {
+userSchema.methods.sendPasswordResetEmail = async function (token: string): Promise<void> {
   // Construct the password reset URL
   const resetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
@@ -328,7 +319,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
 };
 
 // Send a password reset confirmation email
-userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
+userSchema.methods.sendPasswordResetConfirmationEmail = async function (): Promise<void> {
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Password Reset Confirmation';
@@ -338,7 +329,7 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
 };
 
 // Send beta request confirmation email
-userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
+userSchema.methods.sendBetaAccessVerificationEmail = async function (token: string): Promise<void> {
   // Construct the verification URL
   const verificationUrl = `${process.env.TOKENIZED_URL}/verify-email?token=${token}`;
 
@@ -351,7 +342,7 @@ userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
 };
 
 // Send beta request email to support
-userSchema.methods.sendBetaRequestEmail = async function (token) {
+userSchema.methods.sendBetaRequestEmail = async function (token: string): Promise<void> {
   // Construct the approval and denial URLs
   const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
   const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
@@ -365,7 +356,7 @@ userSchema.methods.sendBetaRequestEmail = async function (token) {
 };
 
 // Send beta approval email
-userSchema.methods.sendBetaApprovalEmail = async function (token) {
+userSchema.methods.sendBetaApprovalEmail = async function (token: string): Promise<void> {
   // Construct the password reset URL
   const passwordResetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
@@ -378,7 +369,7 @@ userSchema.methods.sendBetaApprovalEmail = async function (token) {
 };
 
 // Send beta denial email
-userSchema.methods.sendBetaDenialEmail = async function () {
+userSchema.methods.sendBetaDenialEmail = async function (): Promise<void> {
   // Recipient address (user's email)
   if (this.betaAccessTokenExpires === undefined) { // TODO: probably want to change default rather than have this case
     this.betaAccessTokenExpires = new Date(Date.now() + 604800000);
@@ -392,7 +383,7 @@ userSchema.methods.sendBetaDenialEmail = async function () {
 };
 
 // Send admin alert for forgot password abuse
-userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
+userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token: string): Promise<void> {
   // Construct the approval and denial URLs
   const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
   const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
