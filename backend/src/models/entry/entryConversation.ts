@@ -1,5 +1,5 @@
 import { Config, EntryAnalysis } from '../index.js';
-import { Schema, model, Model, Types } from 'mongoose';
+import { Model, Schema, Types, model } from 'mongoose';
 
 import CdGpt, { ChatMessage } from '../../assistants/gpts/CdGpt.js';
 
@@ -48,7 +48,7 @@ entryConversationSchema.statics.joi = function (obj: any, options: object): Joi.
     }))
   });
   return entryConversationJoiSchema.validate(obj, options);
-}
+};
 
 // For quickly fetching conversations related to an entry.
 entryConversationSchema.index({ entry: 1 });
@@ -68,7 +68,7 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
       // Remove an API key from a legacy config
       await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
     } catch (err) {
-      if (typeof err === "string") {
+      if (typeof err === 'string') {
         throw new ExpressError(err, 500);
       } else if (err instanceof Error) {
         throw new ExpressError(err.message, 500);

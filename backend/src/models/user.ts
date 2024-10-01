@@ -1,4 +1,12 @@
-import { Model, PassportLocalDocument, PassportLocalModel, PassportLocalSchema, Schema, model, Document } from 'mongoose';
+import {
+  Document,
+  Model,
+  PassportLocalDocument,
+  PassportLocalModel,
+  PassportLocalSchema,
+  Schema,
+  model
+} from 'mongoose';
 
 import Joi from 'joi';
 
@@ -24,8 +32,6 @@ export interface UserType extends PassportLocalDocument {
   betaAccessTokenExpires?: Date,
   betaAccess?: boolean,
 }
-
-// interface UserStaticsPassportModel<T extends Document, Y, Z> extends PassportLocalModel<T> {}
 
 interface UserMethods {
   comparePassword(candidatePassword: string): Promise<any>,
@@ -159,7 +165,7 @@ const baseUserJoiSchema = Joi.object({
 // Base Joi validation schema
 userSchema.statics.baseJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
   return baseUserJoiSchema.validate(obj, options);
-}
+};
 
 // Registration Joi validation schema
 userSchema.statics.registrationJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
@@ -168,7 +174,7 @@ userSchema.statics.registrationJoi = function (obj: any, options: object): Joi.V
     lname: createNameValidation(true),
   });
   return registrationJoiSchema.validate(obj, options);
-}
+};
 
 // New password Joi validation schema
 userSchema.statics.passwordJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
@@ -176,7 +182,7 @@ userSchema.statics.passwordJoi = function (obj: any, options: object): Joi.Valid
     newPassword: createPasswordValidation(true),
   });
   return passwordJoiSchema.validate(obj, options);
-}
+};
 
 // Account Joi validation schema (fields are not required here)
 userSchema.statics.accountJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
@@ -192,7 +198,7 @@ userSchema.statics.accountJoi = function (obj: any, options: object): Joi.Valida
     }),
   });
   return accountJoiSchema.validate(obj, options);
-}
+};
 
 // Mongoose schema indices and plugins
 // Assuming users will often be queried by email and it must be unique.

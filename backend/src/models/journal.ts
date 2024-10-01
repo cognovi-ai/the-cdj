@@ -1,4 +1,4 @@
-import { Schema, model, Types, Model } from 'mongoose';
+import { Model, Schema, Types, model } from 'mongoose';
 import Joi from 'joi';
 
 export interface JournalType {
@@ -29,7 +29,7 @@ journalSchema.statics.joi = function (obj: any, options: object): Joi.Validation
       .default('The Cognitive Distortion Journal')
   });
   return journalJoiSchema.validate(obj, options);
-}
+};
 
 // Indexing on user as journals will often be queried per user.
 journalSchema.index({ user: 1 });

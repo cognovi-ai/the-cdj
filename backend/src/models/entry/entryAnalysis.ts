@@ -1,4 +1,4 @@
-import { Model, Schema, model, Types } from 'mongoose';
+import { Model, Schema, Types, model } from 'mongoose';
 
 import CdGpt from '../../assistants/gpts/CdGpt.js';
 
@@ -37,7 +37,7 @@ entryAnalysisSchema.statics.joi = function (obj: any, options: object): Joi.Vali
       .default('Analysis not available')
   });
   return entryAnalysisJoiSchema.validate(obj, options);
-}
+};
 
 // As analyses are tied to specific entries, this will speed up retrieval.
 entryAnalysisSchema.index({ entry: 1 });
@@ -60,7 +60,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
       // Remove an API key from a legacy config
       await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
     } catch (err) {
-      if (typeof err === "string") {
+      if (typeof err === 'string') {
         throw new Error(err);
       } else if (err instanceof Error) {
         throw err;

@@ -42,11 +42,11 @@ configSchema.statics.joi = function (obj: any, options: object): Joi.ValidationR
     }).required()
   });
   return joiConfigSchema.validate(obj, options);
-}
+};
 
 // Set new updated_at value before saving
 configSchema.pre('save', function (next) {
-  this.set({ updated_at: Date.now() })
+  this.set({ updated_at: Date.now() });
   next();
 });
 

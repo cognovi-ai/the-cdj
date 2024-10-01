@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType, Model, Types } from 'mongoose';
+import { Model, Schema, Types, model } from 'mongoose';
 import Joi from 'joi';
 
 export interface EntryType {
@@ -56,7 +56,7 @@ entrySchema.statics.joi = function (obj: any, options: object): Joi.ValidationRe
     })
   }).default(); // Apply defaults for the entire object
   return joiEntrySchema.validate(obj, options);
-}
+};
 
 // For retrieving entries in a journal, sorted by the creation date.
 entrySchema.index({ journal: 1, created_at: -1 });
