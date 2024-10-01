@@ -1,4 +1,4 @@
-import { Model, Schema, model } from 'mongoose';
+import { Model, PassportLocalDocument, PassportLocalModel, PassportLocalSchema, Schema, model, Document } from 'mongoose';
 
 import Joi from 'joi';
 
@@ -9,9 +9,10 @@ import passportLocalMongoose from 'passport-local-mongoose';
 
 if (process.env.NODE_ENV !== 'production') dotenv.config();
 
-export interface UserType {
+export interface UserType extends PassportLocalDocument {
   fname: string,
   lname: string,
+  email: string,
   created_at?: Date,
   updated_at?: Date,
   resetPasswordToken?: string,
@@ -23,6 +24,8 @@ export interface UserType {
   betaAccessTokenExpires?: Date,
   betaAccess?: boolean,
 }
+
+// interface UserStaticsPassportModel<T extends Document, Y, Z> extends PassportLocalModel<T> {}
 
 interface UserMethods {
   comparePassword(candidatePassword: string): Promise<any>,
@@ -47,9 +50,17 @@ interface UserStatics extends Model<UserType, {}, UserMethods> {
   accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
 }
 
-const userSchema = new Schema<UserType, UserStatics, UserMethods>({
+interface UserModel<T extends Document> extends PassportLocalModel<T> {
+  baseJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  registrationJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  passwordJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
+}
+
+const userSchema = new Schema<UserType, UserModel<UserType>, UserMethods>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
+  email: { type: String, default: undefined },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: undefined },
@@ -60,7 +71,19 @@ const userSchema = new Schema<UserType, UserStatics, UserMethods>({
   betaAccessToken: { type: String, default: undefined },
   betaAccessTokenExpires: { type: Date, default: undefined },
   betaAccess: { type: Boolean, default: undefined },
+}) as PassportLocalSchema<UserType, UserModel<UserType>, UserMethods>;
+
+// Add passport-local-mongoose to User schema.
+userSchema.plugin(passportLocalMongoose, {
+  usernameField: 'email',
+  errorMessages: {
+    IncorrectPasswordError: 'Incorrect login credentials.',
+    IncorrectUsernameError: 'Incorrect login credentials.',
+    MissingUsernameError: 'No email was given.',
+    UserExistsError: 'The email address provided cannot be used.',
+  },
 });
+
 
 // Utility functions
 // Utility function for first name and last name validation
@@ -178,17 +201,6 @@ userSchema.index({ email: 1 }, { unique: true, background: true });
 // Useful if searching by full name is common.
 userSchema.index({ fname: 1, lname: 1 });
 
-// Add passport-local-mongoose to User schema.
-userSchema.plugin(passportLocalMongoose, {
-  usernameField: 'email',
-  errorMessages: {
-    IncorrectPasswordError: 'Incorrect login credentials.',
-    IncorrectUsernameError: 'Incorrect login credentials.',
-    MissingUsernameError: 'No email was given.',
-    UserExistsError: 'The email address provided cannot be used.',
-  },
-});
-
 // Mongoose middleware
 // Set new updated_at timestamp before saving.
 userSchema.pre('save', function (next) {
@@ -211,7 +223,7 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 // Check if there is a user with the given email
 userSchema.statics.checkEmail = function (email) {
   return new Promise((resolve, reject) => {
-    this.findByUsername(email, (err: any, user: any) => {
+    this.findByUsername(email, false, (err: any, user: any) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -387,4 +399,4 @@ userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
   this.sendMail({ to, subject, text });
 };
 
-export default model<UserType, UserStatics>('User', userSchema);
+export default model<UserType, UserModel<UserType>>('User', userSchema);
