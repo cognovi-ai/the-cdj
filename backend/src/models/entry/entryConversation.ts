@@ -9,7 +9,7 @@ import Joi from 'joi';
 
 export interface EntryConversationType {
   entry: Types.ObjectId,
-  messages: [{
+  messages?: [{
     message_content: string,
     llm_response?: string,
     created_at?: Date,
