@@ -1,8 +1,9 @@
 /**
  * @jest-environment node
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Entry } from "../../../src/models/index.js";
+import { Entry } from '../../../src/models/index.js';
 
 describe('Entry model tests', () => {
   let entryObject: any;
@@ -16,7 +17,7 @@ describe('Entry model tests', () => {
       tags: ['test', 'mock', 'jest'],
       privacy_settings: {
         public: false,
-        shared_with: ['friend1', 'therapist1']
+        shared_with: ['friend1id', 'therapist1id']
       },
     };
     expectedResult = {
@@ -26,7 +27,7 @@ describe('Entry model tests', () => {
       tags: ['test', 'mock', 'jest'],
       privacy_settings: {
         public: false,
-        shared_with: ['friend1', 'therapist1']
+        shared_with: ['friend1id', 'therapist1id']
       },
     };
   });
@@ -40,7 +41,7 @@ describe('Entry model tests', () => {
 
   it('replaces undefined title with Untitled', () => {
     delete entryObject.title;
-    expectedResult.title = 'Untitled'
+    expectedResult.title = 'Untitled';
 
     const { error, value } = Entry.joi(entryObject, {});
 
@@ -178,4 +179,13 @@ describe('Entry model tests', () => {
     expect(value).toStrictEqual(expectedResult);
   });
 
+  it('returns error if property not in schema passed in', () => {
+    entryObject.invalid_property = 'not in schema';
+    expectedResult.invalid_property = 'not in schema';
+
+    const { error, value } = Entry.joi(entryObject);
+
+    expect(error).toBeDefined();
+    expect(value).toStrictEqual(expectedResult);
+  });
 });

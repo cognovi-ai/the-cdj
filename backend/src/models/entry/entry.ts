@@ -11,14 +11,14 @@ export interface EntryType {
   updated_at?: Date,
   privacy_settings?: {
     public?: boolean,
-    shared_with?: Types.ObjectId,
+    shared_with?: Types.ObjectId[],
   },
   analysis?: Types.ObjectId,
   conversation?: Types.ObjectId,
 }
 
 interface EntryStatics extends Model<EntryType> {
-  joi(obj: any, options: object): Joi.ValidationResult<any>,
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
 
 const entrySchema = new Schema<EntryType, EntryStatics>({
@@ -37,7 +37,7 @@ const entrySchema = new Schema<EntryType, EntryStatics>({
   conversation: { type: Schema.Types.ObjectId, ref: 'EntryConversation' }
 });
 
-entrySchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
+entrySchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const joiEntrySchema = Joi.object({
     title: Joi.string()
       .allow('')

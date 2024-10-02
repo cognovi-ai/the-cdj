@@ -32,12 +32,12 @@ export interface UserType extends PassportLocalDocument {
   betaAccess?: boolean,
 
   // Instance Methods
-  comparePassword(candidatePassword: string): Promise<any>,
-  checkEmail(email: string): Promise<any>,
+  comparePassword(candidatePassword: string): Promise<unknown>,
+  checkEmail(email: string): Promise<unknown>,
   generatePasswordResetToken(): string,
   generateEmailVerificationToken(): string,
   generateBetaAccessToken(): string,
-  sendMail(content: any): Promise<void>,
+  sendMail(content: MailContent): Promise<void>,
   sendPasswordResetEmail(token: string): Promise<void>,
   sendPasswordResetConfirmationEmail(): Promise<void>,
   sendBetaAccessVerificationEmail(token: string): Promise<void>,
@@ -47,11 +47,17 @@ export interface UserType extends PassportLocalDocument {
   sendAlertForForgotPasswordAbuse(token: string): Promise<void>,
 }
 
+interface MailContent {
+  to: string,
+  subject: string,
+  text: string,
+}
+
 interface UserModel<T extends Document> extends PassportLocalModel<T> {
-  baseJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  registrationJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  passwordJoi(obj: any, options: object): Joi.ValidationResult<any>,
-  accountJoi(obj: any, options: object): Joi.ValidationResult<any>,
+  baseJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  registrationJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  passwordJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  accountJoi(obj: unknown, options?: object): Joi.ValidationResult,
 }
 
 const userSchema = new Schema<UserType, UserModel<UserType>>({
@@ -154,12 +160,12 @@ const baseUserJoiSchema = Joi.object({
 
 // Validation schemas
 // Base Joi validation schema
-userSchema.statics.baseJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+userSchema.statics.baseJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
   return baseUserJoiSchema.validate(obj, options);
 };
 
 // Registration Joi validation schema
-userSchema.statics.registrationJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+userSchema.statics.registrationJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const registrationJoiSchema = baseUserJoiSchema.keys({
     fname: createNameValidation(true),
     lname: createNameValidation(true),
@@ -168,7 +174,7 @@ userSchema.statics.registrationJoi = function (obj: any, options: object): Joi.V
 };
 
 // New password Joi validation schema
-userSchema.statics.passwordJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+userSchema.statics.passwordJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const passwordJoiSchema = Joi.object({
     newPassword: createPasswordValidation(true),
   });
@@ -176,7 +182,7 @@ userSchema.statics.passwordJoi = function (obj: any, options: object): Joi.Valid
 };
 
 // Account Joi validation schema (fields are not required here)
-userSchema.statics.accountJoi = function (obj: any, options: object): Joi.ValidationResult<any> {
+userSchema.statics.accountJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const accountJoiSchema = Joi.object({
     fname: createNameValidation(),
     lname: createNameValidation(),
@@ -207,9 +213,9 @@ userSchema.pre('save', function (next) {
 
 // User schema methods and statics
 // Compare passwords for re-authentication
-userSchema.methods.comparePassword = function (candidatePassword: string): Promise<any> {
+userSchema.methods.comparePassword = function (candidatePassword: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    this.authenticate(candidatePassword, (err: any, user: any) => {
+    this.authenticate(candidatePassword, (err: unknown, user: unknown) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -218,9 +224,9 @@ userSchema.methods.comparePassword = function (candidatePassword: string): Promi
 };
 
 // Check if there is a user with the given email
-userSchema.statics.checkEmail = function (email: string): Promise<any> {
+userSchema.statics.checkEmail = function (email: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    this.findByUsername(email, false, (err: any, user: any) => {
+    this.findByUsername(email, false, (err: unknown, user: unknown) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -280,7 +286,7 @@ userSchema.methods.generateBetaAccessToken = function (): string {
 };
 
 // Utility function for sending emails
-userSchema.methods.sendMail = async function (content: any): Promise<void> {
+userSchema.methods.sendMail = async function (content: MailContent): Promise<void> {
   const { to, subject, text } = content;
 
   // Configure your SMTP transporter
@@ -377,7 +383,7 @@ userSchema.methods.sendBetaDenialEmail = async function (): Promise<void> {
   const to = this.email;
   const subject = 'Beta Access Denied';
   const text = `Dear ${this.fname
-    },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
+  },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };

@@ -13,13 +13,19 @@ export interface EntryAnalysisType {
   updated_at?: Date,
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: any should be replaced with return type from cdgpt response
 interface EntryAnalysisMethods {
   getAnalysisContent(configId: string, content: string): Promise<any>,
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+// Done to match: https://mongoosejs.com/docs/typescript/statics-and-methods.html
 interface EntryAnalysisStatics extends Model<EntryAnalysisType, {}, EntryAnalysisMethods> {
-  joi(obj: any, options: object): Joi.ValidationResult<any>,
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const entryAnalysisSchema = new Schema<EntryAnalysisType, EntryAnalysisStatics, EntryAnalysisMethods>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
@@ -28,7 +34,7 @@ const entryAnalysisSchema = new Schema<EntryAnalysisType, EntryAnalysisStatics, 
   updated_at: { type: Date, default: Date.now }
 });
 
-entryAnalysisSchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
+entryAnalysisSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const entryAnalysisJoiSchema = Joi.object({
     analysis_content: Joi.string()
       .allow('')
@@ -48,6 +54,7 @@ entryAnalysisSchema.pre('save', function (next) {
   next();
 });
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
@@ -94,4 +101,5 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
   return response;
 };
 
+/* eslint-enable @typescript-eslint/no-explicit-any */
 export default model<EntryAnalysisType, EntryAnalysisStatics>('EntryAnalysis', entryAnalysisSchema);

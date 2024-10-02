@@ -177,9 +177,9 @@ describe('User model and validation tests', () => {
   });
 
   it.skip('sends an email with nodemailer', async () => {
-    // skipping test because kinda pointless and brittle,
-    // but it's a nice example if you want to test other email methods
-    const sendMailFn = jest.fn()
+    // Skipping test because kinda pointless and brittle,
+    // But it's a nice example if you want to test other email methods
+    const sendMailFn = jest.fn();
     mockedNodemailer.createTransport.mockReturnValue(({ sendMail: sendMailFn } as unknown) as Transporter);
     const content = {
       to: '',

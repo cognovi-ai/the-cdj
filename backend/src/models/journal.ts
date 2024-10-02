@@ -10,7 +10,7 @@ export interface JournalType {
 }
 
 interface JournalStatics extends Model<JournalType> {
-  joi(obj: any, options: object): Joi.ValidationResult<any>,
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
 
 const journalSchema = new Schema<JournalType, JournalStatics>({
@@ -21,7 +21,7 @@ const journalSchema = new Schema<JournalType, JournalStatics>({
   updated_at: { type: Date, default: Date.now }
 });
 
-journalSchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
+journalSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const journalJoiSchema = Joi.object({
     title: Joi.string()
       .max(100)

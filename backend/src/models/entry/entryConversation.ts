@@ -1,5 +1,6 @@
+/* eslint-disable sort-imports */
 import { Config, EntryAnalysis } from '../index.js';
-import { Model, Schema, Types, model } from 'mongoose';
+import { Model, model, Schema, Types } from 'mongoose';
 
 import CdGpt, { ChatMessage } from '../../assistants/gpts/CdGpt.js';
 
@@ -19,9 +20,12 @@ interface EntryConversationMethods {
   getChatContent(configId: string, analysisId: string, content: string, messages: []): Promise<string>,
 }
 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+// Done to match: https://mongoosejs.com/docs/typescript/statics-and-methods.html
 interface EntryConversationStatics extends Model<EntryConversationType, {}, EntryConversationMethods> {
-  joi(obj: any, options: object): Joi.ValidationResult<any>,
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const entryConversationSchema = new Schema<EntryConversationType, EntryConversationStatics, EntryConversationMethods>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
@@ -32,7 +36,7 @@ const entryConversationSchema = new Schema<EntryConversationType, EntryConversat
   }]
 });
 
-entryConversationSchema.statics.joi = function (obj: any, options: object): Joi.ValidationResult<any> {
+entryConversationSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const entryConversationJoiSchema = Joi.object({
     messages: Joi.array().items(Joi.object({
       message_content: Joi.string()
