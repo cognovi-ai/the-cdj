@@ -71,10 +71,7 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
   const { entryId } = req.params;
 
   try {
-    const entry = await Entry.findById(entryId).populate(
-      'analysis conversation'
-    );
-
+    const entry = EntryServices.getPopulatedEntry(entryId, 'analysis conversation');
     res.status(200).json(entry);
   } catch (err) {
     req.flash('info', (err as Error).message);

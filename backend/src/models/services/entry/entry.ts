@@ -53,7 +53,7 @@ export namespace EntryServices {
   }
 
   /**
-   * Creates new EntryAnalysis for an Entry, and updates entry with
+   * Creates empty EntryAnalysis for an Entry, and updates entry with
    * refernces to new EntryAnalysis.
    * @param configId Config._id as string
    * @param refEntry Document of target Entry to generate analysis for
@@ -137,7 +137,8 @@ export namespace EntryServices {
     cdGpt.seedAnalysisMessages();
     cdGpt.addUserMessage({ analysis: content });
 
-    const analysisCompletion = await cdGpt.getAnalysisCompletion();
+    //TODO: replace type with better fitting one
+    const analysisCompletion: any = await cdGpt.getAnalysisCompletion();
 
     if (analysisCompletion.error) {
       throw new Error(analysisCompletion.error.message);
@@ -157,4 +158,16 @@ export namespace EntryServices {
 
     return response;
   };
+
+  /**
+   * Gets Entry with populated properties
+   * @param entryId string of Entry._id to get
+   * @param paths string of properties to populate based on Mongoose API
+   * @returns Populated entry document
+   */
+  export async function getPopulatedEntry(entryId: string, paths: string) {
+    return await Entry
+      .findById(entryId)
+      .populate(paths);
+  }
 }
