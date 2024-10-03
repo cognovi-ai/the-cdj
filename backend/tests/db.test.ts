@@ -52,7 +52,7 @@ describe('connectDB', () => {
 
     await connectDB('testdb');
 
-    expect(mongoose.connect).toHaveBeenCalledWith('mongodb://localhost:27017/testdb-test');
+    expect(mongoose.connect).toHaveBeenCalledWith(`${process.env.MONGO_URI}/testdb-test`);
     expect(console.log).toHaveBeenCalledWith('Connected to local test MongoDB: testdb-test');
   });
 
