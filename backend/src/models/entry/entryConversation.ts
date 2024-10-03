@@ -17,7 +17,7 @@ export interface EntryConversationType {
 }
 
 interface EntryConversationMethods {
-  getChatContent(configId: string, analysisId: string, content: string, messages: []): Promise<string>,
+  getChatContent(configId: string, analysisId: string, content: string, messages?: ChatMessage[]): Promise<string>,
 }
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */
@@ -60,9 +60,15 @@ entryConversationSchema.index({ entry: 1 });
 // To order messages within a conversation by time.
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
-entryConversationSchema.methods.getChatContent = async function (configId: string, analysisId: string, content: string, messages: ChatMessage[] = []): Promise<string> {
+entryConversationSchema.methods.getChatContent = async function (
+  configId: string,
+  analysisId: string,
+  content: string,
+  messages: ChatMessage[] = []
+): Promise<string> {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -80,9 +86,13 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
     }
   }
 
-  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.chat);
+  if (process.env.OPENAI_API_KEY === undefined) {
+    throw new Error('OpenAI API Key not set. Cannot retrieve conversation response');
+  }
 
-  const analysis = await EntryAnalysis.findById(analysisId).populate('entry');
+  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.chat, '', 0.7);
+
+  const analysis: any = await EntryAnalysis.findById(analysisId).populate('entry');
 
   if (!analysis) {
     throw new ExpressError('Analysis not found.', 404);
@@ -91,7 +101,7 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
   cdGpt.seedChatMessages(analysis, messages);
   cdGpt.addUserMessage({ chat: content });
 
-  const response = await cdGpt.getChatCompletion();
+  const response: any = await cdGpt.getChatCompletion();
 
   if (response.error) {
     throw new ExpressError(response.error.message, 400);
@@ -99,5 +109,6 @@ entryConversationSchema.methods.getChatContent = async function (configId: strin
 
   return response.choices[0].message.content;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default model<EntryConversationType, EntryConversationStatics>('EntryConversation', entryConversationSchema);

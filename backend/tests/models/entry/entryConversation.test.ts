@@ -3,11 +3,21 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EntryConversation } from "../../../src/models/index.js";
+import mongoose from "mongoose";
+import CdGpt, { ChatCompletionResponse } from "../../../src/assistants/gpts/CdGpt.js";
+import connectDB from "../../../src/db.js";
+import { Config, Entry, EntryAnalysis, EntryConversation } from "../../../src/models/index.js";
+
+jest.mock("../../../src/assistants/gpts/CdGpt.js");
+const mockedCdGpt = jest.mocked(CdGpt);
 
 describe('EntryConversation tests', () => {
   let entryConversationObject: any;
   let expectedResult: any;
+
+  beforeAll(async () => {
+    await connectDB('cdj');
+  });
 
   beforeEach(() => {
     entryConversationObject = {
@@ -40,6 +50,11 @@ describe('EntryConversation tests', () => {
     };
   });
 
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  });
+
   it('succeeds with valid input for EntryConversation', () => {
     const { error, value } = EntryConversation.joi(entryConversationObject);
 
@@ -59,7 +74,7 @@ describe('EntryConversation tests', () => {
   it('allows messages to be empty list', () => {
     entryConversationObject.messages = [];
     expectedResult.messages = [];
-    
+
     const { error, value } = EntryConversation.joi(entryConversationObject);
 
     expect(error).toBeUndefined();
@@ -187,5 +202,58 @@ describe('EntryConversation tests', () => {
 
     expect(error).toBeUndefined();
     expect(value).toStrictEqual(expectedResult);
+  });
+
+  it('gets chat content for an entry', async () => {
+    const mockContent = {
+      reframed_thought: 'mock reframing',
+      distortion_analysis: 'analysis',
+      impact_assessment: 'impact',
+      affirmation: 'affirmation',
+      is_healthy: true,
+    };
+    const expectedResult = JSON.stringify({
+      ...mockContent
+    });
+    mockedCdGpt
+      .prototype
+      .getChatCompletion
+      .mockResolvedValue(
+        {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(mockContent),
+                role: 'system',
+              },
+              index: 0,
+              finish_reason: ""
+            },
+          ],
+          id: "",
+          object: "",
+          created: 0,
+          model: "",
+          usage: {
+            prompt_tokens: 1,
+            completion_tokens: 1,
+            total_tokens: 1,
+          },
+        }
+      );
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      }
+    });
+    const mockEntry = new Entry({ content: '' });
+    const mockAnalysis = new EntryAnalysis({ entry: mockEntry.id, analysis_content: '' });
+    await mockConfig.save();
+    await mockAnalysis.save();
+    const mockChat = new EntryConversation({ entry: mockEntry.id });
+
+    const sut = await mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '');
+
+    expect(sut).toBe(expectedResult);
   });
 });
