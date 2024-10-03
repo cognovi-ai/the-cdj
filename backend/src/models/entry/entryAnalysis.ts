@@ -14,7 +14,7 @@ export interface EntryAnalysisType {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: any should be replaced with return type from cdgpt response
 interface EntryAnalysisMethods {
-  getAnalysisContent(configId: string, content: string): Promise<any>,
+  // GetAnalysisContent(configId: string, content: string): Promise<any>,
 }
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */
@@ -52,6 +52,7 @@ entryAnalysisSchema.pre('save', function (next) {
 
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
+// TODO: References to config type in this method are breaking test suite for some reason. Just try removing from here. Maybe it's a race condition within Jest b/c it's not happening with EntryConversation?
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
   const config = await Config.findById(configId);
 

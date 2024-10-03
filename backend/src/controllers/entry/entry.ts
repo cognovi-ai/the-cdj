@@ -7,6 +7,7 @@ import {
 import { NextFunction, Request, Response } from 'express';
 import mongoose, { Document } from 'mongoose';
 import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
+import { EntryServices } from '../../models/services/entry/entry.js';
 import { EntryType } from '../../models/entry/entry.js';
 import ExpressError from '../../utils/ExpressError.js';
 import { validateEntryAnalysis } from '../../middleware/validation.js';
@@ -17,68 +18,46 @@ import { validateEntryAnalysis } from '../../middleware/validation.js';
 export const getAllEntries = async (req: Request, res: Response) => {
   const { journalId } = req.params;
 
-  const entries = await Entry.find({ journal: journalId });
+  const entries = await EntryServices.getAllEntries(journalId);
 
   if (entries.length === 0) {
     req.flash('info', 'Submit your first entry to get started.');
   }
-
   res.status(200).json({ entries, flash: req.flash() });
 };
 
 /**
  * Create a new entry and analysis in a specific journal.
+ * Request params journalId: string
+ * Request body matches joiEntrySchema, but might be missing fields
  */
 export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
+  // EXTRACT PARAMS AND ENTRY FROM REQUEST
   const { journalId } = req.params;
+  const entryContent = req.body;
 
-  // Ensure that the journal exists
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
+  // VERIFY JOURNAL EXISTS
+  if (!EntryServices.canCreateEntry(journalId)) {
     return next(new ExpressError('Journal not found.', 404));
   }
+  const journal = await Journal.findById(journalId);
 
+  // This call doesn't make sense here. Validation happens before the analysis appears. Only setting a default of analysis_content. You'd want to validate after LLM responds?
   validateEntryAnalysis(req, res, async (err: ExpressError) => {
     if (err) {
       return next(err); // Handle any validation errors
     }
+    // CALL SERVICE TO CREATE NEW ENTRY
+    const newEntry = await EntryServices.createEntry(journalId, entryContent);
 
-    // If validation is successful, proceed to create the entry and analysis
-    const entryData = req.body;
-
-    const newEntry = new Entry({ journal: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({
-      entry: newEntry.id,
-      analysis_content: entryData.analysis_content,
-    });
-
-    // Associate the entry with the analysis
-    newEntry.analysis = newAnalysis._id;
-    if (!journal.config) {
-      return next(new ExpressError('Journal config not found.', 404));
-    }
-    // Get the analysis content for the entry
+    // CALL SERVICE TO CREATE ENTRYANALYSIS FROM NEW ENTRY
     try {
-      const analysis = await newAnalysis.getAnalysisContent(
-        journal.config.toString(),
-        newEntry.content
-      );
-
-      // Complete the entry and analysis with the analysis content if available
-      if (analysis) {
-        newEntry.title = analysis.title;
-        newEntry.mood = analysis.mood;
-        newEntry.tags = analysis.tags;
-
-        newAnalysis.analysis_content = analysis.analysis_content;
-      }
-    } catch (analysisError) {
-      req.flash('info', (analysisError as Error).message);
-    } finally {
-      await newEntry.save();
-      await newAnalysis.save();
+      await EntryServices.createEntryAnalysis(journal.config, newEntry);
+    } catch (analysisError: any) {
+      req.flash('info', analysisError.message);
     }
 
+    // RETURN RESPONSE/ERROR HANDLING
     res
       .status(201)
       .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
@@ -327,6 +306,9 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   await entry.save();
 
   try {
+    if (entry.analysis === undefined) {
+      return next(new ExpressError('Entry analysis not found.' , 500));
+    }
     const llmResponse = await newConversation.getChatContent(
       journal.config.toString(),
       entry.analysis.id,
