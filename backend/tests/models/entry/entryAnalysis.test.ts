@@ -95,31 +95,29 @@ describe('EntryAnalysis Model Test', () => {
       analysis_content: 'affirmation',
       ...mockContent
     }
-    jest
-      .spyOn(CdGpt.prototype, 'getAnalysisCompletion')
-      .mockImplementation(async () => {
-        const mockResponse: ChatCompletionResponse = {
-          choices: [
-            {
-              message: {
-                content: JSON.stringify(mockContent),
-                role: 'system',
-              },
-              index: 0,
-              finish_reason: ""
+    mockedCdGpt
+      .prototype
+      .getAnalysisCompletion
+      .mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify(mockContent),
+              role: 'system',
             },
-          ],
-          id: "",
-          object: "",
-          created: 0,
-          model: "",
-          usage: {
-            prompt_tokens: 1,
-            completion_tokens: 1,
-            total_tokens: 1,
+            index: 0,
+            finish_reason: ""
           },
-        };
-        return mockResponse
+        ],
+        id: "",
+        object: "",
+        created: 0,
+        model: "",
+        usage: {
+          prompt_tokens: 1,
+          completion_tokens: 1,
+          total_tokens: 1,
+        },
       });
     const mockConfig = new Config({
       model: {
