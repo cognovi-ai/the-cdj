@@ -28,7 +28,7 @@ describe('entry controller tests', () => {
     await mockUser.save();
     await mockJournal.save();
 
-    const entries = await EntryServices.getAllEntries(mockJournal.id);
+    const entries = await EntryServices.getAllEntriesInJournal(mockJournal.id);
 
     expect(entries.length).toBe(0);
   });
@@ -43,7 +43,7 @@ describe('entry controller tests', () => {
     await mockEntry1.save();
     await mockEntry2.save();
 
-    const entries = await EntryServices.getAllEntries(mockJournal.id);
+    const entries = await EntryServices.getAllEntriesInJournal(mockJournal.id);
 
     expect(entries.length).toBe(2);
   });
@@ -57,30 +57,11 @@ describe('entry controller tests', () => {
     await mockEntry1.save();
     await mockEntry2.save();
 
-    const entries1 = await EntryServices.getAllEntries(mockJournal1.id);
-    const entries2 = await EntryServices.getAllEntries(mockJournal2.id);
+    const entries1 = await EntryServices.getAllEntriesInJournal(mockJournal1.id);
+    const entries2 = await EntryServices.getAllEntriesInJournal(mockJournal2.id);
 
     expect(entries1.length).toBe(1);
     expect(entries2.length).toBe(1);
-  });
-
-  it('can create entry if journal exists', async () => {
-    const mockUser = new User({ fname: "test", lname: "test" });
-    const mockJournal = new Journal({ user: mockUser.id });
-    await mockJournal.save();
-
-    const sut = await EntryServices.canCreateEntry(mockJournal.id);
-
-    expect(sut).toBe(true);
-  });
-
-  it('cannot create entry if journal does not exist', async () => {
-    const mockUser = new User({ fname: "test", lname: "test" });
-    const mockJournal = new Journal({ user: mockUser.id });
-
-    const sut = await EntryServices.canCreateEntry(mockJournal.id);
-
-    expect(sut).toBe(false);
   });
 
   it('creates entries with valid journal id and content', async () => {

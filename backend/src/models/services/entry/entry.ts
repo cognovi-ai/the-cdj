@@ -1,4 +1,4 @@
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { EntryType } from '../../entry/entry.js';
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import {
@@ -11,74 +11,109 @@ import {
 import CdGpt from '../../../assistants/gpts/CdGpt.js';
 
 export namespace EntryServices {
-
   /**
-   * 
-   * @param journalId 
-   * @returns 
+   * Returns array of all entries in a journal
+   * @param journalId Journal._id as string
+   * @returns array of documents in journal with journalId
    */
-  export async function getAllEntries(journalId: string): Promise<HydratedDocument<EntryType>[]> {
-    return await Entry.find({ journal: journalId });
+  export async function getAllEntriesInJournal(
+    journalId: string
+  ): Promise<HydratedDocument<EntryType>[]> {
+    try {
+      let res = await Entry.find({ journal: journalId });
+      return res;
+    } catch (err) {
+      console.log(err);
+    }
+    return [];
   }
 
   /**
-   * 
-   * @param journalId 
-   * @returns 
+   * Creates a new entry in journalId with entryContent as content
+   * @param journalId Journal._id as string
+   * @param entryContent body of entry
+   * @returns new Entry document on success, and null on error.
    */
-  export async function canCreateEntry(journalId: string): Promise<boolean> {
-    const journal = await Journal.findById(journalId);
-    return journal ? true : false;
+  export async function createEntry(
+    journalId: string,
+    entryContent: object
+  ): Promise<HydratedDocument<EntryType> | null> {
+    /**
+     * TODO: may want to define entryContent type.
+     * Currently, it's based on EntryValidation and Entry joi schemas together b/c validation middleware.
+     * Takes on validation value but b/c mongoose strict mode, non-schema fields are dropped
+     */
+    try {
+      const newEntry = await Entry.create({ journal: journalId, ...entryContent });
+      return newEntry;
+    } catch (err) {
+      console.log(err);
+    }
+    return null;
   }
 
   /**
-   * 
-   * @param journalId 
-   * @param entryData 
+   * Creates new EntryAnalysis for an Entry, and updates entry with
+   * refernces to new EntryAnalysis.
+   * @param configId Config._id as string
+   * @param refEntry Document of target Entry to generate analysis for
+   * @returns new EntryAnalysis for refEntry
    */
-  export async function createEntry(journalId: string, entryContent: object): Promise<HydratedDocument<EntryType>> {
-    const newEntry = new Entry({ journal: journalId, ...entryContent }); // entryContent has non-schema fields after validation middleware, but b/c strict mode, non-schema fields are dropped
-    await newEntry.save();
-    return newEntry;
-  }
-
-  /**
-   * 
-   * @param entryId 
-   * @param refEntry 
-   * @returns 
-   */
-  export async function createEntryAnalysis(configId: string, refEntry: HydratedDocument<EntryType>): Promise<HydratedDocument<EntryAnalysisType>> {
-    const newAnalysis = new EntryAnalysis({
+  export async function createEntryAnalysis(
+    configId: string,
+    refEntry: HydratedDocument<EntryType>
+  ): Promise<HydratedDocument<EntryAnalysisType>> {
+    const newAnalysis = await EntryAnalysis.create({
       entry: refEntry.id,
     });
 
     // Associate the entry with the analysis
     refEntry.analysis = newAnalysis.id;
+    await refEntry.save();
 
-    try { // TODO:  try to extract this out into separate method. Hard because typining from getAnalysisContent not defined right, and having it as a model method is making it really difficult to separate from this function
+    return newAnalysis;
+  }
+
+  /**
+   * Generates analysis body for refEntry, and updates refEntry and refAnalysis
+   * with analysis response.
+   * @param configId Config._id as string
+   * @param refEntry Document of target Entry to generate analysis for
+   * @param refAnalysis Document of EntryAnalysis to generate analysis for
+   */
+  export async function populateAnalysisContent(
+    configId: string,
+    refEntry: HydratedDocument<EntryType>,
+    refAnalysis: HydratedDocument<EntryAnalysisType>
+  ): Promise<void> {
+    try {
       const analysis = await getAnalysisContent(
         configId,
         refEntry.content
       );
 
       // Complete the entry and analysis with the analysis content if available
-      if (analysis) { // DL 9-27-24: I don't think users can set these from the UI
+      if (analysis) {
         refEntry.title = analysis.title;
         refEntry.mood = analysis.mood;
         refEntry.tags = analysis.tags;
 
-        newAnalysis.analysis_content = analysis.analysis_content;
+        refAnalysis.analysis_content = analysis.analysis_content;
       }
-    } catch (analysisError) {
-      throw analysisError;
-    } finally {
       await refEntry.save();
-      await newAnalysis.save();
+      await refAnalysis.save();
+    } catch (err) {
+      console.log(err);
+      throw err;
     }
-    return newAnalysis;
   }
 
+  /**
+   * Calls LLM API to retrieve analysis for entry content.
+   * @param configId Config._id for LLM to use
+   * @param content user entry to generate analysis of
+   * @returns LLM analysis JSON
+   */
   async function getAnalysisContent(configId: string, content: string): Promise<any> {
     const config = await Config.findById(configId);
 

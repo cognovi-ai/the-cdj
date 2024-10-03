@@ -18,7 +18,7 @@ import { validateEntryAnalysis } from '../../middleware/validation.js';
 export const getAllEntries = async (req: Request, res: Response) => {
   const { journalId } = req.params;
 
-  const entries = await EntryServices.getAllEntries(journalId);
+  const entries = await EntryServices.getAllEntriesInJournal(journalId);
 
   if (entries.length === 0) {
     req.flash('info', 'Submit your first entry to get started.');
@@ -32,32 +32,32 @@ export const getAllEntries = async (req: Request, res: Response) => {
  * Request body matches joiEntrySchema, but might be missing fields
  */
 export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
-  // EXTRACT PARAMS AND ENTRY FROM REQUEST
   const { journalId } = req.params;
-  const entryContent = req.body;
 
-  // VERIFY JOURNAL EXISTS
-  if (!EntryServices.canCreateEntry(journalId)) {
+  const journal = await Journal.findById(journalId);
+  if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
-  const journal = await Journal.findById(journalId);
 
   // This call doesn't make sense here. Validation happens before the analysis appears. Only setting a default of analysis_content. You'd want to validate after LLM responds?
   validateEntryAnalysis(req, res, async (err: ExpressError) => {
     if (err) {
       return next(err); // Handle any validation errors
     }
-    // CALL SERVICE TO CREATE NEW ENTRY
-    const newEntry = await EntryServices.createEntry(journalId, entryContent);
+    const entryContent = req.body;
 
-    // CALL SERVICE TO CREATE ENTRYANALYSIS FROM NEW ENTRY
+    const newEntry = await EntryServices.createEntry(journalId, entryContent);
+    if (newEntry === null) {
+      return next(new ExpressError('Could not create entry', 500));
+    }
+
     try {
-      await EntryServices.createEntryAnalysis(journal.config, newEntry);
+      const newAnalysis = await EntryServices.createEntryAnalysis(journal.config, newEntry);
+      await EntryServices.populateAnalysisContent(journal.config, newEntry, newAnalysis);
     } catch (analysisError: any) {
       req.flash('info', analysisError.message);
     }
 
-    // RETURN RESPONSE/ERROR HANDLING
     res
       .status(201)
       .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
