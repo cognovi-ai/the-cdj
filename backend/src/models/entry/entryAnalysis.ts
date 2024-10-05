@@ -56,8 +56,11 @@ entryAnalysisSchema.pre('save', function (next) {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
-// Get the analysis content for an entry
-entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
+/**
+ * 
+ * @param configId string ID of config to update
+ */
+async function updateAPIKey(configId: string): Promise<string> {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -74,32 +77,49 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
       }
     }
   }
+  return config.model.analysis;
+}
 
-  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);
+async function getAnalysisCompletion(configModelAnalysis: string, content: string): Promise<any> {
+  if (process.env.OPENAI_API_KEY === undefined) {
+    throw new Error('OPENAI_API_KEY undefined. Must be set to get analysis')
+  }
+  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, configModelAnalysis, '', .7);
 
   cdGpt.seedAnalysisMessages();
   cdGpt.addUserMessage({ analysis: content });
 
-  const analysisCompletion = await cdGpt.getAnalysisCompletion();
+  const analysisCompletion: any = await cdGpt.getAnalysisCompletion();
 
   if (analysisCompletion.error) {
     throw new Error(analysisCompletion.error.message);
   }
 
-  const response = JSON.parse(analysisCompletion.choices[0].message.content);
+  return JSON.parse(analysisCompletion.choices[0].message.content);
+}
 
-  const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
+// Get the analysis content for an entry
+entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
+  const configModelAnalysis = await updateAPIKey(configId);
+  const response = await getAnalysisCompletion(configModelAnalysis, content);
+  const {
+    reframed_thought: reframing,
+    distortion_analysis: analysis,
+    impact_assessment: impact,
+    affirmation,
+    is_healthy: isHealthy
+  } = response;
 
   if (!isHealthy) {
     if (!analysis || !impact || !reframing) {
       throw new Error('Analysis content is not available.');
     }
-
     response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation;
-  } else response.analysis_content = affirmation;
-
+  } else {
+    response.analysis_content = affirmation;
+  }
   return response;
 };
-
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
 export default model<EntryAnalysisType, EntryAnalysisStatics>('EntryAnalysis', entryAnalysisSchema);
