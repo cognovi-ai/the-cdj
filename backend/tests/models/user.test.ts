@@ -40,7 +40,7 @@ describe('User model and validation tests', () => {
     
     const { error } = User.baseJoi(testObj, testOptions);
 
-    expect(error).not.toBeNull();
+    expect(error).toBeDefined();
   });
 
   const invalidPasswords = [
@@ -49,7 +49,7 @@ describe('User model and validation tests', () => {
     { desc: 'password uses invalid characters', password: 'Invalid$Password' },
   ];
 
-  it.each(invalidPasswords)('returns error if %s', ({ password }) => {
+  it.each(invalidPasswords)('returns error if $desc', ({ desc, password }) => {
     const testObj = { password };
     const testOptions = {};
     
@@ -68,7 +68,7 @@ describe('User model and validation tests', () => {
     const { error, value } = User.baseJoi(testObj, testOptions);
   
     expect(error).not.toBeNull();
-    expect(error?.details.length).toBeGreaterThan(1);
+    expect(error?.details.length).toBe(3);
     expect(value).toEqual(testObj);
   });
 
@@ -88,7 +88,7 @@ describe('User model and validation tests', () => {
     const testObj = { fname };
     const testOptions = {};
     
-    const { error } = User.baseJoi(testObj, testOptions);
+    const { error } = User.registrationJoi(testObj, testOptions);
 
     expect(error).not.toBeNull();
   });
@@ -97,7 +97,7 @@ describe('User model and validation tests', () => {
     const testObj = { lname };
     const testOptions = {};
     
-    const { error } = User.baseJoi(testObj, testOptions);
+    const { error } = User.registrationJoi(testObj, testOptions);
 
     expect(error).not.toBeNull();
   });
