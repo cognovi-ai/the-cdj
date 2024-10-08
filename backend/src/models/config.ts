@@ -2,9 +2,9 @@ import { Model, Schema, model } from 'mongoose';
 import Joi from 'joi';
 
 export interface ConfigType {
-  model?: {
-    chat: string,
-    analysis: string,
+  model: {
+    chat?: string,
+    analysis?: string,
   },
   apiKey?: string,
   created_at: Date,
@@ -17,8 +17,11 @@ interface ConfigStatics extends Model<ConfigType> {
 
 const configSchema = new Schema<ConfigType, ConfigStatics>({
   model: {
-    chat: { type: String },
-    analysis: { type: String }
+    type: {
+      chat: { type: String },
+      analysis: { type: String },
+    },
+    required: true,
   },
   apiKey: { type: String },
   created_at: { type: Date, default: Date.now },
