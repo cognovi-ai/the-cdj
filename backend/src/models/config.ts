@@ -2,9 +2,9 @@ import { Model, Schema, model } from 'mongoose';
 import Joi from 'joi';
 
 export interface ConfigType {
-  model?: {
-    chat: string,
-    analysis: string,
+  model: {
+    chat?: string,
+    analysis?: string,
   },
   apiKey?: string,
   created_at: Date,
@@ -12,13 +12,16 @@ export interface ConfigType {
 }
 
 interface ConfigStatics extends Model<ConfigType> {
-  joi(obj: unknown, options?: object): Joi.ValidationResult<unknown>,
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
 
 const configSchema = new Schema<ConfigType, ConfigStatics>({
   model: {
-    chat: { type: String },
-    analysis: { type: String }
+    type: {
+      chat: { type: String },
+      analysis: { type: String },
+    },
+    required: true,
   },
   apiKey: { type: String },
   created_at: { type: Date, default: Date.now },
@@ -34,7 +37,7 @@ const modelFieldValidation = Joi.string()
     'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
   });
 
-configSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult<unknown> {
+configSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const joiConfigSchema = Joi.object({
     model: Joi.object({
       chat: modelFieldValidation,
