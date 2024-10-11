@@ -1,12 +1,12 @@
 /* @jest-environment node */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import mongoose from "mongoose";
-import CdGpt, { ChatCompletionResponse } from "../../../src/assistants/gpts/CdGpt.js";
-import connectDB from "../../../src/db.js";
-import { Config, EntryAnalysis } from "../../../src/models/index.js";
+import { Config, EntryAnalysis } from '../../../src/models/index.js';
+import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
+import connectDB from '../../../src/db.js';
+import mongoose from 'mongoose';
 
-jest.mock("../../../src/assistants/gpts/CdGpt.js");
+jest.mock('../../../src/assistants/gpts/CdGpt.js');
 const mockedCdGpt = jest.mocked(CdGpt);
 
 describe('EntryAnalysis Model Test', () => {
@@ -47,7 +47,9 @@ describe('EntryAnalysis Model Test', () => {
   });
 
   it('trims whitespace from analysis_content', () => {
-    entryAnalysisObject.analysis_content = 'test content'.padEnd(100, ' ').padStart(100, ' ');
+    entryAnalysisObject.analysis_content = 'test content'
+      .padEnd(100, ' ')
+      .padStart(100, ' ');
     expectedResult.analysis_content = 'test content';
     const { error, value } = EntryAnalysis.joi(entryAnalysisObject);
 
@@ -93,36 +95,33 @@ describe('EntryAnalysis Model Test', () => {
     };
     const expectedResult = {
       analysis_content: 'affirmation',
-      ...mockContent
-    }
-    mockedCdGpt
-      .prototype
-      .getAnalysisCompletion
-      .mockResolvedValue({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(mockContent),
-              role: 'system',
-            },
-            index: 0,
-            finish_reason: ""
+      ...mockContent,
+    };
+    mockedCdGpt.prototype.getAnalysisCompletion.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify(mockContent),
+            role: 'system',
           },
-        ],
-        id: "",
-        object: "",
-        created: 0,
-        model: "",
-        usage: {
-          prompt_tokens: 1,
-          completion_tokens: 1,
-          total_tokens: 1,
+          index: 0,
+          finish_reason: '',
         },
-      });
+      ],
+      id: '',
+      object: '',
+      created: 0,
+      model: '',
+      usage: {
+        prompt_tokens: 1,
+        completion_tokens: 1,
+        total_tokens: 1,
+      },
+    });
     const mockConfig = new Config({
       model: {
         analysis: 'test',
-      }
+      },
     });
     await mockConfig.save();
     const mockAnalysis = new EntryAnalysis({});
@@ -131,5 +130,4 @@ describe('EntryAnalysis Model Test', () => {
 
     expect(sut).toStrictEqual(expectedResult);
   });
-
 });
