@@ -49,7 +49,7 @@ describe('User model and validation tests', () => {
     { desc: 'password uses invalid characters', password: 'Invalid$Password' },
   ];
 
-  it.each(invalidPasswords)('returns error if $desc', ({ desc, password }) => {
+  it.each(invalidPasswords)('returns error if $desc', ({ password }) => {
     const testObj = { password };
     const testOptions = {};
     
@@ -224,23 +224,23 @@ describe('User model and validation tests', () => {
   });
 
   describe('Token generation methods', () => {
-    it('generates a password reset token, sets the resetPasswordToken field, and sets expiry time', async () => {
+    it('generates a password reset token, sets the resetPasswordToken field, and sets expiry time', () => {
       const user = new User({ email: 'test@example.com' });
-      await user.generatePasswordResetToken();
+      user.generatePasswordResetToken();
       expect(user.resetPasswordToken).toBeDefined();
       expect(user.resetPasswordExpires).toBeInstanceOf(Date);
     });
 
-    it('generates an email verification token, sets the verifyEmailToken field, and sets expiry time', async () => {
+    it('generates an email verification token, sets the verifyEmailToken field, and sets expiry time', () => {
       const user = new User({ email: 'test@example.com' });
-      await user.generateEmailVerificationToken();
+      user.generateEmailVerificationToken();
       expect(user.verifyEmailToken).toBeDefined();
       expect(user.verifyEmailTokenExpires).toBeInstanceOf(Date);
     });
 
-    it('generates a beta access token, sets the betaAccessToken field, and sets expiry time', async () => {
+    it('generates a beta access token, sets the betaAccessToken field, and sets expiry time', () => {
       const user = new User({ email: 'test@example.com' });
-      await user.generateBetaAccessToken();
+      user.generateBetaAccessToken();
       expect(user.betaAccessToken).toBeDefined();
       expect(user.betaAccessTokenExpires).toBeInstanceOf(Date);
     });
@@ -248,17 +248,29 @@ describe('User model and validation tests', () => {
 
   describe('Email sending methods', () => {
     let sendMailMock: jest.Mock;
+    const originalEnv = process.env;
 
     beforeEach(() => {
       jest.clearAllMocks();
       sendMailMock = jest.fn().mockResolvedValue({});
+      process.env = { ...originalEnv };
+    });
+
+    afterAll(() => {
+      process.env = originalEnv;
     });
   
-    it('sends an email with nodemailer', async () => {
+    it('sends an email with User method sendMail', async () => {
+      process.env.SMTP_HOST = 'smtp.example.com';
+      process.env.SMTP_USER = 'smtpuser';
+      process.env.SMTP_PASS = 'smtppassword';
+      process.env.SMTP_NAME = 'smtpname';
+      process.env.SYSTEM_INBOX = 'inbox@example.com';
+
       const sendMailFn = jest.fn();
       mockedNodemailer.createTransport.mockReturnValue(({ sendMail: sendMailFn } as unknown) as Transporter);
       const content = {
-        from: '"The CDJ Team" <system@thecdj.app>',
+        from: '"smtpname" <inbox@example.com>',
         to: 'recipient@example.com',
         subject: 'Test Email',
         text: 'This is a test email.',
@@ -273,7 +285,7 @@ describe('User model and validation tests', () => {
   
     const emailTests = [
       {
-        method: async (user: UserType, token?: string | null | null) => {
+        method: async (user: UserType, token?: string | null) => {
           if (!token) throw new Error('Token is required');
           await user.sendPasswordResetEmail(token);
         },
@@ -304,7 +316,7 @@ describe('User model and validation tests', () => {
         }),
       },
       {
-        method: async (user: UserType, token?: string | null | null) => {
+        method: async (user: UserType, token?: string | null) => {
           if (!token) throw new Error('Token is required');
           await user.sendBetaAccessVerificationEmail(token);
         },
@@ -322,7 +334,7 @@ describe('User model and validation tests', () => {
         },
       },
       {
-        method: async (user: UserType, token?: string | null | null) => {
+        method: async (user: UserType, token?: string | null) => {
           if (!token) throw new Error('Token is required');
           await user.sendBetaRequestEmail(token);
         },
@@ -345,7 +357,7 @@ describe('User model and validation tests', () => {
         },
       },
       {
-        method: async (user: UserType, token?: string | null | null) => {
+        method: async (user: UserType, token?: string | null) => {
           if (!token) throw new Error('Token is required');
           await user.sendBetaApprovalEmail(token);
         },
@@ -379,7 +391,7 @@ describe('User model and validation tests', () => {
         },
       },
       {
-        method: async (user: UserType, token?: string | null | null) => {
+        method: async (user: UserType, token?: string | null) => {
           if (!token) throw new Error('Token is required');
           await user.sendAlertForForgotPasswordAbuse(token);
         },
