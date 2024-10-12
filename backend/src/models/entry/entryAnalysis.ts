@@ -65,10 +65,10 @@ entryAnalysisSchema.pre('save', function (next) {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 /**
- *
+ * @deprecated see PR #83
  * @param configId string ID of config to update
  */
-async function updateAPIKey(configId: string): Promise<string> {
+async function removeLegacyApiKey(configId: string): Promise<string> {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -119,7 +119,7 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (
   configId: string,
   content: string
 ): Promise<any> {
-  const configModelAnalysis = await updateAPIKey(configId);
+  const configModelAnalysis = await removeLegacyApiKey(configId);
   const response = await getAnalysisCompletion(configModelAnalysis, content);
   const {
     reframed_thought: reframing,
