@@ -14,6 +14,7 @@ describe('EntryAnalysis Model Test', () => {
   let expectedResult: any;
 
   beforeAll(async () => {
+    jest.clearAllMocks();
     await connectDB('cdj');
   });
 
@@ -129,5 +130,81 @@ describe('EntryAnalysis Model Test', () => {
     const sut = await mockAnalysis.getAnalysisContent(mockConfig.id, '');
 
     expect(sut).toStrictEqual(expectedResult);
+  });
+
+  it('throws error if config not set when getting analysis', async () => {
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(null);
+    const mockAnalysis = new EntryAnalysis({});
+
+    const sut = () => {
+      return mockAnalysis.getAnalysisContent('', '');
+    };
+
+    await expect(sut()).rejects.toThrow(
+      'Configure your account settings to get an analysis.'
+    );
+  });
+
+  it('rmeoves API key from legacy config', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+    const findByIdAndUpdate = jest.fn();
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockImplementationOnce(findByIdAndUpdate);
+    const mockAnalysis = new EntryAnalysis({});
+
+    await mockAnalysis.getAnalysisContent(mockConfig.id, '');
+
+    expect(findByIdAndUpdate).toHaveBeenCalledWith(mockConfig._id, {
+      $unset: { apiKey: 1 },
+    });
+  });
+
+  it('catches string thrown when trying to remove legacy API key', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockRejectedValueOnce('string error');
+    const mockAnalysis = new EntryAnalysis({});
+
+    const sut = () => {
+      return mockAnalysis.getAnalysisContent(mockConfig.id, '');
+    };
+
+    await expect(sut()).rejects.toThrow('string error');
+  });
+
+  it('catches error thrown when trying to remove legacy API key', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('error type'));
+    const mockAnalysis = new EntryAnalysis({});
+
+    const sut = () => {
+      return mockAnalysis.getAnalysisContent(mockConfig.id, '');
+    };
+
+    await expect(sut()).rejects.toThrow('error type');
   });
 });
