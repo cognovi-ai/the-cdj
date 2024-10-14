@@ -1,55 +1,69 @@
-/* eslint-disable sort-imports */
-import { Config, EntryAnalysis } from '../index.js';
-import { Model, model, Schema, Types } from 'mongoose';
-
 import CdGpt, { ChatMessage } from '../../assistants/gpts/CdGpt.js';
+import { Config, EntryAnalysis } from '../index.js';
+import { Model, Schema, Types, model } from 'mongoose';
 
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
 export interface EntryConversationType {
-  entry: Types.ObjectId,
-  messages?: [{
-    message_content: string,
-    llm_response?: string,
-    created_at?: Date,
-  }],
+  entry: Types.ObjectId;
+  messages?: [
+    {
+      message_content: string;
+      llm_response?: string;
+      created_at?: Date;
+    }
+  ];
 }
 
 interface EntryConversationMethods {
-  getChatContent(configId: string, analysisId: string, content: string, messages?: ChatMessage[]): Promise<string>,
+  getChatContent(
+    configId: string,
+    analysisId: string,
+    content: string,
+    messages?: ChatMessage[]
+  ): Promise<string>;
 }
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 // Done to match: https://mongoosejs.com/docs/typescript/statics-and-methods.html
-interface EntryConversationStatics extends Model<EntryConversationType, {}, EntryConversationMethods> {
-  joi(obj: unknown, options?: object): Joi.ValidationResult,
+interface EntryConversationStatics
+  extends Model<EntryConversationType, {}, EntryConversationMethods> {
+  joi(obj: unknown, options?: object): Joi.ValidationResult;
 }
 /* eslint-enable @typescript-eslint/no-empty-object-type */
 
-const entryConversationSchema = new Schema<EntryConversationType, EntryConversationStatics, EntryConversationMethods>({
+const entryConversationSchema = new Schema<
+  EntryConversationType,
+  EntryConversationStatics,
+  EntryConversationMethods
+>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
-  messages: [{
-    message_content: { type: String, required: true },
-    llm_response: { type: String },
-    created_at: { type: Date, default: Date.now }
-  }]
+  messages: [
+    {
+      message_content: { type: String, required: true },
+      llm_response: { type: String },
+      created_at: { type: Date, default: Date.now },
+    },
+  ],
 });
 
-entryConversationSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
+entryConversationSchema.statics.joi = function (
+  obj: unknown,
+  options?: object
+): Joi.ValidationResult {
   const entryConversationJoiSchema = Joi.object({
-    messages: Joi.array().items(Joi.object({
-      message_content: Joi.string()
-        .min(1)
-        .trim()
-        .required(),
-      llm_response: Joi.string()
-        .allow('')
-        .trim()
-        .empty('')
-        .default('Not connected to LLM'),
-      created_at: Joi.date()
-    }))
+    messages: Joi.array().items(
+      Joi.object({
+        message_content: Joi.string().min(1).trim().required(),
+        llm_response: Joi.string()
+          .allow('')
+          .trim()
+          .empty('')
+          .default('Not connected to LLM'),
+        created_at: Joi.date(),
+      })
+    ),
   });
   return entryConversationJoiSchema.validate(obj, options);
 };
@@ -87,12 +101,21 @@ entryConversationSchema.methods.getChatContent = async function (
   }
 
   if (process.env.OPENAI_API_KEY === undefined) {
-    throw new Error('OpenAI API Key not set. Cannot retrieve conversation response');
+    throw new Error(
+      'OpenAI API Key not set. Cannot retrieve conversation response'
+    );
   }
 
-  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.chat, '', 0.7);
+  const cdGpt = new CdGpt(
+    process.env.OPENAI_API_KEY,
+    config.model.chat,
+    '',
+    0.7
+  );
 
-  const analysis: any = await EntryAnalysis.findById(analysisId).populate('entry');
+  const analysis: any = await EntryAnalysis.findById(analysisId).populate(
+    'entry'
+  );
 
   if (!analysis) {
     throw new ExpressError('Analysis not found.', 404);
@@ -111,4 +134,7 @@ entryConversationSchema.methods.getChatContent = async function (
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export default model<EntryConversationType, EntryConversationStatics>('EntryConversation', entryConversationSchema);
+export default model<EntryConversationType, EntryConversationStatics>(
+  'EntryConversation',
+  entryConversationSchema
+);

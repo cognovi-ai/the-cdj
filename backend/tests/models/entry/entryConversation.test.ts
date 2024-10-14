@@ -2,13 +2,18 @@
  * @jest-environment node
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  Config,
+  Entry,
+  EntryAnalysis,
+  EntryConversation,
+} from '../../../src/models/index.js';
 
-import mongoose from "mongoose";
-import CdGpt, { ChatCompletionResponse } from "../../../src/assistants/gpts/CdGpt.js";
-import connectDB from "../../../src/db.js";
-import { Config, Entry, EntryAnalysis, EntryConversation } from "../../../src/models/index.js";
+import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
+import connectDB from '../../../src/db.js';
+import mongoose from 'mongoose';
 
-jest.mock("../../../src/assistants/gpts/CdGpt.js");
+jest.mock('../../../src/assistants/gpts/CdGpt.js');
 const mockedCdGpt = jest.mocked(CdGpt);
 
 describe('EntryConversation tests', () => {
@@ -31,8 +36,8 @@ describe('EntryConversation tests', () => {
           message_content: 'test message 2',
           llm_response: 'test response 2',
           created_at: new Date(0),
-        }
-      ]
+        },
+      ],
     };
     expectedResult = {
       messages: [
@@ -45,8 +50,8 @@ describe('EntryConversation tests', () => {
           message_content: 'test message 2',
           llm_response: 'test response 2',
           created_at: new Date(0),
-        }
-      ]
+        },
+      ],
     };
   });
 
@@ -105,14 +110,14 @@ describe('EntryConversation tests', () => {
     entryConversationObject.messages = [
       {
         message_content: '  test trim  ',
-        llm_response: 'testresponse'
-      }
+        llm_response: 'testresponse',
+      },
     ];
     expectedResult.messages = [
       {
         message_content: 'test trim',
-        llm_response: 'testresponse'
-      }
+        llm_response: 'testresponse',
+      },
     ];
 
     const { error, value } = EntryConversation.joi(entryConversationObject);
@@ -125,13 +130,13 @@ describe('EntryConversation tests', () => {
     entryConversationObject.messages = [
       {
         message_content: 'test content',
-      }
+      },
     ];
     expectedResult.messages = [
       {
         message_content: 'test content',
         llm_response: 'Not connected to LLM',
-      }
+      },
     ];
 
     const { error, value } = EntryConversation.joi(entryConversationObject);
@@ -144,14 +149,14 @@ describe('EntryConversation tests', () => {
     entryConversationObject.messages = [
       {
         message_content: 'test content',
-        llm_response: '     test trim    '
-      }
+        llm_response: '     test trim    ',
+      },
     ];
     expectedResult.messages = [
       {
         message_content: 'test content',
-        llm_response: 'test trim'
-      }
+        llm_response: 'test trim',
+      },
     ];
 
     const { error, value } = EntryConversation.joi(entryConversationObject);
@@ -213,46 +218,48 @@ describe('EntryConversation tests', () => {
       is_healthy: true,
     };
     const expectedResult = JSON.stringify({
-      ...mockContent
+      ...mockContent,
     });
-    mockedCdGpt
-      .prototype
-      .getChatCompletion
-      .mockResolvedValue(
+    mockedCdGpt.prototype.getChatCompletion.mockResolvedValue({
+      choices: [
         {
-          choices: [
-            {
-              message: {
-                content: JSON.stringify(mockContent),
-                role: 'system',
-              },
-              index: 0,
-              finish_reason: ""
-            },
-          ],
-          id: "",
-          object: "",
-          created: 0,
-          model: "",
-          usage: {
-            prompt_tokens: 1,
-            completion_tokens: 1,
-            total_tokens: 1,
+          message: {
+            content: JSON.stringify(mockContent),
+            role: 'system',
           },
-        }
-      );
+          index: 0,
+          finish_reason: '',
+        },
+      ],
+      id: '',
+      object: '',
+      created: 0,
+      model: '',
+      usage: {
+        prompt_tokens: 1,
+        completion_tokens: 1,
+        total_tokens: 1,
+      },
+    });
     const mockConfig = new Config({
       model: {
         analysis: 'test',
-      }
+      },
     });
     const mockEntry = new Entry({ content: '' });
-    const mockAnalysis = new EntryAnalysis({ entry: mockEntry.id, analysis_content: '' });
+    const mockAnalysis = new EntryAnalysis({
+      entry: mockEntry.id,
+      analysis_content: '',
+    });
     await mockConfig.save();
     await mockAnalysis.save();
     const mockChat = new EntryConversation({ entry: mockEntry.id });
 
-    const sut = await mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '');
+    const sut = await mockChat.getChatContent(
+      mockConfig.id,
+      mockAnalysis.id,
+      ''
+    );
 
     expect(sut).toBe(expectedResult);
   });
