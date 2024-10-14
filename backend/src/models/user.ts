@@ -33,7 +33,6 @@ export interface UserType extends PassportLocalDocument {
 
   // Instance Methods
   comparePassword(candidatePassword: string): Promise<unknown>,
-  checkEmail(email: string): Promise<unknown>,
   generatePasswordResetToken(): string,
   generateEmailVerificationToken(): string,
   generateBetaAccessToken(): string,
@@ -58,12 +57,13 @@ interface UserModel<T extends Document> extends PassportLocalModel<T> {
   registrationJoi(obj: unknown, options?: object): Joi.ValidationResult,
   passwordJoi(obj: unknown, options?: object): Joi.ValidationResult,
   accountJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  checkEmail(email: string): Promise<boolean>,
 }
 
 const userSchema = new Schema<UserType, UserModel<UserType>>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
-  email: { type: String, default: undefined },
+  email: { type: String, required: true, unique: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: undefined },
@@ -86,7 +86,6 @@ userSchema.plugin(passportLocalMongoose, {
     UserExistsError: 'The email address provided cannot be used.',
   },
 });
-
 
 // Utility functions
 // Utility function for first name and last name validation
@@ -224,7 +223,7 @@ userSchema.methods.comparePassword = function (candidatePassword: string): Promi
 };
 
 // Check if there is a user with the given email
-userSchema.statics.checkEmail = function (email: string): Promise<unknown> {
+userSchema.statics.checkEmail = function (email: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     this.findByUsername(email, false, (err: unknown, user: unknown) => {
       if (err) return reject(err);
