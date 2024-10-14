@@ -2,15 +2,15 @@ import { Model, Schema, Types, model } from 'mongoose';
 import Joi from 'joi';
 
 export interface JournalType {
-  user: Types.ObjectId,
-  config?: Types.ObjectId,
-  title?: string,
-  created_at?: Date,
-  updated_at?: Date,
+  user: Types.ObjectId;
+  config?: Types.ObjectId;
+  title?: string;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 interface JournalStatics extends Model<JournalType> {
-  joi(obj: unknown, options?: object): Joi.ValidationResult,
+  joi(obj: unknown, options?: object): Joi.ValidationResult;
 }
 
 const journalSchema = new Schema<JournalType, JournalStatics>({
@@ -18,15 +18,18 @@ const journalSchema = new Schema<JournalType, JournalStatics>({
   config: { type: Schema.Types.ObjectId, ref: 'Config' },
   title: { type: String, default: 'The Cognitive Distortion Journal' },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  updated_at: { type: Date, default: Date.now },
 });
 
-journalSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
+journalSchema.statics.joi = function (
+  obj: unknown,
+  options?: object
+): Joi.ValidationResult {
   const journalJoiSchema = Joi.object({
     title: Joi.string()
       .max(100)
       .trim()
-      .default('The Cognitive Distortion Journal')
+      .default('The Cognitive Distortion Journal'),
   });
   return journalJoiSchema.validate(obj, options);
 };
