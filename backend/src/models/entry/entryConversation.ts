@@ -75,14 +75,7 @@ entryConversationSchema.index({ entry: 1 });
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-//TODO: pull out this method to somewhere else. dependency on CdGpt not great
-// Get the analysis content for an entry
-entryConversationSchema.methods.getChatContent = async function (
-  configId: string,
-  analysisId: string,
-  content: string,
-  messages: ChatMessage[] = []
-): Promise<string> {
+async function removeLegacyApiKey(configId: string) {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -99,16 +92,23 @@ entryConversationSchema.methods.getChatContent = async function (
       }
     }
   }
+  return config.model.analysis;
+}
 
+async function getAnalysisCompletion(
+  configModelAnalysis: string,
+  analysisId: string,
+  messages: ChatMessage[],
+  content: string
+) {
   if (process.env.OPENAI_API_KEY === undefined) {
     throw new Error(
       'OpenAI API Key not set. Cannot retrieve conversation response'
     );
   }
-
   const cdGpt = new CdGpt(
     process.env.OPENAI_API_KEY,
-    config.model.chat,
+    configModelAnalysis,
     '',
     0.7
   );
@@ -116,7 +116,6 @@ entryConversationSchema.methods.getChatContent = async function (
   const analysis: any = await EntryAnalysis.findById(analysisId).populate(
     'entry'
   );
-
   if (!analysis) {
     throw new ExpressError('Analysis not found.', 404);
   }
@@ -125,10 +124,27 @@ entryConversationSchema.methods.getChatContent = async function (
   cdGpt.addUserMessage({ chat: content });
 
   const response: any = await cdGpt.getChatCompletion();
-
   if (response.error) {
     throw new ExpressError(response.error.message, 400);
   }
+
+  return response;
+}
+//TODO: pull out this method to somewhere else. dependency on CdGpt not great
+// Get the analysis content for an entry
+entryConversationSchema.methods.getChatContent = async function (
+  configId: string,
+  analysisId: string,
+  content: string,
+  messages: ChatMessage[] = []
+): Promise<string> {
+  const configModelAnalysis = await removeLegacyApiKey(configId);
+  const response: any = await getAnalysisCompletion(
+    configModelAnalysis,
+    analysisId,
+    messages,
+    content
+  );
 
   return response.choices[0].message.content;
 };
