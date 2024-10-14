@@ -4,13 +4,12 @@
 
 import nodemailer, { Transporter } from 'nodemailer';
 import { User } from '../../src/models/index.js';
-
+import { UserType } from '../../src/models/user.js';
 jest.mock('nodemailer');
 
 const mockedNodemailer = jest.mocked(nodemailer);
 
 describe('User model and validation tests', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -29,168 +28,416 @@ describe('User model and validation tests', () => {
     expect(value).toStrictEqual(testObj);
   });
 
-  it('returns error if email over 100 chars', () => {
-    const testObj = {};
+  const invalidEmails = [
+    { desc: 'email over 100 chars', email: 'A'.repeat(101) + '@fakesite.com' },
+    { desc: 'email uses capital letters', email: 'TestEmail@fakesite.com' },
+    { desc: 'email extension is not allowed', email: 'testemail@fakesite.xyz' },
+  ];
+
+  it.each(invalidEmails)('returns error if %s', ({ email }) => {
+    const testObj = { email };
     const testOptions = {};
     
-    const { error, value } = User.baseJoi(testObj, testOptions);
+    const { error } = User.baseJoi(testObj, testOptions);
 
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
+    expect(error).toBeDefined();
   });
 
-  it('returns error if email uses capital letters', () => {
-    const testObj = {};
+  const invalidPasswords = [
+    { desc: 'password under 8 characters', password: 'short' },
+    { desc: 'password over 30 characters', password: 'A'.repeat(31) },
+    { desc: 'password uses invalid characters', password: 'Invalid$Password' },
+  ];
+
+  it.each(invalidPasswords)('returns error if $desc', ({ password }) => {
+    const testObj = { password };
     const testOptions = {};
     
-    const { error, value } = User.baseJoi(testObj, testOptions);
+    const { error } = User.baseJoi(testObj, testOptions);
 
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
+    expect(error).not.toBeNull();
   });
 
-  it('returns error if email extension is not allowed', () => {
-    const testObj = {};
+  it('adds option abortEarly to log all validation errors', () => {
+    const testObj = {
+      email: 'invalid',
+      password: 'short',
+    };
+    const testOptions = { abortEarly: false };
+  
+    const { error, value } = User.baseJoi(testObj, testOptions);
+  
+    expect(error).not.toBeNull();
+    expect(error?.details.length).toBe(3);
+    expect(value).toEqual(testObj);
+  });
+
+  const invalidFirstNames = [
+    { desc: 'fname non-alphanumeric', fname: 'John@' },
+    { desc: 'fname less than 1 character', fname: '' },
+    { desc: 'fname over 50 characters', fname: 'A'.repeat(51) },
+  ];
+
+  const invalidLastNames = [
+    { desc: 'lname non-alphanumeric', lname: 'Doe!' },
+    { desc: 'lname less than 1 character', lname: '' },
+    { desc: 'lname over 50 characters', lname: 'B'.repeat(51) },
+  ];
+
+  it.each(invalidFirstNames)('returns error if %s', ({ fname }) => {
+    const testObj = { fname };
     const testOptions = {};
     
-    const { error, value } = User.baseJoi(testObj, testOptions);
+    const { error } = User.registrationJoi(testObj, testOptions);
 
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
+    expect(error).not.toBeNull();
   });
 
-  it('returns error if password under 8 characters', () => {
-    const testObj = {};
+  it.each(invalidLastNames)('returns error if %s', ({ lname }) => {
+    const testObj = { lname };
     const testOptions = {};
     
-    const { error, value } = User.baseJoi(testObj, testOptions);
+    const { error } = User.registrationJoi(testObj, testOptions);
 
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
-  });
-
-  it('returns error if password over 30 characters', () => {
-    const testObj = {};
-    const testOptions = {};
-    
-    const { error, value } = User.baseJoi(testObj, testOptions);
-
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
-  });
-
-  it('returns error if password uses characters that are not alphanumeric, numbers, or exclaimation points', () => {
-    const testObj = {};
-    const testOptions = {};
-    
-    const { error, value } = User.baseJoi(testObj, testOptions);
-
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
-  });
-
-  it('adds property remember with a boolean value', () => {
-    const testObj = {};
-    const testOptions = {};
-    
-    const { error, value } = User.baseJoi(testObj, testOptions);
-
-    expect(error).toBeUndefined();
-    expect(value).toBeNull();
-  });
-
-  it('returns error if fname non-alphanumeric', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if lname non-alphanumeric', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if fname less than 1 characters', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if lname less than 1 characters', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if fname over 50 characters', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if lname over 50 characters', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if fname 0 characters long', () => {
-
-    expect(false).toBe(true);
-  });
-
-  it('returns error if lname 0 characters long', () => {
-
-    expect(false).toBe(true);
+    expect(error).not.toBeNull();
   });
 
   it('succeeds registration schema validation if fname and lname are valid', () => {
+    const validUser = {
+      fname: 'John',
+      lname: 'Doe',
+      email: 'test@test.com',
+      password: 'StrongP4ssw0rd!',
+    };
 
-    expect(false).toBe(true);
+    const testOptions = { abortEarly: false };
+    const result = User.registrationJoi(validUser, testOptions);
+    expect(result.error).toBeUndefined();
   });
 
   it('succeeds password schema validation if newPassword valid', () => {
-    expect(false).toBe(true);
+    const validPassword = 'StrongP4ssw0rd!';
+    const result = User.passwordJoi({ newPassword: validPassword });
+    expect(result.error).toBeUndefined();
   });
 
-  it('succeeds if account schema validation empty', () => {
-    expect(false).toBe(true);
-  });
-
-  it('succeeds if no present field fails validation', () => {
-    expect(false).toBe(true);
-  });
-
-  it('checks a submitted password against stored one', () => {
-    expect(false).toBe(true);
-  });
-
-  it('checks a submitted email against stored one', () => {
-    expect(false).toBe(true);
-  });
-
-  it('generates a password reset token, sets the resetPasswordToken field, and sets expiry time', () => {
-    expect(false).toBe(true);
-  });
-
-  it('generates an email verification token, sets the verifyEmailToken field, and sets expiry time', () => {
-    expect(false).toBe(true);
-  });
-
-  it('generates an beta access token, sets the betaAccessToken field, and sets expiry time', () => {
-    expect(false).toBe(true);
-  });
-
-  it.skip('sends an email with nodemailer', async () => {
-    // Skipping test because kinda pointless and brittle,
-    // But it's a nice example if you want to test other email methods
-    const sendMailFn = jest.fn();
-    mockedNodemailer.createTransport.mockReturnValue(({ sendMail: sendMailFn } as unknown) as Transporter);
-    const content = {
-      to: '',
-      subject: '',
-      text: ''
+  it('should validate successfully with all valid fields', () => {
+    const validObj = {
+      fname: 'John',
+      lname: 'Doe',
+      email: 'john.doe@example.com',
+      oldPassword: 'OldPassword123!',
+      newPassword: 'NewPassword123!',
+      model: {
+        chat: 'someChatModel',
+        analysis: 'someAnalysisModel',
+      },
     };
-    const mockUser = new User();
 
-    await mockUser.sendMail(content);
-
-    expect(nodemailer.createTransport).toHaveBeenCalled();
-    expect(sendMailFn).toHaveBeenCalled();
+    const { error, value } = User.accountJoi(validObj);
+    expect(error).toBeUndefined();
+    expect(value).toEqual(validObj);
   });
-});
+
+  it('should fail validation with invalid fields', () => {
+    const invalidObj = {
+      fname: 'J',
+      lname: 'Doe',
+      email: 'invalid-email',
+      oldPassword: 'short',
+      newPassword: 'short',
+      model: {
+        chat: 'someChatModel',
+        analysis: 'someAnalysisModel',
+      },
+    };
+
+    const { error, value } = User.accountJoi(invalidObj);
+    expect(error).toBeDefined();
+    expect(value).toEqual(invalidObj);
+  });
+
+  it('should validate successfully with missing optional fields', () => {
+    const partialObj = {
+      fname: 'John',
+      lname: 'Doe',
+      email: 'john.doe@example.com',
+    };
+
+    const { error, value } = User.accountJoi(partialObj);
+    expect(error).toBeUndefined();
+    expect(value).toEqual(partialObj);
+  });  
+
+  it('compares passwords for re-authentication', async () => {
+    const mockUser = new User({ password: 'correct_password' });
+    jest.spyOn(mockUser, 'authenticate').mockImplementation((candidatePassword, callback) => {
+      if (candidatePassword === 'correct_password') {
+        return callback(null, mockUser, null);
+      } else {
+        return callback(null, null, 'Incorrect password');
+      }
+    });
+  
+    const result = await mockUser.comparePassword('correct_password');
+    expect(result).toBe(true);
+  
+    const resultIncorrect = await mockUser.comparePassword('wrong_password');
+    expect(resultIncorrect).toBe(false);
+  });
+
+  describe('checkEmail method', () => {
+    let findByUsernameMock: jest.SpyInstance;
+
+    afterEach(() => {
+      findByUsernameMock.mockRestore();
+    });
+
+    it('should resolve true if a user with the given email exists', async () => {
+      findByUsernameMock = jest.spyOn(User, 'findByUsername').mockImplementation((email, select, callback) => {
+        callback(null, { email: 'testemail@fakesite.com' });
+      });
+
+      const result = await User.checkEmail('testemail@fakesite.com');
+      expect(result).toBe(true);
+      expect(findByUsernameMock).toHaveBeenCalledWith('testemail@fakesite.com', false, expect.any(Function));
+    });
+
+    it('should resolve false if no user with the given email exists', async () => {
+      findByUsernameMock = jest.spyOn(User, 'findByUsername').mockImplementation((email, select, callback) => {
+        callback(null, null);
+      });
+
+      const result = await User.checkEmail('nonexistentemail@fakesite.com');
+      expect(result).toBe(false);
+      expect(findByUsernameMock).toHaveBeenCalledWith('nonexistentemail@fakesite.com', false, expect.any(Function));
+    });
+
+    it('should reject if an error occurs during the search', async () => {
+      findByUsernameMock = jest.spyOn(User, 'findByUsername').mockImplementation((email, select, callback) => {
+        callback(new Error('Database error'), null);
+      });
+
+      await expect(User.checkEmail('error@fakesite.com')).rejects.toThrow('Database error');
+      expect(findByUsernameMock).toHaveBeenCalledWith('error@fakesite.com', false, expect.any(Function));
+    });
+  });
+
+  describe('Token generation methods', () => {
+    it('generates a password reset token, sets the resetPasswordToken field, and sets expiry time', () => {
+      const user = new User({ email: 'test@example.com' });
+      user.generatePasswordResetToken();
+      expect(user.resetPasswordToken).toBeDefined();
+      expect(user.resetPasswordExpires).toBeInstanceOf(Date);
+    });
+
+    it('generates an email verification token, sets the verifyEmailToken field, and sets expiry time', () => {
+      const user = new User({ email: 'test@example.com' });
+      user.generateEmailVerificationToken();
+      expect(user.verifyEmailToken).toBeDefined();
+      expect(user.verifyEmailTokenExpires).toBeInstanceOf(Date);
+    });
+
+    it('generates a beta access token, sets the betaAccessToken field, and sets expiry time', () => {
+      const user = new User({ email: 'test@example.com' });
+      user.generateBetaAccessToken();
+      expect(user.betaAccessToken).toBeDefined();
+      expect(user.betaAccessTokenExpires).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('Email sending methods', () => {
+    let sendMailMock: jest.Mock;
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      sendMailMock = jest.fn().mockResolvedValue({});
+      process.env = { ...originalEnv };
+    });
+
+    afterAll(() => {
+      process.env = originalEnv;
+    });
+  
+    it('sends an email with User method sendMail', async () => {
+      process.env.SMTP_HOST = 'smtp.example.com';
+      process.env.SMTP_USER = 'smtpuser';
+      process.env.SMTP_PASS = 'smtppassword';
+      process.env.SMTP_NAME = 'smtpname';
+      process.env.SYSTEM_INBOX = 'inbox@example.com';
+
+      const sendMailFn = jest.fn();
+      mockedNodemailer.createTransport.mockReturnValue(({ sendMail: sendMailFn } as unknown) as Transporter);
+      const content = {
+        from: '"smtpname" <inbox@example.com>',
+        to: 'recipient@example.com',
+        subject: 'Test Email',
+        text: 'This is a test email.',
+      };
+      const mockUser = new User();
+  
+      await mockUser.sendMail(content);
+  
+      expect(nodemailer.createTransport).toHaveBeenCalled();
+      expect(sendMailFn).toHaveBeenCalledWith(content);
+    });
+  
+    const emailTests = [
+      {
+        method: async (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required');
+          await user.sendPasswordResetEmail(token);
+        },
+        description: 'should send a password reset email with the correct parameters',
+        envVars: { TOKENIZED_URL: 'http://localhost' },
+        token: 'test-token',
+        expectedContent: (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required in expectedContent');
+          const resetUrl = `http://localhost/reset-password?token=${token}`;
+          return {
+            to: user.email,
+            subject: 'Password Reset Request',
+            text: `Dear ${user.fname},\n\nYou are receiving this email because you (or someone else) have requested the password be reset for your account.\n\nPlease click on the following link, or paste it into your browser to complete the process:\n\n${resetUrl}\n\nIf you did not request this, please ignore this email and your password will remain unchanged.\n\nSincerely,\n\nThe CDJ Team\n`,
+          };
+        },
+      },
+      {
+        method: async (user: UserType) => {
+          await user.sendPasswordResetConfirmationEmail();
+        },
+        description: 'should send a password reset confirmation email with the correct parameters',
+        envVars: {},
+        token: null,
+        expectedContent: (user: UserType) => ({
+          to: user.email,
+          subject: 'Password Reset Confirmation',
+          text: `Dear ${user.fname},\n\nYour password has been successfully reset. You may now log in with this email address and your new password.\n\nSincerely,\n\nThe CDJ Team\n`,
+        }),
+      },
+      {
+        method: async (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required');
+          await user.sendBetaAccessVerificationEmail(token);
+        },
+        description: 'should send a beta access verification email with the correct parameters',
+        envVars: { TOKENIZED_URL: 'http://localhost' },
+        token: 'test-token',
+        expectedContent: (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required in expectedContent');
+          const verificationUrl = `http://localhost/verify-email?token=${token}`;
+          return {
+            to: user.email,
+            subject: 'Beta Access Email Verification',
+            text: `Dear ${user.fname},\n\nYou have requested beta access for The Cognitive Distortion Journal. After you verify your email address, you will receive an email when your request is reviewed with instructions. Thank you for your interest in the app!\n\nPlease click the link to verify your email address.\n\n${verificationUrl}\n\nSincerely,\n\nThe CDJ Team\n`,
+          };
+        },
+      },
+      {
+        method: async (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required');
+          await user.sendBetaRequestEmail(token);
+        },
+        description: 'should send a beta request email with the correct parameters',
+        envVars: {
+          DOMAIN: 'http://localhost',
+          PORT: '3000',
+          SUPPORT_INBOX: 'support@example.com',
+        },
+        token: 'test-token',
+        expectedContent: (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required in expectedContent');
+          const approvalUrl = `http://localhost:3000/access/beta-approval?token=${token}`;
+          const denialUrl = `http://localhost:3000/access/beta-denial?token=${token}`;
+          return {
+            to: process.env.SUPPORT_INBOX,
+            subject: 'User Request Beta Access',
+            text: `${user.fname} ${user.lname} <${user.email}> has requested beta access. Use the following tokenized links to approve or deny them.\n\nTo APPROVE ${user.fname} click: ${approvalUrl}\n\nTo DENY ${user.fname} click: ${denialUrl}\n\n${user.fname} ${user.lname} will be notified of your decision.`,
+          };
+        },
+      },
+      {
+        method: async (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required');
+          await user.sendBetaApprovalEmail(token);
+        },
+        description: 'should send a beta approval email with the correct parameters',
+        envVars: { TOKENIZED_URL: 'http://localhost' },
+        token: 'test-token',
+        expectedContent: (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required in expectedContent');
+          const passwordResetUrl = `http://localhost/reset-password?token=${token}`;
+          return {
+            to: user.email,
+            subject: 'Beta Access Approved',
+            text: `Dear ${user.fname},\n\nYour request for beta access has been approved. Please click the following link to complete your registration. You will be prompted to set a password for your account.\n\n${passwordResetUrl}\n\nSincerely,\n\nThe CDJ Team\n`,
+          };
+        },
+      },
+      {
+        method: async (user: UserType) => {
+          await user.sendBetaDenialEmail();
+        },
+        description: 'should send a beta denial email with the correct parameters',
+        envVars: {},
+        token: null,
+        expectedContent: (user: UserType) => {
+          const expectedExpirationDate = new Date(Date.now() + 604800000).toLocaleDateString();
+          return {
+            to: user.email,
+            subject: 'Beta Access Denied',
+            text: `Dear ${user.fname},\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${expectedExpirationDate}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`,
+          };
+        },
+      },
+      {
+        method: async (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required');
+          await user.sendAlertForForgotPasswordAbuse(token);
+        },
+        description: 'should send an alert email with the correct parameters',
+        envVars: {
+          DOMAIN: 'http://localhost',
+          PORT: '3000',
+          ADMIN_INBOX: 'admin@example.com',
+          RELEASE_PHASE: 'beta',
+        },
+        token: 'test-token',
+        expectedContent: (user: UserType, token?: string | null) => {
+          if (!token) throw new Error('Token is required in expectedContent');
+          const approvalUrl = `http://localhost:3000/access/beta-approval?token=${token}`;
+          const denialUrl = `http://localhost:3000/access/beta-denial?token=${token}`;
+          return {
+            to: process.env.ADMIN_INBOX,
+            subject: 'ALERT: User Forgot Password Abuse',
+            text: `${user.fname} ${user.lname} <${user.email}> has attempted to abuse the forgot password feature. This can happen when a user is trying to gain access to an account that is not theirs or they are trying to gain access in a closed beta release.\n\nIf in a closed release, use the following tokenized links to deny or approve them.\n\nTo DENY ${user.fname} click: ${denialUrl}\n\nTo APPROVE ${user.fname} click: ${approvalUrl}\n\n${user.fname} ${user.lname} will be notified of your decision.`,
+          };
+        },
+      },
+    ];
+  
+    emailTests.forEach(({ method, description, envVars, token, expectedContent }) => {
+      it(description, async () => {
+        // Mock environment variables
+        for (const [key, value] of Object.entries(envVars)) {
+          process.env[key] = value;
+        }
+  
+        const user = new User({
+          fname: 'John',
+          lname: 'Doe',
+          email: 'john.doe@example.com',
+        });
+  
+        user.sendMail = sendMailMock;
+  
+        await method(user, token);
+  
+        const expectedEmailContent = expectedContent(user, token);
+  
+        expect(sendMailMock).toHaveBeenCalledTimes(1);
+        expect(sendMailMock).toHaveBeenCalledWith(expectedEmailContent);
+      });
+    });
+  });
+});  
