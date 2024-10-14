@@ -12,6 +12,7 @@ import {
 } from '../../../src/models/index.js';
 
 import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
+import ExpressError from '../../../src/utils/ExpressError.js';
 import connectDB from '../../../src/db.js';
 import mongoose from 'mongoose';
 
@@ -305,6 +306,75 @@ describe('EntryConversation tests', () => {
     expect(findByIdAndUpdate).toHaveBeenCalledWith(mockConfig._id, {
       $unset: { apiKey: 1 },
     });
+  });
+
+  it('should throw an error if OPENAI_API_KEY is not set', async () => {
+    delete process.env.OPENAI_API_KEY;
+
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
+
+    const entryConversation = new EntryConversation();
+
+    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
+      .rejects
+      .toThrow('OpenAI API Key not set. Cannot retrieve conversation response');
+  });
+
+  it('should throw an error if analysis is not found', async () => {
+    process.env.OPENAI_API_KEY = 'test-api-key';
+  
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
+    
+    const mockPopulate = jest.fn().mockResolvedValue(null);
+    jest.spyOn(EntryAnalysis, 'findById').mockImplementation(() => ({
+      populate: mockPopulate
+    }) as any);
+  
+    const entryConversation = new EntryConversation();
+  
+    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
+      .rejects
+      .toThrow(ExpressError);
+  });
+
+  it('should throw an error if response.error is defined', async () => {
+    process.env.OPENAI_API_KEY = 'test-api-key';
+  
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
+    
+    const mockPopulate = jest.fn().mockResolvedValue({
+      entry: 'mockEntryId',
+      analysis_content: 'mockAnalysisContent',
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+  
+    jest.spyOn(EntryAnalysis, 'findById').mockImplementation(() => ({
+      populate: mockPopulate
+    }) as any);
+  
+    jest.spyOn(CdGpt.prototype, 'getChatCompletion').mockResolvedValue({
+      id: 'mock-id',
+      object: 'chat.completion',
+      created: Date.now(),
+      model: 'mock-model',
+      choices: [],
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0
+      },
+      error: {
+        name: 'ErrorName',
+        message: 'test error'
+      }
+    } as any);
+  
+    const entryConversation = new EntryConversation();
+  
+    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
+      .rejects
+      .toThrow(ExpressError);
   });
 
   it('catches string thrown when trying to remove legacy API key', async () => {

@@ -1,13 +1,12 @@
-import { Model, Schema, Types, model } from 'mongoose';
-
+import { Model, Schema, model } from 'mongoose';
 import CdGpt from '../../assistants/gpts/CdGpt.js';
-
 import { Config } from '../index.js';
+import { EntryType } from './entry.js';
 
 import Joi from 'joi';
 
 export interface EntryAnalysisType {
-  entry: Types.ObjectId,
+  entry: EntryType,
   analysis_content?: string,
   created_at?: Date,
   updated_at?: Date,
@@ -73,6 +72,10 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
         throw err;
       }
     }
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('API key is not available)');
   }
 
   const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);

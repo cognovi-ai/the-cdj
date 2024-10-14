@@ -1,4 +1,5 @@
 import Assistant from '../Assistant.js';
+import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
 
 const analysisSeed: string = `
 ROLE
@@ -86,6 +87,7 @@ export interface ChatCompletionResponse {
   model: string;
   choices: ChatCompletionChoice[];
   usage: ChatCompletionUsage;
+  error?: Error;
 }
 
 /**
@@ -101,13 +103,13 @@ export default class CdGpt extends Assistant {
   constructor(
     bearer: string,
     model: string,
-    persona: string = '',
-    temperature: number
+    persona?: string,
+    temperature?: number
   ) {
     super(bearer, model, temperature);
     this.method = 'POST';
     this.contentType = 'application/json';
-    this.persona = persona;
+    this.persona = persona || '';
     this.analysisMessages = [];
     this.chatMessages = [];
   }
@@ -148,7 +150,7 @@ export default class CdGpt extends Assistant {
    * @param messages existing messages in the conversation
    */
   seedChatMessages(
-    entryAnalysis: EntryAnalysis,
+    entryAnalysis: EntryAnalysisType,
     messages: ChatMessage[] = []
   ): void {
     // Set the context

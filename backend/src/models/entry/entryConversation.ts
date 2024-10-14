@@ -1,6 +1,7 @@
-import CdGpt, { ChatMessage } from '../../assistants/gpts/CdGpt.js';
+import CdGpt, { ChatCompletionResponse, ChatMessage, } from '../../assistants/gpts/CdGpt.js';
 import { Config, EntryAnalysis } from '../index.js';
 import { Model, Schema, Types, model } from 'mongoose';
+import { EntryAnalysisType } from './entryAnalysis.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
@@ -31,7 +32,6 @@ interface EntryConversationStatics
   extends Model<EntryConversationType, {}, EntryConversationMethods> {
   joi(obj: unknown, options?: object): Joi.ValidationResult;
 }
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const entryConversationSchema = new Schema<
   EntryConversationType,
@@ -74,7 +74,6 @@ entryConversationSchema.index({ entry: 1 });
 // To order messages within a conversation by time.
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 async function removeLegacyApiKey(configId: string) {
   const config = await Config.findById(configId);
 
@@ -113,9 +112,9 @@ async function getAnalysisCompletion(
     0.7
   );
 
-  const analysis: any = await EntryAnalysis.findById(analysisId).populate(
+  const analysis = await EntryAnalysis.findById(analysisId).populate(
     'entry'
-  );
+  ) as EntryAnalysisType;
   if (!analysis) {
     throw new ExpressError('Analysis not found.', 404);
   }
@@ -123,7 +122,7 @@ async function getAnalysisCompletion(
   cdGpt.seedChatMessages(analysis, messages);
   cdGpt.addUserMessage({ chat: content });
 
-  const response: any = await cdGpt.getChatCompletion();
+  const response: ChatCompletionResponse = await cdGpt.getChatCompletion();
   if (response.error) {
     throw new ExpressError(response.error.message, 400);
   }
@@ -139,7 +138,7 @@ entryConversationSchema.methods.getChatContent = async function (
   messages: ChatMessage[] = []
 ): Promise<string> {
   const configModelAnalysis = await removeLegacyApiKey(configId);
-  const response: any = await getAnalysisCompletion(
+  const response: ChatCompletionResponse = await getAnalysisCompletion(
     configModelAnalysis,
     analysisId,
     messages,
@@ -148,7 +147,6 @@ entryConversationSchema.methods.getChatContent = async function (
 
   return response.choices[0].message.content;
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default model<EntryConversationType, EntryConversationStatics>(
   'EntryConversation',
