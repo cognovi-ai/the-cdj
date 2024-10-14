@@ -3,13 +3,12 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Config } from "../../src/models/index.js";
+import { Config } from '../../src/models/index.js';
 
 describe('Config model tests', () => {
-
   const joiConfigPositiveCases = [
     {
-      desc: "properties in model set with only alphanumeric, hyphen or period characters",
+      desc: 'properties in model set with only alphanumeric, hyphen or period characters',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -24,7 +23,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "chat and analysis are empty strings",
+      desc: 'chat and analysis are empty strings',
       input: {
         model: {
           chat: '',
@@ -39,7 +38,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "chat and analysis are at most 50 characters",
+      desc: 'chat and analysis are at most 50 characters',
       input: {
         model: {
           chat: 'a'.repeat(50),
@@ -57,23 +56,23 @@ describe('Config model tests', () => {
 
   it.each(joiConfigPositiveCases)(
     'Config schema validation succeeds when $desc',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ({ desc, input, expected }) => {
       const { error, value } = Config.joi(input);
 
-      expect(error).toBeUndefined()
+      expect(error).toBeUndefined();
       expect(value).toStrictEqual(expected);
     }
   );
 
-
   const joiConfigNegativeCases = [
     {
-      desc: "empty object",
+      desc: 'empty object',
       input: {},
       expected: {},
     },
     {
-      desc: "apiKey is set",
+      desc: 'apiKey is set',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -90,7 +89,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "created_at is set",
+      desc: 'created_at is set',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -107,7 +106,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "updated_at is set",
+      desc: 'updated_at is set',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -124,7 +123,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "model is missing",
+      desc: 'model is missing',
       input: {
         apiKey: 'testapikey',
         created_at: new Date(0),
@@ -137,7 +136,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "model is empty",
+      desc: 'model is empty',
       input: {
         model: {},
         apiKey: 'testapikey',
@@ -152,7 +151,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "chat has over 50 characters",
+      desc: 'chat has over 50 characters',
       input: {
         model: {
           chat: 'a'.repeat(51),
@@ -173,7 +172,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "invalid character in analysis",
+      desc: 'invalid character in analysis',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -194,7 +193,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "analysis field is missing",
+      desc: 'analysis field is missing',
       input: {
         model: {
           chat: 'test-chat-llm-1.0',
@@ -213,7 +212,7 @@ describe('Config model tests', () => {
       },
     },
     {
-      desc: "model is not an object",
+      desc: 'model is not an object',
       input: {
         model: `{
           chat: 'test-chat-llm-1.0',
@@ -237,6 +236,7 @@ describe('Config model tests', () => {
 
   it.each(joiConfigNegativeCases)(
     'Config schema validation fails when $desc',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ({ desc, input, expected }) => {
       const { error, value } = Config.joi(input);
 

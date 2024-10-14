@@ -3,16 +3,16 @@ import Joi from 'joi';
 
 export interface ConfigType {
   model: {
-    chat?: string,
-    analysis?: string,
-  },
-  apiKey?: string,
-  created_at: Date,
-  updated_at: Date,
+    chat?: string;
+    analysis?: string;
+  };
+  apiKey?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface ConfigStatics extends Model<ConfigType> {
-  joi(obj: unknown, options?: object): Joi.ValidationResult,
+  joi(obj: unknown, options?: object): Joi.ValidationResult;
 }
 
 const configSchema = new Schema<ConfigType, ConfigStatics>({
@@ -25,7 +25,7 @@ const configSchema = new Schema<ConfigType, ConfigStatics>({
   },
   apiKey: { type: String },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  updated_at: { type: Date, default: Date.now },
 });
 
 // Common validation schema for both chat and analysis
@@ -34,15 +34,19 @@ const modelFieldValidation = Joi.string()
   .allow('')
   .max(50)
   .messages({
-    'string.pattern.base': 'Field must only contain alphanumeric characters, hyphens, and periods.'
+    'string.pattern.base':
+      'Field must only contain alphanumeric characters, hyphens, and periods.',
   });
 
-configSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
+configSchema.statics.joi = function (
+  obj: unknown,
+  options?: object
+): Joi.ValidationResult {
   const joiConfigSchema = Joi.object({
     model: Joi.object({
       chat: modelFieldValidation,
-      analysis: modelFieldValidation
-    }).required()
+      analysis: modelFieldValidation,
+    }).required(),
   });
   return joiConfigSchema.validate(obj, options);
 };
