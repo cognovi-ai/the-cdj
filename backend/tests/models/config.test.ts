@@ -56,8 +56,7 @@ describe('Config model tests', () => {
 
   it.each(joiConfigPositiveCases)(
     'Config schema validation succeeds when $desc',
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ({ desc, input, expected }) => {
+    ({ input, expected }) => {
       const { error, value } = Config.joi(input);
 
       expect(error).toBeUndefined();
@@ -236,8 +235,7 @@ describe('Config model tests', () => {
 
   it.each(joiConfigNegativeCases)(
     'Config schema validation fails when $desc',
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ({ desc, input, expected }) => {
+    ({ input, expected }) => {
       const { error, value } = Config.joi(input);
 
       expect(error).toBeDefined();
