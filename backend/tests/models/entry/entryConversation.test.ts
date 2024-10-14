@@ -7,6 +7,8 @@ import {
   Entry,
   EntryAnalysis,
   EntryConversation,
+  Journal,
+  User,
 } from '../../../src/models/index.js';
 
 import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
@@ -24,7 +26,8 @@ describe('EntryConversation tests', () => {
     await connectDB('cdj');
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await mongoose.connection.dropDatabase();
     entryConversationObject = {
       messages: [
         {
@@ -56,7 +59,6 @@ describe('EntryConversation tests', () => {
   });
 
   afterAll(async () => {
-    await mongoose.connection.dropDatabase();
     await mongoose.disconnect();
   });
 
@@ -262,5 +264,102 @@ describe('EntryConversation tests', () => {
     );
 
     expect(sut).toBe(expectedResult);
+  });
+
+  it('throws error if config not set when getting analysis', async () => {
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(null);
+    const mockChat = new EntryConversation({});
+
+    const sut = () => {
+      return mockChat.getChatContent('', '', '', []);
+    };
+
+    await expect(sut()).rejects.toThrow(
+      'Configure your account settings to chat.'
+    );
+  });
+
+  it('removes API key from legacy config', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+    const findByIdAndUpdate = jest.fn();
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockImplementationOnce(findByIdAndUpdate);
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockJournal = await Journal.create({ user: mockUser.id });
+    const mockEntry = await Entry.create({
+      journal: mockJournal.id,
+      content: 'content',
+    });
+    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
+
+    await mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
+
+    expect(findByIdAndUpdate).toHaveBeenCalledWith(mockConfig._id, {
+      $unset: { apiKey: 1 },
+    });
+  });
+
+  it('catches string thrown when trying to remove legacy API key', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockRejectedValueOnce('string error');
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockJournal = await Journal.create({ user: mockUser.id });
+    const mockEntry = await Entry.create({
+      journal: mockJournal.id,
+      content: 'content',
+    });
+    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
+
+    const sut = () => {
+      return mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
+    };
+
+    await expect(sut()).rejects.toThrow('string error');
+  });
+
+  it('catches error thrown when trying to remove legacy API key', async () => {
+    const mockConfig = new Config({
+      model: {
+        analysis: 'test',
+      },
+      apiKey: 'mockKey',
+    });
+
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
+    jest
+      .spyOn(Config, 'findByIdAndUpdate')
+      .mockRejectedValueOnce(new Error('error type'));
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockJournal = await Journal.create({ user: mockUser.id });
+    const mockEntry = await Entry.create({
+      journal: mockJournal.id,
+      content: 'content',
+    });
+    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
+
+    const sut = () => {
+      return mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
+    };
+
+    await expect(sut()).rejects.toThrow('error type');
   });
 });
