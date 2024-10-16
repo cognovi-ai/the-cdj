@@ -4,8 +4,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Config } from '../../src/models/index.js';
+import { ConfigType } from '../../src/models/config.js';
+import mongoose from 'mongoose';
 
 describe('Config model tests', () => {
+  beforeAll(async () => {
+    const mongoUri = `${process.env.MONGO_URI}/cdj`;
+    await mongoose.connect(mongoUri);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+  });
+
   const joiConfigPositiveCases = [
     {
       desc: 'properties in model set with only alphanumeric, hyphen or period characters',
@@ -242,4 +254,28 @@ describe('Config model tests', () => {
       expect(value).toStrictEqual(expected);
     }
   );
+
+  it('should update updated_at field before saving', async () => {
+    const config: ConfigType = {
+      model: {
+        chat: 'chat-model',
+        analysis: 'analysis-model',
+      },
+      apiKey: 'some-api-key',
+      created_at: new Date(),
+      updated_at: new Date(), // Initially set updated_at
+    };
+
+    const createdConfig = await Config.create(config);
+    
+    // Simulate a small delay to check the updated_at change
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Modify the config document
+    createdConfig.model.analysis = 'testmodel';
+    const savedConfig = await createdConfig.save();
+
+    // Ensure that updated_at has been updated after save
+    expect(savedConfig.updated_at.getTime()).toBeGreaterThan(config.updated_at.getTime());
+  });
 });
