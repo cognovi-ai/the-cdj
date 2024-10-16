@@ -292,7 +292,7 @@ describe('EntryConversation tests', () => {
     jest
       .spyOn(Config, 'findByIdAndUpdate')
       .mockImplementationOnce(findByIdAndUpdate);
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
     const mockJournal = await Journal.create({ user: mockUser.id });
     const mockEntry = await Entry.create({
       journal: mockJournal.id,
@@ -398,7 +398,7 @@ describe('EntryConversation tests', () => {
     jest
       .spyOn(Config, 'findByIdAndUpdate')
       .mockRejectedValueOnce('string error');
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
     const mockJournal = await Journal.create({ user: mockUser.id });
     const mockEntry = await Entry.create({
       journal: mockJournal.id,
@@ -426,7 +426,7 @@ describe('EntryConversation tests', () => {
     jest
       .spyOn(Config, 'findByIdAndUpdate')
       .mockRejectedValueOnce(new Error('error type'));
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname' });
+    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
     const mockJournal = await Journal.create({ user: mockUser.id });
     const mockEntry = await Entry.create({
       journal: mockJournal.id,
