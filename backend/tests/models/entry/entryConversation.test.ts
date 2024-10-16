@@ -309,6 +309,7 @@ describe('EntryConversation tests', () => {
   });
 
   it('should throw an error if OPENAI_API_KEY is not set', async () => {
+    const { OPENAI_API_KEY } = process.env;
     delete process.env.OPENAI_API_KEY;
 
     jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
@@ -318,9 +319,12 @@ describe('EntryConversation tests', () => {
     await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
       .rejects
       .toThrow('OpenAI API Key not set. Cannot retrieve conversation response');
+
+    process.env.OPENAI_API_KEY = OPENAI_API_KEY;
   });
 
   it('should throw an error if analysis is not found', async () => {
+    const { OPENAI_API_KEY } = process.env;
     process.env.OPENAI_API_KEY = 'test-api-key';
   
     jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
@@ -335,9 +339,12 @@ describe('EntryConversation tests', () => {
     await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
       .rejects
       .toThrow(ExpressError);
+
+    process.env.OPENAI_API_KEY = OPENAI_API_KEY;
   });
 
   it('should throw an error if response.error is defined', async () => {
+    const { OPENAI_API_KEY } = process.env;
     process.env.OPENAI_API_KEY = 'test-api-key';
   
     jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
@@ -375,6 +382,8 @@ describe('EntryConversation tests', () => {
     await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
       .rejects
       .toThrow(ExpressError);
+
+    process.env.OPENAI_API_KEY = OPENAI_API_KEY;
   });
 
   it('catches string thrown when trying to remove legacy API key', async () => {

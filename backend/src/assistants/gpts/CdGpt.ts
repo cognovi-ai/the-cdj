@@ -49,15 +49,6 @@ export interface Message {
   content: string;
 }
 
-export interface Entry {
-  content: string;
-}
-
-export interface EntryAnalysis {
-  entry: Entry;
-  analysis_content: string;
-}
-
 export interface ChatMessage {
   message_content: string;
   llm_response: string;

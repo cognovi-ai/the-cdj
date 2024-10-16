@@ -108,8 +108,6 @@ async function getAnalysisCompletion(
   const cdGpt = new CdGpt(
     process.env.OPENAI_API_KEY,
     configModelAnalysis,
-    '',
-    0.7
   );
 
   const analysis = await EntryAnalysis.findById(analysisId).populate(

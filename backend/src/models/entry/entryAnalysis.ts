@@ -17,14 +17,12 @@ export interface EntryAnalysisType {
 interface EntryAnalysisMethods {
   getAnalysisContent(configId: string, content: string): Promise<any>,
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 // Done to match: https://mongoosejs.com/docs/typescript/statics-and-methods.html
 interface EntryAnalysisStatics extends Model<EntryAnalysisType, {}, EntryAnalysisMethods> {
   joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 const entryAnalysisSchema = new Schema<EntryAnalysisType, EntryAnalysisStatics, EntryAnalysisMethods>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
@@ -53,7 +51,6 @@ entryAnalysisSchema.pre('save', function (next) {
   next();
 });
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
 entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
@@ -104,5 +101,4 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
   return response;
 };
 
-/* eslint-enable @typescript-eslint/no-explicit-any */
 export default model<EntryAnalysisType, EntryAnalysisStatics>('EntryAnalysis', entryAnalysisSchema);
