@@ -28,7 +28,8 @@ export default async function connectDB(dbName: string): Promise<void> {
       console.log(`Connected to local MongoDB: ${localUri}`);
     } else {
       // Connect to the local test database
-      await connect(`mongodb://localhost:27017/${dbName}-test`);
+      await connect(`${process.env.MONGO_URI}/${dbName}-test`);
+      console.log(`connected to ${process.env.MONGO_URI}`);
       console.log(`Connected to local test MongoDB: ${dbName}-test`);
     }
   } catch (err) {
