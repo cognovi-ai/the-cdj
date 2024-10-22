@@ -1,4 +1,7 @@
 import Assistant from '../Assistant.js';
+import { EntryAnalysis } from '../../models/index.js';
+import { EntryType } from '../../models/entry/entry.js';
+import ExpressError from '../../utils/ExpressError.js';
 
 const analysisSeed: string = `
 ROLE
@@ -48,15 +51,6 @@ export interface Message {
   content: string;
 }
 
-export interface Entry {
-  content: string;
-}
-
-export interface EntryAnalysis {
-  entry: Entry;
-  analysis_content: string;
-}
-
 export interface ChatMessage {
   message_content: string;
   llm_response: string;
@@ -86,6 +80,7 @@ export interface ChatCompletionResponse {
   model: string;
   choices: ChatCompletionChoice[];
   usage: ChatCompletionUsage;
+  error?: Error;
 }
 
 /**
@@ -101,13 +96,13 @@ export default class CdGpt extends Assistant {
   constructor(
     bearer: string,
     model: string,
-    persona: string = '',
-    temperature: number
+    persona?: string,
+    temperature?: number
   ) {
     super(bearer, model, temperature);
     this.method = 'POST';
     this.contentType = 'application/json';
-    this.persona = persona;
+    this.persona = persona || '';
     this.analysisMessages = [];
     this.chatMessages = [];
   }
@@ -147,10 +142,17 @@ export default class CdGpt extends Assistant {
    * @param entryAnalysis the entry and analysis content
    * @param messages existing messages in the conversation
    */
-  seedChatMessages(
-    entryAnalysis: EntryAnalysis,
+  async seedChatMessages(
+    analysisId: string,
     messages: ChatMessage[] = []
-  ): void {
+  ): Promise<void> {
+    const entryAnalysis = await EntryAnalysis
+      .findById(analysisId)
+      .populate<{ entry: EntryType }>('entry');
+    if (!entryAnalysis) {
+      throw new ExpressError('Analysis not found.', 404);
+    }
+
     // Set the context
     this.chatMessages.push({ role: 'system', content: chatSeed });
 

@@ -1,54 +1,42 @@
 import { Model, Schema, Types, model } from 'mongoose';
-
 import CdGpt from '../../assistants/gpts/CdGpt.js';
-
 import { Config } from '../index.js';
 
 import Joi from 'joi';
 
 export interface EntryAnalysisType {
-  entry: Types.ObjectId;
-  analysis_content?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  entry: Types.ObjectId,
+  analysis_content?: string,
+  created_at?: Date,
+  updated_at?: Date,
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: any should be replaced with return type from cdgpt response
 interface EntryAnalysisMethods {
-  getAnalysisContent(configId: string, content: string): Promise<any>;
+  getAnalysisContent(configId: string, content: string): Promise<any>,
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 // Done to match: https://mongoosejs.com/docs/typescript/statics-and-methods.html
-interface EntryAnalysisStatics
-  extends Model<EntryAnalysisType, {}, EntryAnalysisMethods> {
-  joi(obj: unknown, options?: object): Joi.ValidationResult;
+interface EntryAnalysisStatics extends Model<EntryAnalysisType, {}, EntryAnalysisMethods> {
+  joi(obj: unknown, options?: object): Joi.ValidationResult,
 }
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
-const entryAnalysisSchema = new Schema<
-  EntryAnalysisType,
-  EntryAnalysisStatics,
-  EntryAnalysisMethods
->({
+const entryAnalysisSchema = new Schema<EntryAnalysisType, EntryAnalysisStatics, EntryAnalysisMethods>({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
   analysis_content: { type: String, default: 'Analysis not available' },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now }
 });
 
-entryAnalysisSchema.statics.joi = function (
-  obj: unknown,
-  options?: object
-): Joi.ValidationResult {
+entryAnalysisSchema.statics.joi = function (obj: unknown, options?: object): Joi.ValidationResult {
   const entryAnalysisJoiSchema = Joi.object({
     analysis_content: Joi.string()
       .allow('')
       .trim()
       .empty('')
-      .default('Analysis not available'),
+      .default('Analysis not available')
   });
   return entryAnalysisJoiSchema.validate(obj, options);
 };
@@ -62,13 +50,9 @@ entryAnalysisSchema.pre('save', function (next) {
   next();
 });
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
-/**
- * @deprecated see PR #83
- * @param configId string ID of config to update
- */
-async function removeLegacyApiKey(configId: string): Promise<string> {
+// Get the analysis content for an entry
+entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -85,64 +69,40 @@ async function removeLegacyApiKey(configId: string): Promise<string> {
       }
     }
   }
-  return config.model.analysis;
-}
 
-async function getAnalysisCompletion(
-  configModelAnalysis: string,
-  content: string
-): Promise<any> {
-  if (process.env.OPENAI_API_KEY === undefined) {
-    throw new Error('OPENAI_API_KEY undefined. Must be set to get analysis');
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('API key is not available)');
   }
-  const cdGpt = new CdGpt(
-    process.env.OPENAI_API_KEY,
-    configModelAnalysis,
-    '',
-    0.7
-  );
+
+  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);
 
   cdGpt.seedAnalysisMessages();
   cdGpt.addUserMessage({ analysis: content });
 
-  const analysisCompletion: any = await cdGpt.getAnalysisCompletion();
+  const analysisCompletion = await cdGpt.getAnalysisCompletion();
 
   if (analysisCompletion.error) {
     throw new Error(analysisCompletion.error.message);
   }
 
-  return JSON.parse(analysisCompletion.choices[0].message.content);
-}
-
-// Get the analysis content for an entry
-entryAnalysisSchema.methods.getAnalysisContent = async function (
-  configId: string,
-  content: string
-): Promise<any> {
-  const configModelAnalysis = await removeLegacyApiKey(configId);
-  const response = await getAnalysisCompletion(configModelAnalysis, content);
-  const {
-    reframed_thought: reframing,
-    distortion_analysis: analysis,
-    impact_assessment: impact,
-    affirmation,
-    is_healthy: isHealthy,
-  } = response;
+  /**
+   * TODO: define a type for content field and refactor
+   * The next two lines suggests that the message content
+   * is missing a type because it gets unpacked into several expected fields
+   * It would also make sense to extract the next few lines into their own function.
+   */
+  const response = JSON.parse(analysisCompletion.choices[0].message.content);
+  const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
 
   if (!isHealthy) {
     if (!analysis || !impact || !reframing) {
       throw new Error('Analysis content is not available.');
     }
-    response.analysis_content =
-      analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation;
-  } else {
-    response.analysis_content = affirmation;
-  }
+
+    response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation;
+  } else response.analysis_content = affirmation;
+
   return response;
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
-export default model<EntryAnalysisType, EntryAnalysisStatics>(
-  'EntryAnalysis',
-  entryAnalysisSchema
-);
+export default model<EntryAnalysisType, EntryAnalysisStatics>('EntryAnalysis', entryAnalysisSchema);
