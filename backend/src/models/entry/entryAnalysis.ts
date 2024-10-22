@@ -1,12 +1,11 @@
-import { Model, Schema, model } from 'mongoose';
+import { Model, Schema, Types, model } from 'mongoose';
 import CdGpt from '../../assistants/gpts/CdGpt.js';
 import { Config } from '../index.js';
-import { EntryType } from './entry.js';
 
 import Joi from 'joi';
 
 export interface EntryAnalysisType {
-  entry: EntryType,
+  entry: Types.ObjectId,
   analysis_content?: string,
   created_at?: Date,
   updated_at?: Date,

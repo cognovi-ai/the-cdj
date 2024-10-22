@@ -1,8 +1,7 @@
 import CdGpt, { ChatCompletionResponse, ChatMessage, } from '../../assistants/gpts/CdGpt.js';
-import { Config, EntryAnalysis } from '../index.js';
 import { Model, Schema, Types, model } from 'mongoose';
-import { EntryAnalysisType } from './entryAnalysis.js';
 
+import { Config } from '../index.js';
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
@@ -110,17 +109,10 @@ async function getAnalysisCompletion(
     configModelAnalysis,
   );
 
-  const analysis = await EntryAnalysis.findById(analysisId).populate(
-    'entry'
-  ) as EntryAnalysisType;
-  if (!analysis) {
-    throw new ExpressError('Analysis not found.', 404);
-  }
-
-  cdGpt.seedChatMessages(analysis, messages);
+  await cdGpt.seedChatMessages(analysisId, messages);
   cdGpt.addUserMessage({ chat: content });
 
-  const response: ChatCompletionResponse = await cdGpt.getChatCompletion();
+  const response = await cdGpt.getChatCompletion();
   if (response.error) {
     throw new ExpressError(response.error.message, 400);
   }

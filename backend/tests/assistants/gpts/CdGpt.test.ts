@@ -1,5 +1,9 @@
-import { ChatCompletionResponse, ChatMessage, EntryAnalysis, Message, Prompt } from '../../../src/assistants/gpts/CdGpt.js';
+import { ChatCompletionResponse, ChatMessage, Message, Prompt } from '../../../src/assistants/gpts/CdGpt.js';
+import { Entry, EntryAnalysis, Journal, User } from '../../../src/models/index.js';
 import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
+import ExpressError from '../../../src/utils/ExpressError.js';
+import connectDB from '../../../src/db.js';
+import mongoose from 'mongoose';
 
 describe('CdGpt Class', () => {
   const bearerToken = 'testBearerToken';
@@ -9,12 +13,21 @@ describe('CdGpt Class', () => {
 
   let cdgpt: CdGpt;
 
+  beforeAll(async () => {
+    await connectDB('cdj');
+  });
+
   beforeEach(() => {
     cdgpt = new CdGpt(bearerToken, model, persona, temperature);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await mongoose.connection.dropDatabase();
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
   });
 
   describe('seedAnalysisMessages', () => {
@@ -58,13 +71,30 @@ describe('CdGpt Class', () => {
   });
 
   describe('seedChatMessages', () => {
-    it('should seed chat messages correctly', () => {
-      const entryAnalysis: EntryAnalysis = {
-        entry: { content: 'Entry content' },
+    it('should throw an error if analysis is not found', async () => {
+      const user = new User({ fname: 'fname', lname: 'lname', email: 'email@email.com' });
+      const journal = new Journal({ user: user.id });
+      const entry = new Entry({ content: 'Entry content', journal: journal.id });
+      const entryAnalysis= new EntryAnalysis({
+        entry: entry.id,
         analysis_content: 'Analysis content',
-      };
+      });
 
-      cdgpt.seedChatMessages(entryAnalysis);
+      await expect(cdgpt.seedChatMessages(entryAnalysis.id))
+        .rejects
+        .toThrow(ExpressError);
+    });
+
+    it('should seed chat messages correctly', async () => {
+      const user = await User.create({ fname: 'fname', lname: 'lname', email: 'email@email.com' });
+      const journal = await Journal.create({ user: user.id });
+      const entry = await Entry.create({ content: 'Entry content', journal: journal.id });
+      const entryAnalysis= await EntryAnalysis.create({
+        entry: entry.id,
+        analysis_content: 'Analysis content',
+      });
+
+      await cdgpt.seedChatMessages(entryAnalysis.id);
 
       expect(cdgpt.chatMessages).toEqual([
         { role: 'system', content: expect.any(String) },
@@ -74,17 +104,20 @@ describe('CdGpt Class', () => {
       ]);
     });
 
-    it('should include additional messages when provided', () => {
-      const entryAnalysis: EntryAnalysis = {
-        entry: { content: 'Entry content' },
+    it('should include additional messages when provided', async () => {
+      const user = await User.create({ fname: 'fname', lname: 'lname', email: 'email@email.com' });
+      const journal = await Journal.create({ user: user.id });
+      const entry = await Entry.create({ content: 'Entry content', journal: journal.id });
+      const entryAnalysis= await EntryAnalysis.create({
+        entry: entry.id,
         analysis_content: 'Analysis content',
-      };
+      });
 
       const additionalMessages: ChatMessage[] = [
         { message_content: 'User message', llm_response: 'Assistant response' },
       ];
 
-      cdgpt.seedChatMessages(entryAnalysis, additionalMessages);
+      await cdgpt.seedChatMessages(entryAnalysis.id, additionalMessages);
 
       expect(cdgpt.chatMessages).toEqual([
         { role: 'system', content: expect.any(String) },

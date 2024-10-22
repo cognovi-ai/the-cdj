@@ -1,5 +1,7 @@
 import Assistant from '../Assistant.js';
-import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
+import { EntryAnalysis } from '../../models/index.js';
+import { EntryType } from '../../models/entry/entry.js';
+import ExpressError from '../../utils/ExpressError.js';
 
 const analysisSeed: string = `
 ROLE
@@ -140,10 +142,17 @@ export default class CdGpt extends Assistant {
    * @param entryAnalysis the entry and analysis content
    * @param messages existing messages in the conversation
    */
-  seedChatMessages(
-    entryAnalysis: EntryAnalysisType,
+  async seedChatMessages(
+    analysisId: string,
     messages: ChatMessage[] = []
-  ): void {
+  ): Promise<void> {
+    const entryAnalysis = await EntryAnalysis
+      .findById(analysisId)
+      .populate<{ entry: EntryType }>('entry');
+    if (!entryAnalysis) {
+      throw new ExpressError('Analysis not found.', 404);
+    }
+
     // Set the context
     this.chatMessages.push({ role: 'system', content: chatSeed });
 

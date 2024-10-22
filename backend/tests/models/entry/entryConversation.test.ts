@@ -323,26 +323,6 @@ describe('EntryConversation tests', () => {
     process.env.OPENAI_API_KEY = OPENAI_API_KEY;
   });
 
-  it('should throw an error if analysis is not found', async () => {
-    const { OPENAI_API_KEY } = process.env;
-    process.env.OPENAI_API_KEY = 'test-api-key';
-  
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
-    
-    const mockPopulate = jest.fn().mockResolvedValue(null);
-    jest.spyOn(EntryAnalysis, 'findById').mockImplementation(() => ({
-      populate: mockPopulate
-    }) as any);
-  
-    const entryConversation = new EntryConversation();
-  
-    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
-      .rejects
-      .toThrow(ExpressError);
-
-    process.env.OPENAI_API_KEY = OPENAI_API_KEY;
-  });
-
   it('should throw an error if response.error is defined', async () => {
     const { OPENAI_API_KEY } = process.env;
     process.env.OPENAI_API_KEY = 'test-api-key';
