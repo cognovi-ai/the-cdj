@@ -85,8 +85,13 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
     throw new Error(analysisCompletion.error.message);
   }
 
+  /**
+   * TODO: define a type for content field and refactor
+   * The next two lines suggests that the message content
+   * is missing a type because it gets unpacked into several expected fields
+   * It would also make sense to extract the next few lines into their own function.
+   */
   const response = JSON.parse(analysisCompletion.choices[0].message.content);
-
   const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
 
   if (!isHealthy) {
