@@ -90,7 +90,7 @@ async function removeLegacyApiKey(configId: string) {
       }
     }
   }
-  return config.model.analysis;
+  return config.model.analysis ? config.model.analysis : '';
 }
 
 async function getAnalysisCompletion(

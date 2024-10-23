@@ -312,7 +312,7 @@ describe('EntryConversation tests', () => {
     const { OPENAI_API_KEY } = process.env;
     delete process.env.OPENAI_API_KEY;
 
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({ model: {} }));
 
     const entryConversation = new EntryConversation();
 
@@ -327,7 +327,7 @@ describe('EntryConversation tests', () => {
     const { OPENAI_API_KEY } = process.env;
     process.env.OPENAI_API_KEY = 'test-api-key';
   
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({}));
+    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({ model: {} }));
     
     const mockPopulate = jest.fn().mockResolvedValue({
       entry: 'mockEntryId',
