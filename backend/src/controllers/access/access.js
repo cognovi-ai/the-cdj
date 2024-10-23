@@ -1,4 +1,11 @@
-import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../models/index.js';
+import {
+  Config,
+  Entry,
+  EntryAnalysis,
+  EntryConversation,
+  Journal,
+  User,
+} from '../../models/index.js';
 
 import ExpressError from '../../utils/ExpressError.js';
 
@@ -29,7 +36,12 @@ export const updateJournal = async (req, res, next) => {
 
     res.status(200).json({ flash: req.flash() });
   } catch (err) {
-    return next(new ExpressError('An error occurred while attempting to update the journal.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to update the journal.',
+        500
+      )
+    );
   }
 };
 
@@ -50,7 +62,8 @@ export const getAccount = async (req, res, next) => {
     const config = await Config.findById(journal.config);
 
     // If the config doesn't exist instruct the user to set it up
-    if (!config?.model.analysis || !config?.model.chat) req.flash('info', 'Click the Config tab to complete your journal setup.');
+    if (!config?.model.analysis || !config?.model.chat)
+      req.flash('info', 'Click the Config tab to complete your journal setup.');
 
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
@@ -73,10 +86,11 @@ export const updateAccount = async (req, res, next) => {
     // Update the User model with the profile data
     if (profile) {
       // Find and update the user associated with the journal
-      const user = await User.findByIdAndUpdate(journal.user, profile)
-        .catch(() => {
+      const user = await User.findByIdAndUpdate(journal.user, profile).catch(
+        () => {
           req.flash('warning', 'The email address provided cannot be used.');
-        });
+        }
+      );
       if (!user) return next(new ExpressError('User not found.', 404));
       req.flash('success', 'Profile updated successfully.');
     }
@@ -118,8 +132,14 @@ export const updateAccount = async (req, res, next) => {
 
       if (model) {
         // Update chat and analysis fields if they exist in the request body
-        if (model.chat !== undefined) model.chat ? response.model.chat = model.chat : response.model.chat = undefined;
-        if (model.analysis !== undefined) model.analysis ? response.model.analysis = model.analysis : response.model.analysis = undefined;
+        if (model.chat !== undefined)
+          model.chat
+            ? (response.model.chat = model.chat)
+            : (response.model.chat = undefined);
+        if (model.analysis !== undefined)
+          model.analysis
+            ? (response.model.analysis = model.analysis)
+            : (response.model.analysis = undefined);
       }
 
       await response.save();
@@ -134,7 +154,12 @@ export const updateAccount = async (req, res, next) => {
 
     res.status(200).json({ flash: req.flash() });
   } catch (err) {
-    return next(new ExpressError('An error occurred while attempting to update the account.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to update the account.',
+        500
+      )
+    );
   }
 };
 
@@ -191,7 +216,12 @@ export const deleteItem = async (req, res, next) => {
       req.flash('success', 'Account deleted successfully.');
       res.status(200).json({ flash: req.flash() });
     } catch (err) {
-      return next(new ExpressError('An error occurred while attempting to delete the account.', 500));
+      return next(
+        new ExpressError(
+          'An error occurred while attempting to delete the account.',
+          500
+        )
+      );
     }
   }
 };
@@ -201,7 +231,9 @@ export const deleteItem = async (req, res, next) => {
  */
 export const login = async (req, res, next) => {
   passport.authenticate('local', async (err, user, info) => {
-    if (err) { return next(err); }
+    if (err) {
+      return next(err);
+    }
 
     if (!user) {
       const { email } = req.body;
@@ -210,17 +242,28 @@ export const login = async (req, res, next) => {
       if (susUser) {
         // Handle login failure
         if (susUser.betaAccess === false) {
-          req.flash('warning', `You do not have ${ process.env.RELEASE_PHASE } access.`);
+          req.flash(
+            'warning',
+            `You do not have ${process.env.RELEASE_PHASE} access.`
+          );
           return res.status(403).json({ flash: req.flash() });
         } else if (susUser.betaAccess === undefined) {
           if (!susUser.emailVerified) {
-            susUser.sendBetaAccessVerificationEmail(susUser.generateEmailVerificationToken());
+            susUser.sendBetaAccessVerificationEmail(
+              susUser.generateEmailVerificationToken()
+            );
 
             susUser.save();
 
-            req.flash('info', 'You must verify your email address in order for your beta request to be reviewed. Please check your mailbox for messages from The CDJ Team.');
+            req.flash(
+              'info',
+              'You must verify your email address in order for your beta request to be reviewed. Please check your mailbox for messages from The CDJ Team.'
+            );
           } else {
-            req.flash('info', 'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.');
+            req.flash(
+              'info',
+              'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.'
+            );
           }
           return res.status(403).json({ flash: req.flash() });
         }
@@ -235,14 +278,18 @@ export const login = async (req, res, next) => {
     let token;
     if (req.body.remember) {
       try {
-        token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: '7d',
+        });
       } catch (err) {
         req.flash('error', err.message);
       }
     }
 
     req.logIn(user, async (err) => {
-      if (err) { return next(err); }
+      if (err) {
+        return next(err);
+      }
 
       // Give existing users beta access
       if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
@@ -258,12 +305,14 @@ export const login = async (req, res, next) => {
       // May not have a journal if the user must be approved for access
       if (!journal) {
         // Create default config
-        const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+        const newConfig = new Config({
+          model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
+        });
         await newConfig.save();
 
         journal = new Journal({
           user: user._id,
-          config: newConfig._id
+          config: newConfig._id,
         });
 
         await journal.save();
@@ -271,9 +320,17 @@ export const login = async (req, res, next) => {
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
 
-      req.flash('success', `Welcome back, ${ user.fname }. You've been logged in successfully.`);
+      req.flash(
+        'success',
+        `Welcome back, ${user.fname}. You've been logged in successfully.`
+      );
 
-      res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash(), token });
+      res.status(200).json({
+        journalId: journal._id,
+        journalTitle: journal.title,
+        flash: req.flash(),
+        token,
+      });
     });
   })(req, res, next);
 };
@@ -295,7 +352,9 @@ export const tokenLogin = async (req, res, next) => {
 
     // Log the user in
     req.logIn(journal.user, async function (err) {
-      if (err) { return next(err); }
+      if (err) {
+        return next(err);
+      }
 
       // Give existing users beta access
       if (process.env.RELEASE_PHASE === 'beta' && !journal.user?.betaAccess) {
@@ -306,11 +365,19 @@ export const tokenLogin = async (req, res, next) => {
       }
 
       // Show info message only for first 12 hours by iat timestamp
-      if (token.iat + 43200 > Date.now() / 1000) req.flash('info', 'Logging out will prevent automatic future logins.');
+      if (token.iat + 43200 > Date.now() / 1000)
+        req.flash('info', 'Logging out will prevent automatic future logins.');
 
-      req.flash('success', `Welcome back, ${ journal.user.fname }. You've been automatically logged in successfully.`);
+      req.flash(
+        'success',
+        `Welcome back, ${journal.user.fname}. You've been automatically logged in successfully.`
+      );
 
-      return res.status(200).json({ journalId: journal._id, journalTitle: journal.title, flash: req.flash() });
+      return res.status(200).json({
+        journalId: journal._id,
+        journalTitle: journal.title,
+        flash: req.flash(),
+      });
     });
   } else {
     return next(new ExpressError('Token is invalid or has expired.', 403));
@@ -329,21 +396,30 @@ export const forgotPassword = async (req, res, next) => {
     if (err) return next(err);
 
     // If user doesn't exist, return error
-    if (!user) return next(new ExpressError('Could not send recovery email.', 400));
+    if (!user)
+      return next(new ExpressError('Could not send recovery email.', 400));
 
     // A decision has not been made if betaAccess is undefined
     if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
       // Prevent spamming the email server
-      if (user.betaAccessTokenExpires > Date.now() && user.betaAccess === false) {
+      if (
+        user.betaAccessTokenExpires > Date.now() &&
+        user.betaAccess === false
+      ) {
         return next(new ExpressError('You do not have beta access.', 403));
-      };
+      }
 
       // Send email to admin alert admin of suspicious activity
       user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
       user.betaAccess = false; // Prevent spamming the email server
       await user.save();
 
-      return next(new ExpressError('You do not have beta access. Admin has been flagged.', 403));
+      return next(
+        new ExpressError(
+          'You do not have beta access. Admin has been flagged.',
+          403
+        )
+      );
     }
 
     try {
@@ -359,7 +435,12 @@ export const forgotPassword = async (req, res, next) => {
       req.flash('success', 'Recovery email sent successfully.');
       res.status(200).json({ flash: req.flash() });
     } catch (error) {
-      return next(new ExpressError('An error occurred while attempting to generate a recovery email.', 500));
+      return next(
+        new ExpressError(
+          'An error occurred while attempting to generate a recovery email.',
+          500
+        )
+      );
     }
   });
 };
@@ -372,20 +453,19 @@ export const resetPassword = async (req, res, next) => {
 
   try {
     // Hash the incoming token
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token and check if token hasn't expired
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
       // No user found, or token has expired
-      return next(new ExpressError('Password reset token is invalid or has expired.', 400));
+      return next(
+        new ExpressError('Password reset token is invalid or has expired.', 400)
+      );
     }
 
     // Reset password
@@ -403,20 +483,27 @@ export const resetPassword = async (req, res, next) => {
     res.status(200).json({ flash: req.flash() });
   } catch (error) {
     // Handle any errors here
-    return next(new ExpressError('An error occurred while attempting to reset the password.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to reset the password.',
+        500
+      )
+    );
   }
 };
 
 /**
  * Logout a user.
  */
-export const logout = (req, res) => {
+export const logout = (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
   });
 
   req.flash('success', 'Logged out successfully.');
-  res.status(200).json({ message: 'Logged out successfully.', flash: req.flash() });
+  res
+    .status(200)
+    .json({ message: 'Logged out successfully.', flash: req.flash() });
 };
 
 /**
@@ -426,7 +513,10 @@ export const register = async (req, res, next) => {
   const { fname, lname, email, password } = req.body;
 
   try {
-    const newUser = await User.register(new User({ email, fname, lname }), password).catch(err => {
+    const newUser = await User.register(
+      new User({ email, fname, lname }),
+      password
+    ).catch((err) => {
       return next(err);
     });
 
@@ -437,23 +527,41 @@ export const register = async (req, res, next) => {
       if (err) return next(err); // Handle validation errors
 
       // Create default config
-      const newConfig = new Config({ model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' } });
+      const newConfig = new Config({
+        model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
+      });
       await newConfig.save();
 
       // Continue with creating the journal if validation is successful
-      const newJournal = new Journal({ user: newUser._id, title: req.body.title, config: newConfig._id });
+      const newJournal = new Journal({
+        user: newUser._id,
+        title: req.body.title,
+        config: newConfig._id,
+      });
       await newJournal.save();
 
       // Continue with the rest of the registration process
-      req.login(newUser, err => {
+      req.login(newUser, (err) => {
         if (err) return next(err);
 
-        req.flash('success', `Welcome, ${ fname }. You've been registered successfully.`);
-        res.status(200).json({ journalId: newJournal._id, journalTitle: newJournal.title, flash: req.flash() });
+        req.flash(
+          'success',
+          `Welcome, ${fname}. You've been registered successfully.`
+        );
+        res.status(200).json({
+          journalId: newJournal._id,
+          journalTitle: newJournal.title,
+          flash: req.flash(),
+        });
       });
     });
   } catch (err) {
-    return next(new ExpressError('An error occurred while attempting to register the user.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to register the user.',
+        500
+      )
+    );
   }
 };
 
@@ -465,19 +573,18 @@ export const verifyEmail = async (req, res, next) => {
 
   try {
     // Hash the incoming token
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token
     const user = await User.findOne({
-      verifyEmailToken: hashedToken
+      verifyEmailToken: hashedToken,
     });
 
     if (!user) {
       // No user found
-      return next(new ExpressError('Email verification token is invalid.', 400));
+      return next(
+        new ExpressError('Email verification token is invalid.', 400)
+      );
     }
 
     // Confirm email
@@ -488,7 +595,10 @@ export const verifyEmail = async (req, res, next) => {
     // Send email to admin to approve the user for beta access
     if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
       user.sendBetaRequestEmail(user.generateBetaAccessToken());
-      req.flash('info', 'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.');
+      req.flash(
+        'info',
+        'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.'
+      );
     }
 
     // Save the updated user
@@ -498,7 +608,12 @@ export const verifyEmail = async (req, res, next) => {
     res.status(200).json({ flash: req.flash() });
   } catch (error) {
     // Handle any errors here
-    return next(new ExpressError('An error occurred while attempting to verify the email.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to verify the email.',
+        500
+      )
+    );
   }
 };
 
@@ -508,25 +623,30 @@ export const verifyEmail = async (req, res, next) => {
 export const betaApproval = async (req, res, next) => {
   const { token } = req.query;
 
-  if (process.env.RELEASE_PHASE !== 'beta') return next(new ExpressError('Beta is not the current release phase.', 400));
+  if (process.env.RELEASE_PHASE !== 'beta')
+    return next(
+      new ExpressError('Beta is not the current release phase.', 400)
+    );
 
-  if (!token) return next(new ExpressError('Beta access request token is required.', 400));
+  if (!token)
+    return next(
+      new ExpressError('Beta access request token is required.', 400)
+    );
 
   try {
     // Hash the incoming token
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token
     const user = await User.findOne({
-      betaAccessToken: hashedToken
+      betaAccessToken: hashedToken,
     });
 
     if (!user) {
       // No user found
-      return next(new ExpressError('Beta access request token is invalid.', 400));
+      return next(
+        new ExpressError('Beta access request token is invalid.', 400)
+      );
     }
 
     // Approve beta access
@@ -544,7 +664,12 @@ export const betaApproval = async (req, res, next) => {
     res.status(200).json({ flash: req.flash() });
   } catch (error) {
     // Handle any errors here
-    return next(new ExpressError('An error occurred while attempting to approve beta access.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to approve beta access.',
+        500
+      )
+    );
   }
 };
 
@@ -554,25 +679,30 @@ export const betaApproval = async (req, res, next) => {
 export const betaDenial = async (req, res, next) => {
   const { token } = req.query;
 
-  if (process.env.RELEASE_PHASE !== 'beta') return next(new ExpressError('Beta is not the current release phase.', 400));
+  if (process.env.RELEASE_PHASE !== 'beta')
+    return next(
+      new ExpressError('Beta is not the current release phase.', 400)
+    );
 
-  if (!token) return next(new ExpressError('Beta access request token is required.', 400));
+  if (!token)
+    return next(
+      new ExpressError('Beta access request token is required.', 400)
+    );
 
   try {
     // Hash the incoming token
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     // Search for user by hashed token
     const user = await User.findOne({
-      betaAccessToken: hashedToken
+      betaAccessToken: hashedToken,
     });
 
     if (!user) {
       // No user found
-      return next(new ExpressError('Beta access request token is invalid.', 400));
+      return next(
+        new ExpressError('Beta access request token is invalid.', 400)
+      );
     }
 
     // Deny beta access
@@ -588,6 +718,11 @@ export const betaDenial = async (req, res, next) => {
     res.status(200).json({ flash: req.flash() });
   } catch (error) {
     // Handle any errors here
-    return next(new ExpressError('An error occurred while attempting to deny beta access.', 500));
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to deny beta access.',
+        500
+      )
+    );
   }
 };

@@ -15,6 +15,7 @@ npm install
 ## Usage
 
 ### Run server
+
 Installs dependencies and starts the server in development mode with nodemon.
 
 ```bash
@@ -22,6 +23,7 @@ npm run dev
 ```
 
 ### Run tests
+
 Runs all tests in the `tests` directory with jest.
 
 ```bash
@@ -29,6 +31,7 @@ npm run test
 ```
 
 ### Run linter
+
 Runs eslint on all files in the `src` directory.
 
 ```bash
