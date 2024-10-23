@@ -1,4 +1,11 @@
-import { Schema, model } from 'mongoose';
+import {
+  Document,
+  PassportLocalDocument,
+  PassportLocalModel,
+  PassportLocalSchema,
+  Schema,
+  model
+} from 'mongoose';
 
 import Joi from 'joi';
 
@@ -9,9 +16,54 @@ import passportLocalMongoose from 'passport-local-mongoose';
 
 if (process.env.NODE_ENV !== 'production') dotenv.config();
 
-const userSchema = new Schema({
+export interface UserType extends PassportLocalDocument {
+  fname: string,
+  lname: string,
+  email: string,
+  created_at?: Date,
+  updated_at?: Date,
+  resetPasswordToken?: string,
+  resetPasswordExpires?: Date,
+  verifyEmailToken?: string,
+  verifyEmailTokenExpires?: Date,
+  emailVerified?: boolean,
+  betaAccessToken?: string,
+  betaAccessTokenExpires?: Date,
+  betaAccess?: boolean,
+
+  // Instance Methods
+  comparePassword(candidatePassword: string): Promise<unknown>,
+  generatePasswordResetToken(): string,
+  generateEmailVerificationToken(): string,
+  generateBetaAccessToken(): string,
+  sendMail(content: MailContent): Promise<void>,
+  sendPasswordResetEmail(token: string): Promise<void>,
+  sendPasswordResetConfirmationEmail(): Promise<void>,
+  sendBetaAccessVerificationEmail(token: string): Promise<void>,
+  sendBetaRequestEmail(token: string): Promise<void>,
+  sendBetaApprovalEmail(token: string): Promise<void>,
+  sendBetaDenialEmail(): Promise<void>,
+  sendAlertForForgotPasswordAbuse(token: string): Promise<void>,
+}
+
+interface MailContent {
+  to: string,
+  subject: string,
+  text: string,
+}
+
+interface UserModel<T extends Document> extends PassportLocalModel<T> {
+  baseJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  registrationJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  passwordJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  accountJoi(obj: unknown, options?: object): Joi.ValidationResult,
+  checkEmail(email: string): Promise<boolean>,
+}
+
+const userSchema = new Schema<UserType, UserModel<UserType>>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: undefined },
@@ -22,6 +74,17 @@ const userSchema = new Schema({
   betaAccessToken: { type: String, default: undefined },
   betaAccessTokenExpires: { type: Date, default: undefined },
   betaAccess: { type: Boolean, default: undefined },
+}) as PassportLocalSchema<UserType, UserModel<UserType>>;
+
+// Add passport-local-mongoose to User schema.
+userSchema.plugin(passportLocalMongoose, {
+  usernameField: 'email',
+  errorMessages: {
+    IncorrectPasswordError: 'Incorrect login credentials.',
+    IncorrectUsernameError: 'Incorrect login credentials.',
+    MissingUsernameError: 'No email was given.',
+    UserExistsError: 'The email address provided cannot be used.',
+  },
 });
 
 // Utility functions
@@ -88,37 +151,50 @@ const modelFieldValidation = Joi.string()
       'Field must only contain alphanumeric characters, hyphens, and periods.',
   });
 
-// Validation schemas
-// Base Joi validation schema
-userSchema.statics.baseJoi = Joi.object({
+const baseUserJoiSchema = Joi.object({
   email: createEmailValidation(true),
   password: createPasswordValidation(true),
   remember: Joi.boolean(),
 });
 
+// Validation schemas
+// Base Joi validation schema
+userSchema.statics.baseJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
+  return baseUserJoiSchema.validate(obj, options);
+};
+
 // Registration Joi validation schema
-userSchema.statics.registrationJoi = userSchema.statics.baseJoi.keys({
-  fname: createNameValidation(true),
-  lname: createNameValidation(true),
-});
+userSchema.statics.registrationJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
+  const registrationJoiSchema = baseUserJoiSchema.keys({
+    fname: createNameValidation(true),
+    lname: createNameValidation(true),
+  });
+  return registrationJoiSchema.validate(obj, options);
+};
 
 // New password Joi validation schema
-userSchema.statics.passwordJoi = Joi.object({
-  newPassword: createPasswordValidation(true),
-});
+userSchema.statics.passwordJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
+  const passwordJoiSchema = Joi.object({
+    newPassword: createPasswordValidation(true),
+  });
+  return passwordJoiSchema.validate(obj, options);
+};
 
 // Account Joi validation schema (fields are not required here)
-userSchema.statics.accountJoi = Joi.object({
-  fname: createNameValidation(),
-  lname: createNameValidation(),
-  email: createEmailValidation(),
-  oldPassword: createPasswordValidation(),
-  newPassword: createPasswordValidation(),
-  model: Joi.object({
-    chat: modelFieldValidation,
-    analysis: modelFieldValidation,
-  }),
-});
+userSchema.statics.accountJoi = function (obj: unknown, options?: object): Joi.ValidationResult {
+  const accountJoiSchema = Joi.object({
+    fname: createNameValidation(),
+    lname: createNameValidation(),
+    email: createEmailValidation(),
+    oldPassword: createPasswordValidation(),
+    newPassword: createPasswordValidation(),
+    model: Joi.object({
+      chat: modelFieldValidation,
+      analysis: modelFieldValidation,
+    }),
+  });
+  return accountJoiSchema.validate(obj, options);
+};
 
 // Mongoose schema indices and plugins
 // Assuming users will often be queried by email and it must be unique.
@@ -126,17 +202,6 @@ userSchema.index({ email: 1 }, { unique: true, background: true });
 
 // Useful if searching by full name is common.
 userSchema.index({ fname: 1, lname: 1 });
-
-// Add passport-local-mongoose to User schema.
-userSchema.plugin(passportLocalMongoose, {
-  usernameField: 'email',
-  errorMessages: {
-    IncorrectPasswordError: 'Incorrect login credentials.',
-    IncorrectUsernameError: 'Incorrect login credentials.',
-    MissingUsernameError: 'No email was given.',
-    UserExistsError: 'The email address provided cannot be used.',
-  },
-});
 
 // Mongoose middleware
 // Set new updated_at timestamp before saving.
@@ -147,9 +212,9 @@ userSchema.pre('save', function (next) {
 
 // User schema methods and statics
 // Compare passwords for re-authentication
-userSchema.methods.comparePassword = function (candidatePassword) {
+userSchema.methods.comparePassword = function (candidatePassword: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    this.authenticate(candidatePassword, (err, user) => {
+    this.authenticate(candidatePassword, (err: unknown, user: unknown) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -158,9 +223,9 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 };
 
 // Check if there is a user with the given email
-userSchema.statics.checkEmail = function (email) {
+userSchema.statics.checkEmail = function (email: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
-    this.findByUsername(email, (err, user) => {
+    this.findByUsername(email, false, (err: unknown, user: unknown) => {
       if (err) return reject(err);
       if (user) return resolve(true);
       return resolve(false);
@@ -169,7 +234,7 @@ userSchema.statics.checkEmail = function (email) {
 };
 
 // Generate a password reset token
-userSchema.methods.generatePasswordResetToken = function () {
+userSchema.methods.generatePasswordResetToken = function (): string {
   // Generate a token
   const resetToken = crypto.randomBytes(20).toString('hex');
 
@@ -180,13 +245,13 @@ userSchema.methods.generatePasswordResetToken = function () {
     .digest('hex');
 
   // Set an expiry time of 10 minutes
-  this.resetPasswordExpires = Date.now() + 600000;
+  this.set({ resetPasswordExpires: Date.now() + 600000 });
 
   return resetToken;
 };
 
 // Generate an email confirmation token
-userSchema.methods.generateEmailVerificationToken = function () {
+userSchema.methods.generateEmailVerificationToken = function (): string {
   // Generate a token
   const verificationToken = crypto.randomBytes(20).toString('hex');
 
@@ -197,13 +262,13 @@ userSchema.methods.generateEmailVerificationToken = function () {
     .digest('hex');
 
   // Set an expiry time of 1 week
-  this.verifyEmailTokenExpires = Date.now() + 604800000;
+  this.set({ verifyEmailTokenExpires: Date.now() + 604800000 });
 
   return verificationToken;
 };
 
 // Generate a beta access token
-userSchema.methods.generateBetaAccessToken = function () {
+userSchema.methods.generateBetaAccessToken = function (): string {
   // Generate a token
   const betaAccessToken = crypto.randomBytes(20).toString('hex');
 
@@ -214,13 +279,13 @@ userSchema.methods.generateBetaAccessToken = function () {
     .digest('hex');
 
   // Set an expiry time of 1 week
-  this.betaAccessTokenExpires = Date.now() + 604800000;
+  this.set({ betaAccessTokenExpires: Date.now() + 604800000 });
 
   return betaAccessToken;
 };
 
 // Utility function for sending emails
-userSchema.methods.sendMail = async function (content) {
+userSchema.methods.sendMail = async function (content: MailContent): Promise<void> {
   const { to, subject, text } = content;
 
   // Configure your SMTP transporter
@@ -246,7 +311,7 @@ userSchema.methods.sendMail = async function (content) {
 };
 
 // Send a password reset email
-userSchema.methods.sendPasswordResetEmail = async function (token) {
+userSchema.methods.sendPasswordResetEmail = async function (token: string): Promise<void> {
   // Construct the password reset URL
   const resetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
@@ -259,7 +324,7 @@ userSchema.methods.sendPasswordResetEmail = async function (token) {
 };
 
 // Send a password reset confirmation email
-userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
+userSchema.methods.sendPasswordResetConfirmationEmail = async function (): Promise<void> {
   // Recipient address (user's email)
   const to = this.email;
   const subject = 'Password Reset Confirmation';
@@ -269,7 +334,7 @@ userSchema.methods.sendPasswordResetConfirmationEmail = async function () {
 };
 
 // Send beta request confirmation email
-userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
+userSchema.methods.sendBetaAccessVerificationEmail = async function (token: string): Promise<void> {
   // Construct the verification URL
   const verificationUrl = `${process.env.TOKENIZED_URL}/verify-email?token=${token}`;
 
@@ -282,7 +347,7 @@ userSchema.methods.sendBetaAccessVerificationEmail = async function (token) {
 };
 
 // Send beta request email to support
-userSchema.methods.sendBetaRequestEmail = async function (token) {
+userSchema.methods.sendBetaRequestEmail = async function (token: string): Promise<void> {
   // Construct the approval and denial URLs
   const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
   const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
@@ -296,7 +361,7 @@ userSchema.methods.sendBetaRequestEmail = async function (token) {
 };
 
 // Send beta approval email
-userSchema.methods.sendBetaApprovalEmail = async function (token) {
+userSchema.methods.sendBetaApprovalEmail = async function (token: string): Promise<void> {
   // Construct the password reset URL
   const passwordResetUrl = `${process.env.TOKENIZED_URL}/reset-password?token=${token}`;
 
@@ -309,19 +374,21 @@ userSchema.methods.sendBetaApprovalEmail = async function (token) {
 };
 
 // Send beta denial email
-userSchema.methods.sendBetaDenialEmail = async function () {
+userSchema.methods.sendBetaDenialEmail = async function (): Promise<void> {
   // Recipient address (user's email)
+  if (this.betaAccessTokenExpires === undefined) { // TODO: probably want to change default rather than have this case
+    this.betaAccessTokenExpires = new Date(Date.now() + 604800000);
+  }
   const to = this.email;
   const subject = 'Beta Access Denied';
-  const text = `Dear ${
-    this.fname
+  const text = `Dear ${this.fname
   },\n\nAfter reviewing your request for beta access, we have decided to deny your request. There may be a number of reasons why we made this decision such as the beta period ending soon or we have reached our maximum number of beta users. Whatever the case, you may apply again after ${this.betaAccessTokenExpires.toLocaleDateString()}. Thank you for your interest in the app! We hope you will consider applying again after the specified date or using the app when it is released.\n\nSincerely,\n\nThe CDJ Team\n`;
 
   this.sendMail({ to, subject, text });
 };
 
 // Send admin alert for forgot password abuse
-userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
+userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token: string): Promise<void> {
   // Construct the approval and denial URLs
   const approvalUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-approval?token=${token}`;
   const denialUrl = `${process.env.DOMAIN}:${process.env.PORT}/access/beta-denial?token=${token}`;
@@ -334,4 +401,4 @@ userSchema.methods.sendAlertForForgotPasswordAbuse = async function (token) {
   this.sendMail({ to, subject, text });
 };
 
-export default model('User', userSchema);
+export default model<UserType, UserModel<UserType>>('User', userSchema);
