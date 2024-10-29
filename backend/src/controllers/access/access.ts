@@ -6,15 +6,14 @@ import {
   Journal,
   User,
 } from '../../models/index.js';
-
-import ExpressError from '../../utils/ExpressError.js';
-
-import crypto from 'crypto';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import passport from 'passport';
-
-import { validateJournal } from '../../middleware/validation.js';
 import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import ExpressError from '../../utils/ExpressError.js';
+import { HydratedDocument } from 'mongoose';
+import { UserType } from '../../models/user.js';
+import crypto from 'crypto';
+import passport from 'passport';
+import { validateJournal } from '../../middleware/validation.js';
 
 interface TokenRequest extends Request {
   token: UserToken;
@@ -44,7 +43,7 @@ export const updateJournal = async (req: Request, res: Response, next: NextFunct
     }
 
     res.status(200).json({ flash: req.flash() });
-  } catch (err) {
+  } catch {
     return next(
       new ExpressError(
         'An error occurred while attempting to update the journal.',
@@ -141,14 +140,14 @@ export const updateAccount = async (req: Request, res: Response, next: NextFunct
 
       if (model) {
         // Update chat and analysis fields if they exist in the request body
-        if (model.chat !== undefined)
-          model.chat
-            ? (response.model.chat = model.chat)
-            : (response.model.chat = undefined);
-        if (model.analysis !== undefined)
-          model.analysis
-            ? (response.model.analysis = model.analysis)
-            : (response.model.analysis = undefined);
+        response.model.chat = undefined;
+        response.model.analysis = undefined;
+        if (model.chat !== undefined) {
+          response.model.chat = model.chat;
+        }
+        if (model.analysis !== undefined) {
+          response.model.analysis = model.analysis;
+        }
       }
 
       await response.save();
@@ -162,7 +161,7 @@ export const updateAccount = async (req: Request, res: Response, next: NextFunct
     }
 
     res.status(200).json({ flash: req.flash() });
-  } catch (err) {
+  } catch {
     return next(
       new ExpressError(
         'An error occurred while attempting to update the account.',
@@ -224,7 +223,7 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
 
       req.flash('success', 'Account deleted successfully.');
       res.status(200).json({ flash: req.flash() });
-    } catch (err) {
+    } catch {
       return next(
         new ExpressError(
           'An error occurred while attempting to delete the account.',
@@ -239,8 +238,11 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
  * Login a user.
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  //TODO: user and info need to be defined by us as model I think, otherwise leave as any
-  passport.authenticate('local', async (err: Error, user: any, info: any) => {
+  // DL: not super sure what type info arg is, but seems to have this interface
+  type AuthenticateInfo = {
+    message: string;
+  }
+  passport.authenticate('local', async (err: Error, user: HydratedDocument<UserType>, info: AuthenticateInfo) => {
     if (err) {
       return next(err);
     }
@@ -288,19 +290,19 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     let token: string;
     if (req.body.remember) {
       try {
-        let JWT_SECRET = process.env.JWT_SECRET;
+        const { JWT_SECRET } = process.env;
         if (JWT_SECRET === undefined) {
           throw new Error('JWT secret not defined');
         }
         token = jwt.sign({ id: user._id }, JWT_SECRET, {
           expiresIn: '7d',
         });
-      } catch (err: any) {
-        req.flash('error', err.message);
+      } catch (err) {
+        req.flash('error', (err as Error).message);
       }
     }
 
-    req.logIn(user, async (err) => {
+    req.logIn((user as Express.User), async (err) => {
       if (err) {
         return next(err);
       }
@@ -454,7 +456,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
       req.flash('success', 'Recovery email sent successfully.');
       res.status(200).json({ flash: req.flash() });
-    } catch (error) {
+    } catch {
       return next(
         new ExpressError(
           'An error occurred while attempting to generate a recovery email.',
@@ -501,7 +503,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 
     req.flash('success', 'Password reset successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch (error) {
+  } catch {
     // Handle any errors here
     return next(
       new ExpressError(
@@ -575,7 +577,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
       });
     });
-  } catch (err) {
+  } catch {
     return next(
       new ExpressError(
         'An error occurred while attempting to register the user.',
@@ -626,7 +628,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
 
     req.flash('success', 'Email verified successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch (error) {
+  } catch {
     // Handle any errors here
     return next(
       new ExpressError(
@@ -687,7 +689,7 @@ export const betaApproval = async (req: Request, res: Response, next: NextFuncti
 
     req.flash('success', 'Beta access approved successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch (error) {
+  } catch {
     // Handle any errors here
     return next(
       new ExpressError(
@@ -746,7 +748,7 @@ export const betaDenial = async (req: Request, res: Response, next: NextFunction
 
     req.flash('success', 'Beta access denied successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch (error) {
+  } catch {
     // Handle any errors here
     return next(
       new ExpressError(

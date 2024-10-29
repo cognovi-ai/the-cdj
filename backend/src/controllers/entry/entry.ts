@@ -4,13 +4,10 @@ import {
   EntryConversation,
   Journal,
 } from '../../models/index.js';
-
-import ExpressError from '../../utils/ExpressError.js';
-
-import mongoose from 'mongoose';
-
-import { validateEntryAnalysis } from '../../middleware/validation.js';
 import { NextFunction, Request, Response } from 'express';
+import ExpressError from '../../utils/ExpressError.js';
+import mongoose from 'mongoose';
+import { validateEntryAnalysis } from '../../middleware/validation.js';
 
 /**
  * Get all entries in a specific journal.
@@ -71,8 +68,8 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
 
         newAnalysis.analysis_content = analysis.analysis_content;
       }
-    } catch (analysisError: any) {
-      req.flash('info', analysisError.message);
+    } catch (analysisError) {
+      req.flash('info', (analysisError as Error).message);
     } finally {
       await newEntry.save();
       await newAnalysis.save();
@@ -96,8 +93,8 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
     );
 
     res.status(200).json(entry);
-  } catch (err: any) {
-    req.flash('info', err.message);
+  } catch (err) {
+    req.flash('info', (err as Error).message);
     return next(err);
   }
 };
@@ -141,8 +138,8 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
 
           oldAnalysis.analysis_content = analysis.analysis_content;
         }
-      } catch (analysisError: any) {
-        req.flash('info', analysisError.message);
+      } catch (analysisError) {
+        req.flash('info', (analysisError as Error).message);
       } finally {
         await updatedEntry.save();
         await oldAnalysis.save();
@@ -181,7 +178,7 @@ export const deleteEntry = async (req: Request, res: Response, next: NextFunctio
 
     // Commit the transaction
     await session.commitTransaction();
-  } catch (error) {
+  } catch {
     // If an error occurs, abort the transaction
     await session.abortTransaction();
     return next(
@@ -255,8 +252,8 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
       entry.save();
       req.flash('success', 'Successfully generated a new analysis.');
     }
-  } catch (err: any) {
-    req.flash('info', err.message);
+  } catch (err) {
+    req.flash('info', (err as Error).message);
   }
 
   res
