@@ -7,6 +7,7 @@ module.exports = {
   moduleNameMapper: {
     "^(\\.\\.?\\/.+)\\.jsx?$": "$1"
   },
+  roots: ["<rootDir>/tests"],
   globalSetup: "<rootDir>/tests/jest.setup.cjs",
   globalTeardown: "<rootDir>/tests/jest.teardown.cjs"
 };

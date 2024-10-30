@@ -1,6 +1,7 @@
-import { ChatCompletionResponse, ChatMessage, Message, Prompt } from '../../../src/assistants/gpts/CdGpt.js';
+import { ChatCompletionResponse, Message, Prompt } from '../../../src/assistants/gpts/CdGpt.js';
 import { Entry, EntryAnalysis, Journal, User } from '../../../src/models/index.js';
 import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
+import { ChatMessage } from '../../../src/models/entry/entryConversation.js';
 import ExpressError from '../../../src/utils/ExpressError.js';
 import connectDB from '../../../src/db.js';
 import mongoose from 'mongoose';
