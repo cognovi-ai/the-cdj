@@ -86,7 +86,7 @@ app.use(passport.authenticate('session'));
 
 // Passport config
 passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
+passport.serializeUser(User.serializeUser()); // Build error from mismatch between Express.User and UserType
 passport.deserializeUser(User.deserializeUser());
 
 // Use rate limit middleware

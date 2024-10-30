@@ -7,8 +7,8 @@ import Joi from 'joi';
 
 export interface EntryConversationType {
   entry: Types.ObjectId;
-  messages?: [
-    {
+  messages?: [ 
+    { // TODO: this object should be CdGpt.ChatMessage type
       message_content: string;
       llm_response?: string;
       created_at?: Date;
@@ -39,7 +39,7 @@ const entryConversationSchema = new Schema<
 >({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
   messages: [
-    {
+    { // TODO: this object should be CdGpt.ChatMessage type
       message_content: { type: String, required: true },
       llm_response: { type: String },
       created_at: { type: Date, default: Date.now },

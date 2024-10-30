@@ -241,7 +241,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   // DL: not super sure what type info arg is, but seems to have this interface
   type AuthenticateInfo = {
     message: string;
-  }
+  };
   passport.authenticate('local', async (err: Error, user: HydratedDocument<UserType>, info: AuthenticateInfo) => {
     if (err) {
       return next(err);
@@ -359,7 +359,7 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
     const { token } = req as TokenRequest;
 
     // Retrieve the user's journal
-    const journal = await Journal.findOne({ user: token.id }).populate('user');
+    const journal = await Journal.findOne({ user: token.id }).populate< { user: UserType } >('user');
 
     // If user has no journal or the token is expired, return error
     if (!journal) {
@@ -367,7 +367,7 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
     }
 
     // Log the user in
-    req.logIn(journal.user, async function (err) {
+    req.logIn(journal.user, async function (err) { // TODO: figure out UserType and Express.User compatability
       if (err) {
         return next(err);
       }
@@ -563,7 +563,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       await newJournal.save();
 
       // Continue with the rest of the registration process
-      req.login(newUser, (err) => {
+      req.login(newUser, (err) => { // TODO: it's not clear what type to use here. User model not compatible with Express.User
         if (err) return next(err);
 
         req.flash(
@@ -643,8 +643,6 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
  * Approve a user for beta access.
  */
 export const betaApproval = async (req: Request, res: Response, next: NextFunction) => {
-  // Token isn't JWt. This is a beta access token, or maybe email verification token. see models/user.js
-  // TODO: create type for beta access tokens
   const { token } = req.query;
 
   if (process.env.RELEASE_PHASE !== 'beta')
@@ -704,8 +702,6 @@ export const betaApproval = async (req: Request, res: Response, next: NextFuncti
  * Deny a user for beta access.
  */
 export const betaDenial = async (req: Request, res: Response, next: NextFunction) => {
-  // TODO: this is a beta access token, or maybe email verification token. see models/user.js
-  // Token isn't JWT
   const { token } = req.query;
 
   if (process.env.RELEASE_PHASE !== 'beta')

@@ -46,17 +46,19 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
 
     const newEntry = new Entry({ journal: journalId, ...entryData });
     const newAnalysis = new EntryAnalysis({
-      entry: newEntry._id,
+      entry: newEntry.id,
       analysis_content: entryData.analysis_content,
     });
 
     // Associate the entry with the analysis
     newEntry.analysis = newAnalysis._id;
-
+    if (!journal.config) {
+      return next(new ExpressError('Journal config not found.', 404));
+    }
     // Get the analysis content for the entry
     try {
       const analysis = await newAnalysis.getAnalysisContent(
-        journal.config,
+        journal.config.toString(),
         newEntry.content
       );
 
@@ -77,7 +79,7 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
 
     res
       .status(201)
-      .json({ ...(await newEntry.save())._doc, flash: req.flash() });
+      .json({ ...(await newEntry.save())._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
   });
 };
 
@@ -117,6 +119,9 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
 
     const entryData = req.body;
     const updatedEntry = await Entry.findById(entryId);
+    if (!updatedEntry) {
+      return next(new ExpressError('Entry not found.', 404));
+    }
 
     if (entryData.content) {
       // Update the entry with the new data
@@ -124,10 +129,15 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
 
       // Update the analysis content for the entry with a new analysis
       const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
-
+      if (!oldAnalysis) {
+        return next(new ExpressError('Entry analysis not found.', 404));
+      }
+      if (!journal.config) {
+        return next(new ExpressError('Journal config not found.', 404));
+      }
       try {
         const analysis = await oldAnalysis.getAnalysisContent(
-          journal.config,
+          journal.config?.toString(),
           updatedEntry.content
         );
 
@@ -150,7 +160,7 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
     }
 
     req.flash('success', 'Successfully updated entry.');
-    res.status(200).json({ ...updatedEntry._doc, flash: req.flash() });
+    res.status(200).json({ ...updatedEntry._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
   });
 };
 
@@ -211,7 +221,7 @@ export const getEntryAnalysis = async (req: Request, res: Response, next: NextFu
     return next(new ExpressError('Entry analysis not found.', 404));
   }
 
-  res.status(200).json(entryAnalysis._doc);
+  res.status(200).json(entryAnalysis._doc); // TODO: I'm not sure the intent of ._doc and it's causing a build error
 };
 
 /**
@@ -233,10 +243,15 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
   }
 
   const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId });
-
+  if (!entryAnalysis) {
+    return next(new ExpressError('Entry not found.', 404));
+  }
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
+  }
   try {
     const analysis = await entryAnalysis.getAnalysisContent(
-      journal.config,
+      journal.config.toString(),
       entry.content
     );
 
@@ -258,7 +273,7 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
 
   res
     .status(200)
-    .json({ ...entryAnalysis._doc, entry: entry._doc, flash: req.flash() });
+    .json({ ...entryAnalysis._doc, entry: entry._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
 };
 
 /**
@@ -269,7 +284,7 @@ export const getEntryConversation = async (req: Request, res: Response) => {
 
   const response = await EntryConversation.findOne({ entry: entryId });
   const entryConversation = response
-    ? { ...response._doc, chatId: response._id }
+    ? { ...response._doc, chatId: response.id } // TODO: I'm not sure the intent of ._doc and it's causing a build error
     : {};
 
   res.status(200).json(entryConversation);
@@ -289,9 +304,21 @@ export const createEntryConversation = async (req: Request, res: Response, next:
 
   // Get the config from the journal
   const journal = await Journal.findById(journalId);
+  if (!journal) {
+    return next(new ExpressError('Journal not found.', 404));
+  }
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
+  }
 
   // Get an entry with the analysis
   const entry = await Entry.findById(entryId).populate('analysis');
+  if (!entry) {
+    return next(new ExpressError('Entry not found.', 404));
+  }
+  if (!entry.analysis) {
+    return next(new ExpressError('Entry analysis not found.', 404));
+  }
 
   // Associate the conversation with the entry
   entry.conversation = newConversation._id;
@@ -299,12 +326,15 @@ export const createEntryConversation = async (req: Request, res: Response, next:
 
   try {
     const llmResponse = await newConversation.getChatContent(
-      journal.config,
-      entry.analysis._id, // TODO: there's a bug in this line. I think entry.analysis doesn't exist for seeded entries
+      journal.config.toString(),
+      entry.analysis.toString(), // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
       messageData.messages[0].message_content
     );
 
     // If the chat is not empty, update the llm_response
+    if (!newConversation.messages) {
+      return next(new ExpressError('No message to get completion for.', 404));
+    }
     if (llmResponse) {
       newConversation.messages[0].llm_response = llmResponse;
     }
@@ -315,7 +345,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   await newConversation.save();
 
   const response = await EntryConversation.findOne({ entry: entryId });
-  const entryConversation = response ? response._doc : {};
+  const entryConversation = response ? response._doc : {}; // TODO: I'm not sure the intent of ._doc and it's causing a build error
 
   req.flash('success', 'Successfully created conversation.');
   res.status(201).json({ ...entryConversation, flash: req.flash() });
@@ -330,19 +360,34 @@ export const updateEntryConversation = async (req: Request, res: Response, next:
 
   // Get the config from the journal
   const journal = await Journal.findById(journalId);
+  if (!journal) {
+    return next(new ExpressError('Journal not found.', 404));
+  }
 
   // Get the conversation from the database
   const conversation = await EntryConversation.findById(chatId);
+  if (!conversation) {
+    return next(new ExpressError('Entry conversation not found.', 404));
+  }
+  if (!conversation.messages) {
+    return next(new ExpressError('Entry conversation messages not found.', 404));
+  }
 
   // Get the analysis associated with the entry
   const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
+  if (!analysis) {
+    return next(new ExpressError('Entry analysis not found.', 404));
+  }
 
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
+  }
   try {
     const llmResponse = await conversation.getChatContent(
-      journal.config,
-      analysis._id,
+      journal.config.toString(),
+      analysis.id,
       messageData.messages[0].message_content,
-      conversation.messages
+      conversation.messages // TODO: resolve what conversation.messages[n] type should be to fix this build error
     );
 
     // If the chat is not empty, update the llm_response
@@ -362,6 +407,9 @@ export const updateEntryConversation = async (req: Request, res: Response, next:
     },
     { new: true }
   );
+  if (!response) {
+    return next(new ExpressError('Failed to update entry conversation.', 500));
+  }
 
-  res.status(200).json({ ...response._doc, flash: req.flash() });
+  res.status(200).json({ ...response._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
 };
