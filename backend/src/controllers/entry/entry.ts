@@ -139,7 +139,7 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
       }
       try {
         const analysis = await oldAnalysis.getAnalysisContent(
-          journal.config?.toString(),
+          journal.config.toString(),
           updatedEntry.content
         );
 
@@ -329,7 +329,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   try {
     const llmResponse = await newConversation.getChatContent(
       journal.config.toString(),
-      entry.analysis.id, // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
+      entry.analysis.id,
       messageData.messages[0].message_content
     );
 
@@ -389,7 +389,7 @@ export const updateEntryConversation = async (req: Request, res: Response, next:
       journal.config.toString(),
       analysis.id,
       messageData.messages[0].message_content,
-      conversation.messages // TODO: resolve what conversation.messages[n] type should be to fix this build error
+      conversation.messages
     );
 
     // If the chat is not empty, update the llm_response
