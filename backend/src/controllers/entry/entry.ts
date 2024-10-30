@@ -5,8 +5,10 @@ import {
   Journal,
 } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
+import mongoose, { Document } from 'mongoose';
+import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
+import { EntryType } from '../../models/entry/entry.js';
 import ExpressError from '../../utils/ExpressError.js';
-import mongoose from 'mongoose';
 import { validateEntryAnalysis } from '../../middleware/validation.js';
 
 /**
@@ -79,7 +81,7 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
 
     res
       .status(201)
-      .json({ ...(await newEntry.save())._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
+      .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
   });
 };
 
@@ -160,7 +162,7 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
     }
 
     req.flash('success', 'Successfully updated entry.');
-    res.status(200).json({ ...updatedEntry._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
+    res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
   });
 };
 
@@ -215,13 +217,13 @@ export const getEntryAnalysis = async (req: Request, res: Response, next: NextFu
 
   const entryAnalysis = await EntryAnalysis.findOne({
     entry: entryId,
-  }).populate('entry'); // TODO: fix types with call
+  }).populate<{ entry: EntryType }>('entry');
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found.', 404));
   }
 
-  res.status(200).json(entryAnalysis._doc); // TODO: I'm not sure the intent of ._doc and it's causing a build error
+  res.status(200).json(entryAnalysis.toObject());
 };
 
 /**
@@ -273,7 +275,7 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
 
   res
     .status(200)
-    .json({ ...entryAnalysis._doc, entry: entry._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
+    .json({ ...entryAnalysis.toObject(), entry: entry.toObject(), flash: req.flash() });
 };
 
 /**
@@ -284,7 +286,7 @@ export const getEntryConversation = async (req: Request, res: Response) => {
 
   const response = await EntryConversation.findOne({ entry: entryId });
   const entryConversation = response
-    ? { ...response._doc, chatId: response.id } // TODO: I'm not sure the intent of ._doc and it's causing a build error
+    ? { ...response.toObject(), chatId: response.id }
     : {};
 
   res.status(200).json(entryConversation);
@@ -312,7 +314,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   }
 
   // Get an entry with the analysis
-  const entry = await Entry.findById(entryId).populate('analysis'); // TODO: fix populate type here
+  const entry = await Entry.findById(entryId).populate<{ analysis: Document<EntryAnalysisType> }>('analysis');
   if (!entry) {
     return next(new ExpressError('Entry not found.', 404));
   }
@@ -327,7 +329,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   try {
     const llmResponse = await newConversation.getChatContent(
       journal.config.toString(),
-      entry.analysis._id, // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
+      entry.analysis.id, // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
       messageData.messages[0].message_content
     );
 
@@ -345,7 +347,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   await newConversation.save();
 
   const response = await EntryConversation.findOne({ entry: entryId });
-  const entryConversation = response ? response._doc : {}; // TODO: I'm not sure the intent of ._doc and it's causing a build error
+  const entryConversation = response ? response.toObject() : {};
 
   req.flash('success', 'Successfully created conversation.');
   res.status(201).json({ ...entryConversation, flash: req.flash() });
@@ -411,5 +413,5 @@ export const updateEntryConversation = async (req: Request, res: Response, next:
     return next(new ExpressError('Failed to update entry conversation.', 500));
   }
 
-  res.status(200).json({ ...response._doc, flash: req.flash() }); // TODO: I'm not sure the intent of ._doc and it's causing a build error
+  res.status(200).json({ ...response.toObject(), flash: req.flash() });
 };
