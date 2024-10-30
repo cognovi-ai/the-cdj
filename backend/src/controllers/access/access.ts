@@ -15,10 +15,16 @@ import crypto from 'crypto';
 import passport from 'passport';
 import { validateJournal } from '../../middleware/validation.js';
 
+/**
+ * Used for JWT login, where token payload is User.id
+ */
 interface TokenRequest extends Request {
   token: UserToken;
 }
 
+/**
+ * JWT with added payload fields. User.id used for JWT login
+ */
 interface UserToken extends JwtPayload {
   id: string;
 }
@@ -242,7 +248,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   type AuthenticateInfo = {
     message: string;
   };
-  passport.authenticate('local', async (err: Error, user: HydratedDocument<UserType>, info: AuthenticateInfo) => {
+  passport.authenticate('local', async (err: Error, user: HydratedDocument<UserType> | null, info: AuthenticateInfo) => {
     if (err) {
       return next(err);
     }
@@ -302,7 +308,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       }
     }
 
-    req.logIn((user as Express.User), async (err) => {
+    req.logIn(user, async (err) => {
       if (err) {
         return next(err);
       }
@@ -367,7 +373,7 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
     }
 
     // Log the user in
-    req.logIn(journal.user, async function (err) { // TODO: figure out UserType and Express.User compatability
+    req.logIn(journal.user, async function (err) {
       if (err) {
         return next(err);
       }
@@ -413,7 +419,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
   const { email } = req.body;
 
   // Search for user by email
-  // TODO: not sure what selectHashSaltFields should be set to
+  // TODO: not sure what selectHashSaltFields should be set to. Guessing false
   User.findByUsername(email, false, async (err, user) => {
     if (err) return next(err);
 
@@ -563,7 +569,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       await newJournal.save();
 
       // Continue with the rest of the registration process
-      req.login(newUser, (err) => { // TODO: it's not clear what type to use here. User model not compatible with Express.User
+      req.login(newUser, (err) => {
         if (err) return next(err);
 
         req.flash(

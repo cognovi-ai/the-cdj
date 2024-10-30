@@ -215,7 +215,7 @@ export const getEntryAnalysis = async (req: Request, res: Response, next: NextFu
 
   const entryAnalysis = await EntryAnalysis.findOne({
     entry: entryId,
-  }).populate('entry');
+  }).populate('entry'); // TODO: fix types with call
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found.', 404));
@@ -312,7 +312,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   }
 
   // Get an entry with the analysis
-  const entry = await Entry.findById(entryId).populate('analysis');
+  const entry = await Entry.findById(entryId).populate('analysis'); // TODO: fix populate type here
   if (!entry) {
     return next(new ExpressError('Entry not found.', 404));
   }
@@ -327,7 +327,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   try {
     const llmResponse = await newConversation.getChatContent(
       journal.config.toString(),
-      entry.analysis.toString(), // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
+      entry.analysis._id, // TODO: there's a bug in this line. entry.analysis doesn't exist for seeded entries
       messageData.messages[0].message_content
     );
 
