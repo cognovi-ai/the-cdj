@@ -1,12 +1,14 @@
-/** This file is used to extend Express types with custom properties. 
+/** This file is used to extend Express types to match CDJ models with declaration merging. 
  * 
- * Note that Passport extends the Request object with a user property. To use
- * id on the Express.User type, Express.User must be extended to include id 
- * that passport sets on the user object.
+ * Passport extends global.Express.User for use in its extension of global.Express.Request
+ * We extend global.Express.User to match the CDJ's UserType.
  */
 
-declare namespace Express {
-  interface User {
-    id: string; 
+import { UserType } from '../../models/user.ts';
+
+declare global {
+  namespace Express {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface User extends UserType {}
   }
 }
