@@ -1,19 +1,19 @@
-import CdGpt, { ChatCompletionResponse, ChatMessage, } from '../../assistants/gpts/CdGpt.js';
+import CdGpt, { ChatCompletionResponse, } from '../../assistants/gpts/CdGpt.js';
 import { Model, Schema, Types, model } from 'mongoose';
 
 import { Config } from '../index.js';
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
+export interface ChatMessage {
+  message_content: string;
+  llm_response: string;
+  created_at?: Date;
+}
+
 export interface EntryConversationType {
   entry: Types.ObjectId;
-  messages?: [
-    {
-      message_content: string;
-      llm_response?: string;
-      created_at?: Date;
-    }
-  ];
+  messages?: ChatMessage[];
 }
 
 interface EntryConversationMethods {
@@ -32,19 +32,19 @@ interface EntryConversationStatics
   joi(obj: unknown, options?: object): Joi.ValidationResult;
 }
 
+const chatMessageSchema = new Schema({
+  message_content: { type: String, required: true },
+  llm_response: { type: String, required: true },
+  created_at: { type: Date, default: Date.now }
+});
+
 const entryConversationSchema = new Schema<
   EntryConversationType,
   EntryConversationStatics,
   EntryConversationMethods
 >({
   entry: { type: Schema.Types.ObjectId, ref: 'Entry', required: true },
-  messages: [
-    {
-      message_content: { type: String, required: true },
-      llm_response: { type: String },
-      created_at: { type: Date, default: Date.now },
-    },
-  ],
+  messages: { type: [chatMessageSchema], default: [] },
 });
 
 entryConversationSchema.statics.joi = function (

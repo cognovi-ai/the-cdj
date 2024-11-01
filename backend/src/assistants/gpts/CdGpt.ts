@@ -1,4 +1,5 @@
 import Assistant from '../Assistant.js';
+import { ChatMessage } from '../../models/entry/entryConversation.js';
 import { EntryAnalysis } from '../../models/index.js';
 import { EntryType } from '../../models/entry/entry.js';
 import ExpressError from '../../utils/ExpressError.js';
@@ -49,11 +50,6 @@ const formatInstructions: FormatInstructions = {
 export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
-}
-
-export interface ChatMessage {
-  message_content: string;
-  llm_response: string;
 }
 
 export interface Prompt {
