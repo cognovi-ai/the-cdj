@@ -32,7 +32,7 @@ export async function getAllEntriesInJournal(
  * Gets Entry with all referenced properties populated
  * @param entryId string of Entry._id to get
  * @param paths string of properties to populate
- * @returns Populated entry document
+ * @returns Populated entry document matching entryId
  */
 export async function getPopulatedEntry(entryId: string) {
   return await Entry
@@ -45,8 +45,8 @@ export async function getPopulatedEntry(entryId: string) {
 
 /**
  * Gets EntryAnalysis corresponding to entryId and populates with its Entry
- * @param entryId 
- * @returns 
+ * @param entryId string of Entry._id to get
+ * @returns populated EntryAnalysis document matching entryId
  */
 export async function getPopluatedEntryAnalysis(entryId: string) {
   try {
@@ -63,8 +63,8 @@ export async function getPopluatedEntryAnalysis(entryId: string) {
 
 /**
  * Gets EntryConversation corresponding to entryId
- * @param entryId 
- * @returns 
+ * @param entryId string of Entry._id to get
+ * @returns EntryConversation matching entryId
  */
 export async function getEntryConversation(entryId: string) {
   try {
