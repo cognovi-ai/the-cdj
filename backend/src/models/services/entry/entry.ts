@@ -75,7 +75,7 @@ export async function getEntryConversation(entryId: string) {
   return null;
 }
 
-// TODO: All functions below are in-progress. DL will be working on them in other PRs
+// TODO: All functions below are in-progress for create operations and are not being used currently. DL will be working on them in other PRs
 
 /**
  * Creates a new entry in journalId with entryContent as content
@@ -136,7 +136,7 @@ export async function populateAnalysisContent(
   refAnalysis: HydratedDocument<EntryAnalysisType>
 ): Promise<void> {
   try {
-    const analysis = await refAnalysis.getAnalysisContent(
+    const analysis = await getAnalysisContent(
       configId,
       refEntry.content
     );

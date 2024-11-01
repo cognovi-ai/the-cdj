@@ -33,28 +33,51 @@ export const getAllEntries = async (req: Request, res: Response) => {
 export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
 
+  // Ensure that the journal exists
   const journal = await Journal.findById(journalId);
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
 
-  // This call doesn't make sense here. Validation happens before the analysis appears. Only setting a default of analysis_content. You'd want to validate after LLM responds?
   validateEntryAnalysis(req, res, async (err: ExpressError) => {
     if (err) {
       return next(err); // Handle any validation errors
     }
-    const entryContent = req.body;
 
-    const newEntry = await EntryServices.createEntry(journalId, entryContent);
-    if (newEntry === null) {
-      return next(new ExpressError('Could not create entry', 500));
+    // If validation is successful, proceed to create the entry and analysis
+    const entryData = req.body;
+
+    const newEntry = new Entry({ journal: journalId, ...entryData });
+    const newAnalysis = new EntryAnalysis({
+      entry: newEntry.id,
+      analysis_content: entryData.analysis_content,
+    });
+
+    // Associate the entry with the analysis
+    newEntry.analysis = newAnalysis._id;
+    if (!journal.config) {
+      return next(new ExpressError('Journal config not found.', 404));
     }
-
+    // Get the analysis content for the entry
     try {
-      const newAnalysis = await EntryServices.createEntryAnalysis(journal.config, newEntry);
-      await EntryServices.populateAnalysisContent(journal.config, newEntry, newAnalysis);
+      const analysis = await newAnalysis.getAnalysisContent(
+        journal.config.toString(),
+        newEntry.content
+      );
+
+      // Complete the entry and analysis with the analysis content if available
+      if (analysis) {
+        newEntry.title = analysis.title;
+        newEntry.mood = analysis.mood;
+        newEntry.tags = analysis.tags;
+
+        newAnalysis.analysis_content = analysis.analysis_content;
+      }
     } catch (analysisError) {
       req.flash('info', (analysisError as Error).message);
+    } finally {
+      await newEntry.save();
+      await newAnalysis.save();
     }
 
     res
@@ -70,7 +93,7 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
   const { entryId } = req.params;
 
   try {
-    const entry = EntryServices.getPopulatedEntry(entryId);
+    const entry = await EntryServices.getPopulatedEntry(entryId);
     res.status(200).json(entry);
   } catch (err) {
     req.flash('info', (err as Error).message);

@@ -83,11 +83,11 @@ describe('Entry service tests', () => {
       return;
     }
     expect(sut.id).toBe(mockEntry.id);
-    expect(sut.analysis.entry.toHexString()).toBe(mockEntry.id);
+    expect(sut.analysis.entry.toString()).toBe(mockEntry.id);
     expect(sut.analysis.analysis_content).toBe('test content');
     expect(sut.analysis.created_at).toBeDefined();
     expect(sut.analysis.updated_at).toBeDefined();
-    expect(sut.conversation.entry.toHexString()).toBe(mockEntry.id);
+    expect(sut.conversation.entry.toString()).toBe(mockEntry.id);
     expect(sut.conversation.messages).toBeDefined();
   });
 
@@ -106,7 +106,7 @@ describe('Entry service tests', () => {
 
     expect(sut.id).toBe(mockAnalysis.id);
     expect(sut.entry.content).toBe('mock content');
-    expect(sut.entry.journal.toHexString()).toBe(mockJournal.id);
+    expect(sut.entry.journal.toString()).toBe(mockJournal.id);
   });
 
   it('returns null on error when getting populated EntryAnalysis', async () => {
