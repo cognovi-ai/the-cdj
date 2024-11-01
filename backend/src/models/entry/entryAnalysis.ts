@@ -14,7 +14,7 @@ export interface EntryAnalysisType {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: any should be replaced with return type from cdgpt response
 interface EntryAnalysisMethods {
-  // GetAnalysisContent(configId: string, content: string): Promise<any>,
+  getAnalysisContent(configId: string, content: string): Promise<any>,
 }
 
 /* eslint-disable @typescript-eslint/no-empty-object-type */

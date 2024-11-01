@@ -1,3 +1,4 @@
+import * as EntryServices from '../../models/services/entry/entry.js';
 import {
   Entry,
   EntryAnalysis,
@@ -7,8 +8,6 @@ import {
 import { NextFunction, Request, Response } from 'express';
 import mongoose, { Document } from 'mongoose';
 import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
-import { EntryServices } from '../../models/services/entry/entry.js';
-import { EntryType } from '../../models/entry/entry.js';
 import ExpressError from '../../utils/ExpressError.js';
 import { validateEntryAnalysis } from '../../middleware/validation.js';
 
@@ -54,8 +53,8 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
     try {
       const newAnalysis = await EntryServices.createEntryAnalysis(journal.config, newEntry);
       await EntryServices.populateAnalysisContent(journal.config, newEntry, newAnalysis);
-    } catch (analysisError: any) {
-      req.flash('info', analysisError.message);
+    } catch (analysisError) {
+      req.flash('info', (analysisError as Error).message);
     }
 
     res
@@ -71,7 +70,7 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
   const { entryId } = req.params;
 
   try {
-    const entry = EntryServices.getPopulatedEntry(entryId, 'analysis conversation');
+    const entry = EntryServices.getPopulatedEntry(entryId);
     res.status(200).json(entry);
   } catch (err) {
     req.flash('info', (err as Error).message);
@@ -188,12 +187,9 @@ export const deleteEntry = async (req: Request, res: Response, next: NextFunctio
  * Get an entry and its analysis by ID.
  */
 export const getEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
-  // Const { journalId, entryId } = req.params;
   const { entryId } = req.params;
 
-  const entryAnalysis = await EntryAnalysis.findOne({
-    entry: entryId,
-  }).populate<{ entry: EntryType }>('entry');
+  const entryAnalysis = await EntryServices.getPopluatedEntryAnalysis(entryId);
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found.', 404));
@@ -260,7 +256,7 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
 export const getEntryConversation = async (req: Request, res: Response) => {
   const { entryId } = req.params;
 
-  const response = await EntryConversation.findOne({ entry: entryId });
+  const response = await EntryServices.getEntryConversation(entryId);
   const entryConversation = response
     ? { ...response.toObject(), chatId: response.id }
     : {};
