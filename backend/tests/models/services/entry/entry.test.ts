@@ -131,9 +131,10 @@ describe('Entry service tests', () => {
     const mockConfig = await Config.create({ model: {} });
     jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
 
-    const sut = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
+    const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
     const testAnalysis = await EntryAnalysis.findById(sut.analysis);
 
+    expect(errMessage).toBeUndefined();
     expect(sut.title).toBe('Untitled');
     expect(sut.journal.toString()).toBe(mockJournal.id);
     expect(sut.content).toBe('mock content');
@@ -156,9 +157,10 @@ describe('Entry service tests', () => {
     };
     jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
 
-    const sut = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
+    const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
     const testAnalysis = await EntryAnalysis.findById(sut.analysis);
 
+    expect(errMessage).toBeUndefined();
     expect(sut.title).toBe(mockAnalysisContent.title);
     expect(sut.journal.toString()).toBe(mockJournal.id);
     expect(sut.mood).toBe(mockAnalysisContent.mood);

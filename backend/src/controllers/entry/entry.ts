@@ -13,7 +13,10 @@ import ExpressError from '../../utils/ExpressError.js';
 /**
  * Get all entries in a specific journal.
  */
-export const getAllEntries = async (req: Request, res: Response) => {
+export const getAllEntries = async (
+  req: Request,
+  res: Response
+) => {
   const { journalId } = req.params;
 
   const entries = await EntryServices.getAllEntriesInJournal(journalId);
@@ -29,7 +32,11 @@ export const getAllEntries = async (req: Request, res: Response) => {
  * Request params journalId: string
  * Request body matches joiEntrySchema, but might be missing fields
  */
-export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
+export const createEntry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { journalId } = req.params;
   const entryData = req.body;
 
@@ -42,23 +49,26 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
     return next(new ExpressError('Journal config not found.', 404));
   }
 
-  try {
-    const newEntry = await EntryServices.createEntry(
-      journalId,
-      journal.config.toString(),
-      entryData
-    );
+  const { errMessage, entry: newEntry } = await EntryServices.createEntry(
+    journalId,
+    journal.config.toString(),
+    entryData
+  );
 
-    res.status(201).json({ ... newEntry.toObject(), flash: req.flash() });
-  } catch (analysisError) {
-    req.flash('info', (analysisError as Error).message);
+  if (errMessage) {
+    req.flash('info', errMessage);
   }
+  res.status(201).json({ ...newEntry.toObject(), flash: req.flash() });
 };
 
 /**
  * Get an entry and all associated documents by ID.
  */
-export const getAnEntry = async (req: Request, res: Response, next: NextFunction) => {
+export const getAnEntry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId } = req.params;
 
   try {
@@ -73,7 +83,11 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
 /**
  * Update an entry by ID.
  */
-export const updateEntry = async (req: Request, res: Response, next: NextFunction) => {
+export const updateEntry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId, journalId } = req.params;
   const entryData = req.body;
 
@@ -130,7 +144,11 @@ export const updateEntry = async (req: Request, res: Response, next: NextFunctio
 /**
  * Delete an entry by ID and all associated documents.
  */
-export const deleteEntry = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteEntry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId } = req.params;
 
   // Start a session and transaction for atomicity
@@ -172,7 +190,11 @@ export const deleteEntry = async (req: Request, res: Response, next: NextFunctio
 /**
  * Get an entry and its analysis by ID.
  */
-export const getEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+export const getEntryAnalysis = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId } = req.params;
 
   const entryAnalysis = await EntryServices.getPopluatedEntryAnalysis(entryId);
@@ -187,7 +209,11 @@ export const getEntryAnalysis = async (req: Request, res: Response, next: NextFu
 /**
  * Update the analysis of an entry by entry ID.
  */
-export const updateEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+export const updateEntryAnalysis = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId, journalId } = req.params;
 
   // Ensure that the journal exists
@@ -233,7 +259,11 @@ export const updateEntryAnalysis = async (req: Request, res: Response, next: Nex
 
   res
     .status(200)
-    .json({ ...entryAnalysis.toObject(), entry: entry.toObject(), flash: req.flash() });
+    .json({
+      ...entryAnalysis.toObject(),
+      entry: entry.toObject(),
+      flash: req.flash(),
+    });
 };
 
 /**
@@ -253,7 +283,11 @@ export const getEntryConversation = async (req: Request, res: Response) => {
 /**
  * Create a conversation for a specific entry.
  */
-export const createEntryConversation = async (req: Request, res: Response, next: NextFunction) => {
+export const createEntryConversation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
@@ -272,7 +306,9 @@ export const createEntryConversation = async (req: Request, res: Response, next:
   }
 
   // Get an entry with the analysis
-  const entry = await Entry.findById(entryId).populate<{ analysis: Document<EntryAnalysisType> }>('analysis');
+  const entry = await Entry.findById(entryId).populate<{
+    analysis: Document<EntryAnalysisType>;
+  }>('analysis');
   if (!entry) {
     return next(new ExpressError('Entry not found.', 404));
   }
@@ -286,7 +322,7 @@ export const createEntryConversation = async (req: Request, res: Response, next:
 
   try {
     if (entry.analysis === undefined) {
-      return next(new ExpressError('Entry analysis not found.' , 500));
+      return next(new ExpressError('Entry analysis not found.', 500));
     }
     const llmResponse = await newConversation.getChatContent(
       journal.config.toString(),
@@ -317,7 +353,11 @@ export const createEntryConversation = async (req: Request, res: Response, next:
 /**
  * Update a conversation for a specific entry.
  */
-export const updateEntryConversation = async (req: Request, res: Response, next: NextFunction) => {
+export const updateEntryConversation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { chatId, journalId } = req.params;
   const messageData = req.body;
 
@@ -333,7 +373,9 @@ export const updateEntryConversation = async (req: Request, res: Response, next:
     return next(new ExpressError('Entry conversation not found.', 404));
   }
   if (!conversation.messages) {
-    return next(new ExpressError('Entry conversation messages not found.', 404));
+    return next(
+      new ExpressError('Entry conversation messages not found.', 404)
+    );
   }
 
   // Get the analysis associated with the entry
