@@ -90,7 +90,11 @@ export async function getEntryConversation(entryId: string) {
 export async function createEntry(
   journalId: string,
   configId: string,
-  entryData: object): Promise<HydratedDocument<EntryType>> {
+  entryData: object,
+): Promise<{
+    errMessage?: string,
+    entry: HydratedDocument<EntryType>,
+  }> {
   // Create new Entry and corresponding EntryAnalysis
   const newEntry = new Entry({ journal: journalId, ...entryData });
   const newAnalysis = new EntryAnalysis({
@@ -99,7 +103,15 @@ export async function createEntry(
   
   // Associate the entry with the analysis
   newEntry.analysis = newAnalysis.id;
-  
+
+  // Creating return object to push error handling into service rather than controller
+  const createEntryResult: {
+    errMessage?: string,
+    entry: HydratedDocument<EntryType>,
+  } = {
+    entry: newEntry,
+  };
+
   // Get the analysis content for the entry
   try {
     const analysis = await newAnalysis.getAnalysisContent(
@@ -116,9 +128,12 @@ export async function createEntry(
       // TODO: you might validate here instead, not use middleware
       newAnalysis.analysis_content = analysis.analysis_content;
     }
+  } catch (err) {
+    console.error(err);
+    createEntryResult.errMessage = (err as Error).message;
   } finally {
     await newEntry.save();
     await newAnalysis.save();
   }
-  return newEntry;
+  return createEntryResult;
 }
