@@ -3,7 +3,7 @@
  */
 
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
-import { Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
+import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { EntryType } from '../../../../src/models/entry/entry.js';
 import { JournalType } from '../../../../src/models/journal.js';
@@ -11,7 +11,6 @@ import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
 
 describe('Entry service tests', () => {
-  const NULL_CHECK_MESSAGE = 'EntryService function return should not be null in this test';
   let mockUser: HydratedDocument<UserType>;
   let mockJournal: HydratedDocument<JournalType>;
 
@@ -78,17 +77,13 @@ describe('Entry service tests', () => {
 
     const sut = await EntryServices.getPopulatedEntry(mockEntry.id);
 
-    if (sut === null) {
-      expect(NULL_CHECK_MESSAGE).toBe(false);
-      return;
-    }
-    expect(sut.id).toBe(mockEntry.id);
-    expect(sut.analysis.entry.toString()).toBe(mockEntry.id);
-    expect(sut.analysis.analysis_content).toBe('test content');
-    expect(sut.analysis.created_at).toBeDefined();
-    expect(sut.analysis.updated_at).toBeDefined();
-    expect(sut.conversation.entry.toString()).toBe(mockEntry.id);
-    expect(sut.conversation.messages).toBeDefined();
+    expect(sut?.id).toBe(mockEntry.id);
+    expect(sut?.analysis.entry.toString()).toBe(mockEntry.id);
+    expect(sut?.analysis.analysis_content).toBe('test content');
+    expect(sut?.analysis.created_at).toBeDefined();
+    expect(sut?.analysis.updated_at).toBeDefined();
+    expect(sut?.conversation.entry.toString()).toBe(mockEntry.id);
+    expect(sut?.conversation.messages).toBeDefined();
   });
 
   it('gets EntryAnalysis by entryId populated with Entry', async () => {
@@ -98,15 +93,11 @@ describe('Entry service tests', () => {
     await mockAnalysis.save();
     await mockEntry.save();
 
-    const sut = await EntryServices.getPopulatedEntryAnalysis(mockEntry.id);
-    if (sut === null) {
-      expect(NULL_CHECK_MESSAGE).toBe(false);
-      return;
-    }
+    const sut = await EntryServices.getPopluatedEntryAnalysis(mockEntry.id);
 
-    expect(sut.id).toBe(mockAnalysis.id);
-    expect(sut.entry.content).toBe('mock content');
-    expect(sut.entry.journal.toString()).toBe(mockJournal.id);
+    expect(sut?.id).toBe(mockAnalysis.id);
+    expect(sut?.entry.content).toBe('mock content');
+    expect(sut?.entry.journal.toString()).toBe(mockJournal.id);
   });
 
   it('returns null on error when getting populated EntryAnalysis', async () => {
@@ -122,12 +113,8 @@ describe('Entry service tests', () => {
     await mockEntry.save();
 
     const sut = await EntryServices.getEntryConversation(mockEntry.id);
-    if (sut === null) {
-      expect(NULL_CHECK_MESSAGE).toBe(false);
-      return;
-    }
 
-    expect(sut.id).toBe(mockConversation.id);
+    expect(sut?.id).toBe(mockConversation.id);
   });
 
   it('returns null on error when getting EntryConversation', async () => {
@@ -136,25 +123,48 @@ describe('Entry service tests', () => {
     expect(sut).toBeNull();
   });
 
-  it('creates entries with valid journal id and content', async () => {
+  it('creates Entry with valid journal id, config id, and content', async () => {
     const mockEntryContent: EntryType = {
       journal: mockJournal.id,
       content: 'mock content',
     };
+    const mockConfig = await Config.create({ model: {} });
+    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
 
-    const sut = await EntryServices.createEntry(mockJournal.id, mockEntryContent);
-    if (sut === null) {
-      expect(NULL_CHECK_MESSAGE).toBe(false);
-      return;
-    }
+    const sut = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
+    const testAnalysis = await EntryAnalysis.findById(sut.analysis);
 
     expect(sut.title).toBe('Untitled');
     expect(sut.journal.toString()).toBe(mockJournal.id);
     expect(sut.content).toBe('mock content');
     expect(sut.tags).toStrictEqual([]);
-    expect(sut.analysis).toBeUndefined();
+    expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+    expect(testAnalysis?.analysis_content).toBe('Analysis not available');
   });
 
-  it('creates entries', async () => { });
+  it('creates Entry with valid journal id, config id, and content with analysis returned', async () => {
+    const mockEntryContent: EntryType = {
+      journal: mockJournal.id,
+      content: 'mock content',
+    };
+    const mockConfig = await Config.create({ model: {} });
+    const mockAnalysisContent = {
+      title: 'Mock Title',
+      mood: 'mock mood',
+      tags: ['test', 'mock'],
+      analysis_content: 'mock analysis content',
+    };
+    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
 
+    const sut = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
+    const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+
+    expect(sut.title).toBe(mockAnalysisContent.title);
+    expect(sut.journal.toString()).toBe(mockJournal.id);
+    expect(sut.mood).toBe(mockAnalysisContent.mood);
+    expect(sut.content).toBe('mock content');
+    expect(sut.tags).toStrictEqual(mockAnalysisContent.tags);
+    expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+    expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
+  });
 });

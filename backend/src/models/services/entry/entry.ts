@@ -1,10 +1,8 @@
 import {
-  Config,
   Entry,
   EntryAnalysis,
   EntryConversation,
 } from '../../index.js';
-import CdGpt from '../../../assistants/gpts/CdGpt.js';
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import { EntryConversationType } from '../../entry/entryConversation.js';
 import { EntryType } from '../../entry/entry.js';
@@ -79,135 +77,48 @@ export async function getEntryConversation(entryId: string) {
   return null;
 }
 
-// TODO: All functions below are in-progress for create operations and are not being used currently. DL will be working on them in other PRs
-
 /**
- * Creates a new entry in journalId with entryContent as content
- * @param journalId Journal._id as string
- * @param entryContent body of entry
- * @returns new Entry document on success, and null on error.
+ * TODO: Continue breaking up this function. Move out EntryAnalysis creation and populating with content
+ * Creates a new Entry and corresponding EntryAnalysis in Journal
+ * with journalId with entryContent as content
+ *
+ * @param journalId id of journal where creating new entry
+ * @param configId id of config to use
+ * @param entryContent body of entry, see EntryType
+ * @returns new Entry document with reference to EntryAnalysis
  */
 export async function createEntry(
   journalId: string,
-  entryContent: object
-): Promise<HydratedDocument<EntryType> | null> {
-  /**
-   * TODO: may want to define entryContent type.
-   * Currently, it's based on EntryValidation and Entry joi schemas together b/c validation middleware.
-   * Takes on validation value but b/c mongoose strict mode, non-schema fields are dropped
-   */
-  try {
-    const newEntry = await Entry.create({ journal: journalId, ...entryContent });
-    return newEntry;
-  } catch (err) {
-    console.error(err);
-  }
-  return null;
-}
-
-/**
- * Creates empty EntryAnalysis for an Entry, and updates entry with
- * refernces to new EntryAnalysis.
- * @param configId Config._id as string
- * @param refEntry Document of target Entry to generate analysis for
- * @returns new EntryAnalysis for refEntry
- */
-export async function createEntryAnalysis(
   configId: string,
-  refEntry: HydratedDocument<EntryType>
-): Promise<HydratedDocument<EntryAnalysisType>> {
-  const newAnalysis = await EntryAnalysis.create({
-    entry: refEntry.id,
+  entryData: object): Promise<HydratedDocument<EntryType>> {
+  // Create new Entry and corresponding EntryAnalysis
+  const newEntry = new Entry({ journal: journalId, ...entryData });
+  const newAnalysis = new EntryAnalysis({
+    entry: newEntry.id,
   });
-
+  
   // Associate the entry with the analysis
-  refEntry.analysis = newAnalysis.id;
-  await refEntry.save();
-
-  return newAnalysis;
-}
-
-/**
- * Generates analysis body for refEntry, and updates refEntry and refAnalysis
- * with analysis response.
- * @param configId Config._id as string
- * @param refEntry Document of target Entry to generate analysis for
- * @param refAnalysis Document of EntryAnalysis to generate analysis for
- */
-export async function populateAnalysisContent(
-  configId: string,
-  refEntry: HydratedDocument<EntryType>,
-  refAnalysis: HydratedDocument<EntryAnalysisType>
-): Promise<void> {
+  newEntry.analysis = newAnalysis.id;
+  
+  // Get the analysis content for the entry
   try {
-    const analysis = await getAnalysisContent(
+    const analysis = await newAnalysis.getAnalysisContent(
       configId,
-      refEntry.content
+      newEntry.content
     );
-
+  
     // Complete the entry and analysis with the analysis content if available
     if (analysis) {
-      refEntry.title = analysis.title;
-      refEntry.mood = analysis.mood;
-      refEntry.tags = analysis.tags;
-
-      refAnalysis.analysis_content = analysis.analysis_content;
+      newEntry.title = analysis.title;
+      newEntry.mood = analysis.mood;
+      newEntry.tags = analysis.tags;
+  
+      // TODO: you might validate here instead, not use middleware
+      newAnalysis.analysis_content = analysis.analysis_content;
     }
-    await refEntry.save();
-    await refAnalysis.save();
-  } catch (err) {
-    console.error(err);
-    throw err;
+  } finally {
+    await newEntry.save();
+    await newAnalysis.save();
   }
-}
-
-/**
- * Calls LLM API to retrieve analysis for entry content.
- * @param configId Config._id for LLM to use
- * @param content user entry to generate analysis of
- * @returns LLM analysis JSON
- */
-async function getAnalysisContent(configId: string, content: string): Promise<any> {
-  const config = await Config.findById(configId);
-
-  if (!config) {
-    throw new Error('Configure your account settings to get an analysis.');
-  } else if (config.apiKey) {
-    try {
-      // Remove an API key from a legacy config
-      await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
-    } catch (err) {
-      if (typeof err === 'string') {
-        throw new Error(err);
-      } else if (err instanceof Error) {
-        throw err;
-      }
-    }
-  }
-
-  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);
-
-  cdGpt.seedAnalysisMessages();
-  cdGpt.addUserMessage({ analysis: content });
-
-  //TODO: replace type with better fitting one
-  const analysisCompletion: any = await cdGpt.getAnalysisCompletion();
-
-  if (analysisCompletion.error) {
-    throw new Error(analysisCompletion.error.message);
-  }
-
-  const response = JSON.parse(analysisCompletion.choices[0].message.content);
-
-  const { reframed_thought: reframing, distortion_analysis: analysis, impact_assessment: impact, affirmation, is_healthy: isHealthy } = response;
-
-  if (!isHealthy) {
-    if (!analysis || !impact || !reframing) {
-      throw new Error('Analysis content is not available.');
-    }
-
-    response.analysis_content = analysis + ' ' + impact + ' Think, "' + reframing + '"' || affirmation;
-  } else response.analysis_content = affirmation;
-
-  return response;
+  return newEntry;
 }
