@@ -15,12 +15,10 @@ import { HydratedDocument } from 'mongoose';
  * given that it's for enforcing user input
  */
 interface MessageData {
-  messages: [
-    {
-      message_content: string,
-      llm_response: string
-    }
-  ]
+  messages: {
+    message_content: string,
+    llm_response: string
+  }[]
 }
 
 /**
@@ -142,7 +140,6 @@ export async function createEntry(
       newAnalysis.analysis_content = analysis.analysis_content;
     }
   } catch (err) {
-    console.error(err);
     createEntryResult.errMessage = (err as Error).message;
   } finally {
     await newEntry.save();
@@ -182,6 +179,10 @@ export async function createEntryConversation(
     entry: entryId,
     ...messageData,
   });
+  // I don't think this case will ever get used because joi validation rejects empty messages, and that happens before hitting this function
+  if (!newConversation.messages || newConversation.messages.length === 0) {
+    throw new ExpressError('No message to get completion for.', 404);
+  }
   
   // Associate the conversation with the entry
   entry.conversation = newConversation.id;
@@ -194,9 +195,6 @@ export async function createEntryConversation(
   );
   
   // If the chat is not empty, update the llm_response
-  if (!newConversation.messages) {
-    throw new ExpressError('No message to get completion for.', 404);
-  }
   if (llmResponse) {
     newConversation.messages[0].llm_response = llmResponse;
   }
