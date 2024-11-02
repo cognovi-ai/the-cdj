@@ -30,7 +30,6 @@ export interface UserType extends PassportLocalDocument {
   betaAccessToken?: string,
   betaAccessTokenExpires?: Date,
   betaAccess?: boolean,
-  id: string // Added for compatibility with Express.User
 
   // Instance Methods
   comparePassword(candidatePassword: string): Promise<unknown>,

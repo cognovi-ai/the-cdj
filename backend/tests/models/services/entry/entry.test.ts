@@ -5,6 +5,7 @@
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { ChatMessage } from '../../../../src/models/entry/entryConversation.js';
 import { EntryType } from '../../../../src/models/entry/entry.js';
 import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
@@ -19,6 +20,7 @@ describe('Entry service tests', () => {
   });
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     await mongoose.connection.dropDatabase();
     mockUser = await User.create({ fname: 'test', lname: 'test', email: 'testEmail@gmail.com' });
     mockJournal = await Journal.create({ user: mockUser.id });
@@ -171,22 +173,117 @@ describe('Entry service tests', () => {
   });
 
   it('creates and saves EntryConversation with valid input', async () => {
-    expect(true).toBe(false);
+    const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+    const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    mockEntry.analysis = mockEntryAnalysis.id;
+    await mockEntry.save();
+    const mockConfig = await Config.create({ model: {} });
+    const mockMessageData = {
+      messages: [
+        {
+          message_content: 'test message',
+          llm_response: 'mock llm response'
+        },
+      ]
+    };
+    const mockLlmContent = 'mock llm chat response';
+    jest.spyOn(EntryConversation.prototype, 'getChatContent').mockResolvedValue(mockLlmContent);
+    
+    const sut = await EntryServices.createEntryConversation(
+      mockEntry.id,
+      mockConfig.id,
+      mockMessageData
+    );
+
+    expect(sut.entry.toString()).toBe(mockEntry.id);
+    expect(sut.messages?.length).toBe(1);
+    expect((sut.messages as ChatMessage[])[0].message_content).toBe(mockMessageData.messages[0].message_content);
+    expect((sut.messages as ChatMessage[])[0].llm_response).toBe(mockLlmContent);
   });
 
   it('throws error on missing entry when creating EntryConversation', async () => {
-    expect(true).toBe(false);
+    const nonexistentEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+    const mockConfig = new Config({ model: {} });
+    const mockMessageData = {
+      messages: [
+        {
+          message_content: 'test message',
+          llm_response: 'mock llm response'
+        },
+      ]
+    };
+    
+    await expect(EntryServices.createEntryConversation(
+      nonexistentEntry.id,
+      mockConfig.id,
+      mockMessageData
+    )).rejects.toThrow('Entry not found.');
   });
 
   it('throws error on missing entry.analysis when creating EntryConversation', async () => {
-    expect(true).toBe(false);
+    const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+    await mockEntry.save();
+    const mockConfig = new Config({ model: {} });
+    const mockMessageData = {
+      messages: [
+        {
+          message_content: 'test message',
+          llm_response: 'mock llm response'
+        },
+      ]
+    };
+    
+    await expect(EntryServices.createEntryConversation(
+      mockEntry.id,
+      mockConfig.id,
+      mockMessageData
+    )).rejects.toThrow('Entry analysis not found.');
   });
 
   it('throws error when new EntryConversation has empty messages', async () => {
-    expect(true).toBe(false);
+    const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+    const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    mockEntry.analysis = mockEntryAnalysis.id;
+    await mockEntry.save();
+    const mockConfig = new Config({ model: {} });
+    const mockMessageData = {
+      messages: [
+      ]
+    };
+    
+    await expect(EntryServices.createEntryConversation(
+      mockEntry.id,
+      mockConfig.id,
+      mockMessageData
+    )).rejects.toThrow('No message to get completion for.');
   });
 
   it('does not update EntryConversation if llm response is empty', async () => {
-    expect(true).toBe(false);
+    const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+    const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+    mockEntry.analysis = mockEntryAnalysis.id;
+    await mockEntry.save();
+    const mockConfig = await Config.create({ model: {} });
+    const mockMessageData = {
+      messages: [
+        {
+          message_content: 'test message',
+          llm_response: 'mock llm response'
+        },
+      ]
+    };
+    const mockLlmContent = '';
+    jest.spyOn(EntryConversation.prototype, 'getChatContent').mockResolvedValue(mockLlmContent);
+    
+    const sut = await EntryServices.createEntryConversation(
+      mockEntry.id,
+      mockConfig.id,
+      mockMessageData
+    );
+
+    expect(sut.entry.toString()).toBe(mockEntry.id);
+    expect(sut.messages?.length).toBe(1);
+    expect((sut.messages as ChatMessage[])[0].message_content).toBe(mockMessageData.messages[0].message_content);
+    expect((sut.messages as ChatMessage[])[0].llm_response).toBe(mockMessageData.messages[0].llm_response);
   });
 });
