@@ -33,51 +33,26 @@ export const createEntry = async (req: Request, res: Response, next: NextFunctio
   const { journalId } = req.params;
   const entryData = req.body;
 
-  // Ensure that the journal exists
-  const journal = await Journal.findById(journalId); 
+  // Verify journal and journal.config exist
+  const journal = await Journal.findById(journalId);
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
-
-  const newEntry = new Entry({ journal: journalId, ...entryData });
-  const newAnalysis = new EntryAnalysis({
-    entry: newEntry.id,
-  });
-
-  // Associate the entry with the analysis
-  newEntry.analysis = newAnalysis.id;
-
-  // Check if journal.config exists
   if (!journal.config) {
     return next(new ExpressError('Journal config not found.', 404));
   }
-  
-  // Get the analysis content for the entry
+
   try {
-    const analysis = await newAnalysis.getAnalysisContent(
+    const newEntry = await EntryServices.createEntry(
+      journalId,
       journal.config.toString(),
-      newEntry.content
+      entryData
     );
 
-    // Complete the entry and analysis with the analysis content if available
-    if (analysis) {
-      newEntry.title = analysis.title;
-      newEntry.mood = analysis.mood;
-      newEntry.tags = analysis.tags;
-
-      // TODO: you might validate here instead, not use middleware
-      newAnalysis.analysis_content = analysis.analysis_content;
-    }
+    res.status(201).json({ ... newEntry.toObject(), flash: req.flash() });
   } catch (analysisError) {
     req.flash('info', (analysisError as Error).message);
-  } finally {
-    await newEntry.save();
-    await newAnalysis.save();
   }
-
-  res
-    .status(201)
-    .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
 };
 
 /**
