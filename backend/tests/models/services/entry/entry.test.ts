@@ -169,4 +169,24 @@ describe('Entry service tests', () => {
     expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
     expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
   });
+
+  it('creates and saves EntryConversation with valid input', async () => {
+    expect(true).toBe(false);
+  });
+
+  it('throws error on missing entry when creating EntryConversation', async () => {
+    expect(true).toBe(false);
+  });
+
+  it('throws error on missing entry.analysis when creating EntryConversation', async () => {
+    expect(true).toBe(false);
+  });
+
+  it('throws error when new EntryConversation has empty messages', async () => {
+    expect(true).toBe(false);
+  });
+
+  it('does not update EntryConversation if llm response is empty', async () => {
+    expect(true).toBe(false);
+  });
 });

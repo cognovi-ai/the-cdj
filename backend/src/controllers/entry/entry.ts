@@ -6,9 +6,8 @@ import {
   Journal,
 } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
-import mongoose, { Document } from 'mongoose';
-import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
 import ExpressError from '../../utils/ExpressError.js';
+import mongoose from 'mongoose';
 
 /**
  * Get all entries in a specific journal.
@@ -91,9 +90,13 @@ export const updateEntry = async (
   const { entryId, journalId } = req.params;
   const entryData = req.body;
 
+  // Verify journal and journal.config exist
   const journal = await Journal.findById(journalId);
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
+  }
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
   }
 
   const updatedEntry = await Entry.findById(entryId);
@@ -109,9 +112,6 @@ export const updateEntry = async (
     const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
     if (!oldAnalysis) {
       return next(new ExpressError('Entry analysis not found.', 404));
-    }
-    if (!journal.config) {
-      return next(new ExpressError('Journal config not found.', 404));
     }
     try {
       const analysis = await oldAnalysis.getAnalysisContent(
@@ -291,12 +291,7 @@ export const createEntryConversation = async (
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
-  const newConversation = new EntryConversation({
-    entry: entryId,
-    ...messageData,
-  });
-
-  // Get the config from the journal
+  // Verify journal and journal.config exist
   const journal = await Journal.findById(journalId);
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
@@ -305,49 +300,21 @@ export const createEntryConversation = async (
     return next(new ExpressError('Journal config not found.', 404));
   }
 
-  // Get an entry with the analysis
-  const entry = await Entry.findById(entryId).populate<{
-    analysis: Document<EntryAnalysisType>;
-  }>('analysis');
-  if (!entry) {
-    return next(new ExpressError('Entry not found.', 404));
-  }
-  if (!entry.analysis) {
-    return next(new ExpressError('Entry analysis not found.', 404));
-  }
-
-  // Associate the conversation with the entry
-  entry.conversation = newConversation._id;
-  await entry.save();
-
+  // Create new EntryConversation
   try {
-    if (entry.analysis === undefined) {
-      return next(new ExpressError('Entry analysis not found.', 500));
-    }
-    const llmResponse = await newConversation.getChatContent(
+    const response = await EntryServices.createEntryConversation(
+      entryId,
       journal.config.toString(),
-      entry.analysis.id,
-      messageData.messages[0].message_content
+      messageData
     );
 
-    // If the chat is not empty, update the llm_response
-    if (!newConversation.messages) {
-      return next(new ExpressError('No message to get completion for.', 404));
-    }
-    if (llmResponse) {
-      newConversation.messages[0].llm_response = llmResponse;
-    }
-  } catch (err) {
-    return next(err);
+    // Craft response body
+    const entryConversation = response ? response.toObject() : {};
+    req.flash('success', 'Successfully created conversation.');
+    res.status(201).json({ ...entryConversation, flash: req.flash() });
+  } catch (error) {
+    return next(error);
   }
-
-  await newConversation.save();
-
-  const response = await EntryConversation.findOne({ entry: entryId });
-  const entryConversation = response ? response.toObject() : {};
-
-  req.flash('success', 'Successfully created conversation.');
-  res.status(201).json({ ...entryConversation, flash: req.flash() });
 };
 
 /**
