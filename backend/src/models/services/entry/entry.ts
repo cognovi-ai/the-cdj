@@ -6,8 +6,22 @@ import {
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import { EntryConversationType } from '../../entry/entryConversation.js';
 import { EntryType } from '../../entry/entry.js';
+import ExpressError from '../../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
 
+/**
+ * Shape of data in request body when creating EntryConversation
+ * TODO: consider moving this somewhere else. Might not be best fit here
+ * given that it's for enforcing user input
+ */
+interface MessageData {
+  messages: [
+    {
+      message_content: string,
+      llm_response: string
+    }
+  ]
+}
 
 /**
  * Returns array of all entries in a journal.
@@ -82,6 +96,9 @@ export async function getEntryConversation(entryId: string) {
  * Creates a new Entry and corresponding EntryAnalysis in Journal
  * with journalId with entryContent as content
  *
+ * This function doesn't throw errors because the original controller
+ * handled them by creating a flash message with the error and continuing to
+ * respond noramlly.
  * @param journalId id of journal where creating new entry
  * @param configId id of config to use
  * @param entryContent body of entry, see EntryType
@@ -136,4 +153,58 @@ export async function createEntry(
     await newAnalysis.save();
   }
   return createEntryResult;
+}
+
+/**
+ * TODO: continue breaking up this function
+ * Creates new EntryConversation for an Entry and populates with LLM response
+ * 
+ * This function throws errors to replicate how the original function
+ * handled them, which was to create a new error and call the error handler.
+ * The controller is responsible for catching errors and calling
+ * the error handler when using this function.
+ * @param entryId id of Entry to create EntryConversation for
+ * @param messageData user-submitted messages to create conversation for
+ * @param configId id of Config for LLM
+ * @returns new EntryConversation from messageData
+ */
+export async function createEntryConversation(
+  entryId: string,
+  configId: string,
+  messageData: MessageData
+) {
+  // Get an entry with the analysis
+  const entry = await Entry.findById(entryId);
+  if (!entry) {
+    throw new ExpressError('Entry not found.', 404);
+  }
+  if (!entry.analysis) {
+    throw new ExpressError('Entry analysis not found.', 404);
+  }
+  
+  const newConversation = new EntryConversation({
+    entry: entryId,
+    ...messageData,
+  });
+  
+  // Associate the conversation with the entry
+  entry.conversation = newConversation.id;
+  await entry.save();
+  
+  const llmResponse = await newConversation.getChatContent(
+    configId,
+    entry.analysis.toString(),
+    messageData.messages[0].message_content
+  );
+  
+  // If the chat is not empty, update the llm_response
+  if (!newConversation.messages) {
+    throw new ExpressError('No message to get completion for.', 404);
+  }
+  if (llmResponse) {
+    newConversation.messages[0].llm_response = llmResponse;
+  }
+  await newConversation.save();
+
+  return newConversation;
 }
