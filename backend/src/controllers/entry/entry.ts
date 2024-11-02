@@ -9,7 +9,6 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose, { Document } from 'mongoose';
 import { EntryAnalysisType } from '../../models/entry/entryAnalysis.js';
 import ExpressError from '../../utils/ExpressError.js';
-import { validateEntryAnalysis } from '../../middleware/validation.js';
 
 /**
  * Get all entries in a specific journal.
@@ -32,58 +31,53 @@ export const getAllEntries = async (req: Request, res: Response) => {
  */
 export const createEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { journalId } = req.params;
+  const entryData = req.body;
 
   // Ensure that the journal exists
-  const journal = await Journal.findById(journalId);
+  const journal = await Journal.findById(journalId); 
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
 
-  validateEntryAnalysis(req, res, async (err: ExpressError) => {
-    if (err) {
-      return next(err); // Handle any validation errors
-    }
-
-    // If validation is successful, proceed to create the entry and analysis
-    const entryData = req.body;
-
-    const newEntry = new Entry({ journal: journalId, ...entryData });
-    const newAnalysis = new EntryAnalysis({
-      entry: newEntry.id,
-      analysis_content: entryData.analysis_content,
-    });
-
-    // Associate the entry with the analysis
-    newEntry.analysis = newAnalysis._id;
-    if (!journal.config) {
-      return next(new ExpressError('Journal config not found.', 404));
-    }
-    // Get the analysis content for the entry
-    try {
-      const analysis = await newAnalysis.getAnalysisContent(
-        journal.config.toString(),
-        newEntry.content
-      );
-
-      // Complete the entry and analysis with the analysis content if available
-      if (analysis) {
-        newEntry.title = analysis.title;
-        newEntry.mood = analysis.mood;
-        newEntry.tags = analysis.tags;
-
-        newAnalysis.analysis_content = analysis.analysis_content;
-      }
-    } catch (analysisError) {
-      req.flash('info', (analysisError as Error).message);
-    } finally {
-      await newEntry.save();
-      await newAnalysis.save();
-    }
-
-    res
-      .status(201)
-      .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
+  const newEntry = new Entry({ journal: journalId, ...entryData });
+  const newAnalysis = new EntryAnalysis({
+    entry: newEntry.id,
   });
+
+  // Associate the entry with the analysis
+  newEntry.analysis = newAnalysis.id;
+
+  // Check if journal.config exists
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
+  }
+  
+  // Get the analysis content for the entry
+  try {
+    const analysis = await newAnalysis.getAnalysisContent(
+      journal.config.toString(),
+      newEntry.content
+    );
+
+    // Complete the entry and analysis with the analysis content if available
+    if (analysis) {
+      newEntry.title = analysis.title;
+      newEntry.mood = analysis.mood;
+      newEntry.tags = analysis.tags;
+
+      // TODO: you might validate here instead, not use middleware
+      newAnalysis.analysis_content = analysis.analysis_content;
+    }
+  } catch (analysisError) {
+    req.flash('info', (analysisError as Error).message);
+  } finally {
+    await newEntry.save();
+    await newAnalysis.save();
+  }
+
+  res
+    .status(201)
+    .json({ ...(await newEntry.save()).toObject(), flash: req.flash() });
 };
 
 /**
@@ -106,62 +100,56 @@ export const getAnEntry = async (req: Request, res: Response, next: NextFunction
  */
 export const updateEntry = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId, journalId } = req.params;
+  const entryData = req.body;
 
   const journal = await Journal.findById(journalId);
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
 
-  validateEntryAnalysis(req, res, async (err: ExpressError) => {
-    if (err) {
-      return next(err);
+  const updatedEntry = await Entry.findById(entryId);
+  if (!updatedEntry) {
+    return next(new ExpressError('Entry not found.', 404));
+  }
+
+  if (entryData.content) {
+    // Update the entry with the new data
+    updatedEntry.content = entryData.content;
+
+    // Update the analysis content for the entry with a new analysis
+    const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
+    if (!oldAnalysis) {
+      return next(new ExpressError('Entry analysis not found.', 404));
     }
-
-    const entryData = req.body;
-    const updatedEntry = await Entry.findById(entryId);
-    if (!updatedEntry) {
-      return next(new ExpressError('Entry not found.', 404));
+    if (!journal.config) {
+      return next(new ExpressError('Journal config not found.', 404));
     }
+    try {
+      const analysis = await oldAnalysis.getAnalysisContent(
+        journal.config.toString(),
+        updatedEntry.content
+      );
 
-    if (entryData.content) {
-      // Update the entry with the new data
-      updatedEntry.content = entryData.content;
+      if (analysis) {
+        updatedEntry.title = analysis.title;
+        updatedEntry.mood = analysis.mood;
+        updatedEntry.tags = analysis.tags;
 
-      // Update the analysis content for the entry with a new analysis
-      const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
-      if (!oldAnalysis) {
-        return next(new ExpressError('Entry analysis not found.', 404));
+        oldAnalysis.analysis_content = analysis.analysis_content;
       }
-      if (!journal.config) {
-        return next(new ExpressError('Journal config not found.', 404));
-      }
-      try {
-        const analysis = await oldAnalysis.getAnalysisContent(
-          journal.config.toString(),
-          updatedEntry.content
-        );
-
-        if (analysis) {
-          updatedEntry.title = analysis.title;
-          updatedEntry.mood = analysis.mood;
-          updatedEntry.tags = analysis.tags;
-
-          oldAnalysis.analysis_content = analysis.analysis_content;
-        }
-      } catch (analysisError) {
-        req.flash('info', (analysisError as Error).message);
-      } finally {
-        await updatedEntry.save();
-        await oldAnalysis.save();
-      }
-    } else if (entryData.title) {
-      updatedEntry.title = entryData.title;
+    } catch (analysisError) {
+      req.flash('info', (analysisError as Error).message);
+    } finally {
       await updatedEntry.save();
+      await oldAnalysis.save();
     }
+  } else if (entryData.title) {
+    updatedEntry.title = entryData.title;
+    await updatedEntry.save();
+  }
 
-    req.flash('success', 'Successfully updated entry.');
-    res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
-  });
+  req.flash('success', 'Successfully updated entry.');
+  res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
 };
 
 /**
