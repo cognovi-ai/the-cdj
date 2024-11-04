@@ -183,7 +183,10 @@ export async function createEntryConversation(
     entry: entryId,
     ...messageData,
   });
-  // I don't think this case will ever get used because joi validation rejects empty messages, and that happens before hitting this function
+  /**
+   * I don't think this case will ever get used because joi validation
+   * rejects empty messages, and that happens before hitting this function, but it's defensive
+   */
   if (!newConversation.messages || newConversation.messages.length === 0) {
     throw new ExpressError('No message to get completion for.', 404);
   }

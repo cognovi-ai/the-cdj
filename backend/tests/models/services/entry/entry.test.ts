@@ -172,6 +172,27 @@ describe('Entry service tests', () => {
     expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
   });
 
+  it('returns error message when getting analysis content throws error', async () => {
+    const mockEntryContent: EntryType = {
+      journal: mockJournal.id,
+      content: 'mock content',
+    };
+    const mockConfig = await Config.create({ model: {} });
+    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockRejectedValue(new Error('test error message'));
+
+    const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
+    const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+
+    expect(errMessage).toBe('test error message');
+    expect(sut.title).toBe('Untitled');
+    expect(sut.journal.toString()).toBe(mockJournal.id);
+    expect(sut.mood).toBeUndefined();
+    expect(sut.content).toBe('mock content');
+    expect(sut.tags).toStrictEqual([]);
+    expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+    expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+  });
+
   it('creates and saves EntryConversation with valid input', async () => {
     const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
     const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
