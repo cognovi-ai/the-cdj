@@ -309,7 +309,7 @@ describe('Entry service tests', () => {
   });
 
 
-  describe('updateEntry refactoring tests, combine with createEntry', () => {
+  describe('updateEntry tests', () => {
     it('updates Entry with valid journal id, config id, and content', async () => {
       const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
       const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
