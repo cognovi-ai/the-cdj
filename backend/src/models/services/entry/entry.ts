@@ -22,6 +22,9 @@ interface MessageData {
   }[]
 }
 
+/**
+ * Return value of operations that create or update Entry
+ */
 interface EntryUpdateResponse {
   errMessage?: string;
   entry: HydratedDocument<EntryType>;
@@ -45,6 +48,11 @@ export async function getAllEntriesInJournal(
   return [];
 }
 
+/**
+ * Gets Entry with entryId
+ * @param entryId id of Entry
+ * @returns Entry or null
+ */
 export async function getEntryById(entryId: string) {
   try {
     const entry = await Entry.findById(entryId);
@@ -55,6 +63,11 @@ export async function getEntryById(entryId: string) {
   return null;
 }
 
+/**
+ * Gets EntryAnalysis for Entry with entryId
+ * @param entryId id of Entry associated with analysis
+ * @returns EntryAnalysis or null
+ */
 export async function getEntryAnalysisById(entryId: string) {
   try {
     const analysis = await EntryAnalysis.findOne({ entry: entryId });
@@ -121,7 +134,6 @@ export async function getEntryConversation(entryId: string) {
 }
 
 /**
- * TODO: Continue breaking up this function. Move out EntryAnalysis creation and populating with content
  * Creates a new Entry and corresponding EntryAnalysis in Journal
  * with journalId with entryContent as content
  *
@@ -151,13 +163,12 @@ export async function createEntry(
 }
 
 /**
- * TODO: try to combine with createEntry
- * try moving reads for existing objects into controller
- * 
- * @param entryId 
- * @param configId 
+ * Updates Entry with entryId and associated EntryAnalysis.
+ * If content changes, will generate new LLM analysis.
+ * @param entryId id of Entry to update
+ * @param configId id of Config for LLM
  * @param entryData body of entry
- * @returns 
+ * @returns updated Entry and error message if error ocurred
  */
 export async function updateEntry(
   entryId: string,
