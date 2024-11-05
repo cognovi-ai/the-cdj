@@ -82,13 +82,13 @@ describe('Entry service tests', () => {
 
       const sut = await EntryServices.getPopulatedEntry(mockEntry.id);
 
-      expect(sut?.id).toBe(mockEntry.id);
-      expect(sut?.analysis.entry.toString()).toBe(mockEntry.id);
-      expect(sut?.analysis.analysis_content).toBe('test content');
-      expect(sut?.analysis.created_at).toBeDefined();
-      expect(sut?.analysis.updated_at).toBeDefined();
-      expect(sut?.conversation.entry.toString()).toBe(mockEntry.id);
-      expect(sut?.conversation.messages).toBeDefined();
+      expect(sut!.id).toBe(mockEntry.id);
+      expect(sut!.analysis.entry.toString()).toBe(mockEntry.id);
+      expect(sut!.analysis.analysis_content).toBe('test content');
+      expect(sut!.analysis.created_at).toBeDefined();
+      expect(sut!.analysis.updated_at).toBeDefined();
+      expect(sut!.conversation.entry.toString()).toBe(mockEntry.id);
+      expect(sut!.conversation.messages).toBeDefined();
     });
 
     it('gets EntryAnalysis by entryId entry populated with Entry', async () => {
@@ -100,9 +100,9 @@ describe('Entry service tests', () => {
 
       const sut = await EntryServices.getPopluatedEntryAnalysis(mockEntry.id);
 
-      expect(sut?.id).toBe(mockAnalysis.id);
-      expect(sut?.entry.content).toBe('mock content');
-      expect(sut?.entry.journal.toString()).toBe(mockJournal.id);
+      expect(sut!.id).toBe(mockAnalysis.id);
+      expect(sut!.entry.content).toBe('mock content');
+      expect(sut!.entry.journal.toString()).toBe(mockJournal.id);
     });
 
     it('returns null on error when getting populated EntryAnalysis', async () => {
@@ -119,7 +119,7 @@ describe('Entry service tests', () => {
 
       const sut = await EntryServices.getEntryConversation(mockEntry.id);
 
-      expect(sut?.id).toBe(mockConversation.id);
+      expect(sut!.id).toBe(mockConversation.id);
     });
 
     it('returns null on error when getting EntryConversation', async () => {
@@ -145,8 +145,8 @@ describe('Entry service tests', () => {
       expect(sut.journal.toString()).toBe(mockJournal.id);
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual([]);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe('Analysis not available');
     });
 
     it('creates Entry with valid journal id, config id, and content with analysis returned', async () => {
@@ -171,8 +171,8 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBe(mockAnalysisContent.mood);
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual(mockAnalysisContent.tags);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe(mockAnalysisContent.analysis_content);
     });
 
     it('returns error message when getting analysis content throws error', async () => {
@@ -192,8 +192,8 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBeUndefined();
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual([]);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe('Analysis not available');
     });
 
     it('creates and saves EntryConversation with valid input', async () => {
@@ -333,8 +333,8 @@ describe('Entry service tests', () => {
       expect(sut.journal.toString()).toBe(mockJournal.id);
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual([]);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe('Analysis not available');
     });
   
     it('updates Entry with valid journal id, config id, and content with analysis returned', async () => {
@@ -364,8 +364,8 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBe(mockAnalysisContent.mood);
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual(mockAnalysisContent.tags);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe(mockAnalysisContent.analysis_content);
     });
   
     it('returns error message when getting analysis content throws error', async () => {
@@ -389,8 +389,8 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBeUndefined();
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual([]);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe('Analysis not available');
     });
 
     it('updates title when content is empty', async () => {
@@ -412,8 +412,8 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBeUndefined();
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual([]);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
-      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe('Analysis not available');
     });
   });
 
@@ -440,9 +440,9 @@ describe('Entry service tests', () => {
       expect(sut.journal.toString()).toBe(mockJournal.id);
       expect(sut.content).toBe('mock content');
       expect(sut.tags).toStrictEqual(updateContent.tags);
-      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+      expect(sut.analysis!.toString()).toBe(testAnalysis!.id);
+      expect(testAnalysis!.analysis_content).toBe(updateContent.analysis_content);
       expect(sut.mood).toBe(updateContent.mood);
-      expect(testAnalysis?.analysis_content).toBe(updateContent.analysis_content);
     });
   });
 
