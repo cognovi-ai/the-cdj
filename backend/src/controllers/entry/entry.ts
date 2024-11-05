@@ -1,3 +1,4 @@
+import * as CdGptServices from '../../models/services/CdGpt.js';
 import * as EntryServices from '../../models/services/entry/entry.js';
 import {
   Entry,
@@ -14,13 +15,13 @@ import mongoose from 'mongoose';
  * i.e. all requests that go through validateEntry
  */
 export interface UpdateEntryRequestBody {
-  title: string;
+  title?: string;
   content?: string;
   mood?: string;
   tags?: string[];
   privacy_settings?: {
     public: boolean;
-    shared_swith: string[];
+    shared_with: string[];
   };
 }
 
@@ -223,7 +224,7 @@ export const updateEntryAnalysis = async (
     return next(new ExpressError('Journal config not found.', 404));
   }
   try {
-    const analysis = await entryAnalysis.getAnalysisContent(
+    const analysis = await CdGptServices.getAnalysisContent(
       journal.config.toString(),
       entry.content
     );
