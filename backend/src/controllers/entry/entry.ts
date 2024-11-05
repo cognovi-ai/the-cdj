@@ -9,12 +9,16 @@ import { NextFunction, Request, Response } from 'express';
 import ExpressError from '../../utils/ExpressError.js';
 import mongoose from 'mongoose';
 
-interface UpdateEntryRequestBody {
+/**
+ * Request body for create and update Entry operations,
+ * i.e. all requests that go through validateEntry
+ */
+export interface UpdateEntryRequestBody {
   title: string;
-  content: string;
+  content?: string;
   mood?: string;
   tags?: string[];
-  privacy_settings: {
+  privacy_settings?: {
     public: boolean;
     shared_swith: string[];
   };
@@ -48,7 +52,7 @@ export const createEntry = async (
   next: NextFunction
 ) => {
   const { journalId } = req.params;
-  const entryData = req.body;
+  const entryData: UpdateEntryRequestBody = req.body;
 
   try {
     const configId = await verifyJournalExists(journalId);
@@ -106,8 +110,7 @@ export const updateEntry = async (
         .updateEntry(
           entryId,
           configId,
-          entryData.content,
-          entryData.title
+          entryData,
         );
   
       if (errMessage) {

@@ -322,7 +322,7 @@ describe('Entry service tests', () => {
       const mockConfig = await Config.create({ model: {} });
       jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
   
-      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
   
       expect(errMessage).toBeUndefined();
@@ -352,7 +352,7 @@ describe('Entry service tests', () => {
       };
       jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
   
-      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
   
       expect(errMessage).toBeUndefined();
@@ -377,7 +377,7 @@ describe('Entry service tests', () => {
       const mockConfig = await Config.create({ model: {} });
       jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockRejectedValue(new Error('test error message'));
   
-      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
   
       expect(errMessage).toBe('test error message');
@@ -400,7 +400,7 @@ describe('Entry service tests', () => {
       };
       const mockConfig = await Config.create({ model: {} });
   
-      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, undefined, updateContent.title);
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
   
       expect(errMessage).toBeUndefined();
