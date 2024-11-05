@@ -51,8 +51,7 @@ entryAnalysisSchema.pre('save', function (next) {
 });
 
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
-// Get the analysis content for an entry
-entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
+async function removeLegacyApiKey(configId: string) {
   const config = await Config.findById(configId);
 
   if (!config) {
@@ -65,29 +64,37 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
       if (typeof err === 'string') {
         throw new Error(err);
       } else if (err instanceof Error) {
-        throw err;
+        throw new Error(err.message);
       }
     }
   }
-  if (!config.model.analysis) {
-    config.model.analysis = '';
-  }
-  
+  return config.model.analysis ? config.model.analysis : '';
+}
 
+async function getAnalysisCompletion(configModelAnalysis: string, content: string) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('API key is not available)');
   }
 
-  const cdGpt = new CdGpt(process.env.OPENAI_API_KEY, config.model.analysis);
+  const cdGpt = new CdGpt(
+    process.env.OPENAI_API_KEY,
+    configModelAnalysis
+  );
 
   cdGpt.seedAnalysisMessages();
   cdGpt.addUserMessage({ analysis: content });
 
   const analysisCompletion = await cdGpt.getAnalysisCompletion();
-
   if (analysisCompletion.error) {
     throw new Error(analysisCompletion.error.message);
   }
+  return analysisCompletion;
+}
+
+// Get the analysis content for an entry
+entryAnalysisSchema.methods.getAnalysisContent = async function (configId: string, content: string): Promise<any> {
+  const configModelAnalysis = await removeLegacyApiKey(configId);
+  const analysisCompletion = await getAnalysisCompletion(configModelAnalysis, content);
 
   /**
    * TODO: define a type for content field and refactor
