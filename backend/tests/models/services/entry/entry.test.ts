@@ -6,7 +6,6 @@ import * as CdGptServices from '../../../../src/models/services/CdGpt.js';
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { ChatMessage } from '../../../../src/models/entry/entryConversation.js';
 import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
@@ -212,7 +211,7 @@ describe('Entry service tests', () => {
         ]
       };
       const mockLlmContent = 'mock llm chat response';
-      jest.spyOn(CdGptServices, 'getChatContent').mockResolvedValue(mockLlmContent);
+      mockedCdGptServices.getChatContent.mockResolvedValue(mockLlmContent);
     
       const sut = await EntryServices.createEntryConversation(
         mockEntry.id,
@@ -221,9 +220,9 @@ describe('Entry service tests', () => {
       );
 
       expect(sut.entry.toString()).toBe(mockEntry.id);
-      expect(sut.messages?.length).toBe(1);
-      expect((sut.messages as ChatMessage[])[0].message_content).toBe(mockMessageData.messages[0].message_content);
-      expect((sut.messages as ChatMessage[])[0].llm_response).toBe(mockLlmContent);
+      expect(sut.messages!).toHaveLength(1);
+      expect(sut.messages![0].message_content).toBe(mockMessageData.messages[0].message_content);
+      expect(sut.messages![0].llm_response).toBe(mockLlmContent);
     });
 
     it('throws error on missing entry when creating EntryConversation', async () => {
@@ -298,7 +297,7 @@ describe('Entry service tests', () => {
         ]
       };
       const mockLlmContent = '';
-      jest.spyOn(CdGptServices, 'getChatContent').mockResolvedValue(mockLlmContent);
+      mockedCdGptServices.getChatContent.mockResolvedValue(mockLlmContent);
     
       const sut = await EntryServices.createEntryConversation(
         mockEntry.id,
@@ -307,9 +306,9 @@ describe('Entry service tests', () => {
       );
 
       expect(sut.entry.toString()).toBe(mockEntry.id);
-      expect(sut.messages?.length).toBe(1);
-      expect((sut.messages as ChatMessage[])[0].message_content).toBe(mockMessageData.messages[0].message_content);
-      expect((sut.messages as ChatMessage[])[0].llm_response).toBe(mockMessageData.messages[0].llm_response);
+      expect(sut.messages!).toHaveLength(1);
+      expect(sut.messages![0].message_content).toBe(mockMessageData.messages[0].message_content);
+      expect(sut.messages![0].llm_response).toBe(mockMessageData.messages[0].llm_response);
     });
   });
 
@@ -445,5 +444,33 @@ describe('Entry service tests', () => {
       expect(sut.mood).toBe(updateContent.mood);
       expect(testAnalysis?.analysis_content).toBe(updateContent.analysis_content);
     });
+  });
+
+  describe('Update EntryConversation tests', () => {
+    it('updates EntryConversation with valid input', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
+      const mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
+      await mockChat.save();
+      await mockAnalysis.save();
+      await mockEntry.save();
+      const mockConfig = await Config.create({ model: {} });
+      const mockMessageData = {
+        messages: [
+          {
+            message_content: 'message_content',
+            llm_response: 'llm_response',
+          },
+        ]
+      };
+      const mockLlmResponse = 'test chat llm response';
+      mockedCdGptServices.getChatContent.mockResolvedValue(mockLlmResponse);
+
+      const sut = await EntryServices.updateEntryConversation(mockChat.id, mockConfig.id, mockMessageData);
+
+      expect(sut.messages![0].message_content).toBe('message_content');
+      expect(sut.messages![0].llm_response).toBe('test chat llm response');
+    });
+    
   });
 });

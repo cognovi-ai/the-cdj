@@ -4,24 +4,12 @@ import {
   EntryAnalysis,
   EntryConversation,
 } from '../../index.js';
+import { UpdateChatRequestBody, UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import { EntryConversationType } from '../../entry/entryConversation.js';
 import { EntryType } from '../../entry/entry.js';
 import ExpressError from '../../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
-import { UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
-
-/**
- * TODO: consider moving this somewhere else. Might not be best fit here
- * given that it's for enforcing user input
- * Shape of data in request body when creating EntryConversation
- */
-interface MessageData {
-  messages: {
-    message_content: string,
-    llm_response: string
-  }[]
-}
 
 /**
  * Return value of operations that create or update Entry
@@ -206,6 +194,68 @@ export async function updateEntryAnalysis(
   };
 }
 
+/**
+ * Creates new EntryConversation for an Entry and populates with LLM response
+ * 
+ * This function throws errors to replicate how the original function
+ * handled them, which was to create a new error and call the error handler.
+ * The controller is responsible for catching errors and calling
+ * the error handler when using this function.
+ * @param entryId id of Entry to create EntryConversation for
+ * @param messageData user-submitted messages to create conversation for
+ * @param configId id of Config for LLM
+ * @returns new EntryConversation from messageData
+ */
+export async function createEntryConversation(
+  entryId: string,
+  configId: string,
+  messageData: UpdateChatRequestBody
+) {
+  /**
+   * I don't think this case will ever get used because joi validation
+   * rejects empty messages, and that happens before hitting this function, but it's defensive
+   */
+  if (!messageData.messages || messageData.messages.length === 0) {
+    throw new ExpressError('No message to get completion for.', 404);
+  }
+  // Get an entry with the analysis
+  const { entry, entryAnalysis } = await _verifyEntry(entryId);
+  
+  const newConversation = new EntryConversation({
+    entry: entryId,
+    messages: messageData.messages,
+  });
+
+  // Associate the conversation with the entry
+  entry.conversation = newConversation.id;
+  
+  // TODO: try to use _populateChatContent. Can't currently because this doesn't append; it modifies in place
+  const llmResponse = await CdGptServices.getChatContent(
+    configId,
+    entryAnalysis.id,
+    messageData.messages[0].message_content
+  );
+  
+  if (llmResponse) {
+    // messages defined because messageData.mesages defined
+    newConversation.messages![0].llm_response = llmResponse;
+  }
+  await newConversation.save();
+  await entry.save();
+
+  return newConversation;
+}
+
+export async function updateEntryConversation(
+  chatId: string,
+  configId: string,
+  messageData: UpdateChatRequestBody
+) {
+  const { conversation, analysis } = await _verifyEntryConversation(chatId);
+
+  return await _populateChatContent(configId, analysis, messageData, conversation);
+}
+
 async function _verifyEntry(entryId: string) {
   const entry = await getEntryById(entryId);
   if (!entry) {
@@ -251,60 +301,41 @@ async function _updateEntry(
   return updateEntryResult;
 }
 
-/**
- * TODO: continue breaking up this function
- * Creates new EntryConversation for an Entry and populates with LLM response
- * 
- * This function throws errors to replicate how the original function
- * handled them, which was to create a new error and call the error handler.
- * The controller is responsible for catching errors and calling
- * the error handler when using this function.
- * @param entryId id of Entry to create EntryConversation for
- * @param messageData user-submitted messages to create conversation for
- * @param configId id of Config for LLM
- * @returns new EntryConversation from messageData
- */
-export async function createEntryConversation(
-  entryId: string,
+async function _populateChatContent(
   configId: string,
-  messageData: MessageData
+  analysis: HydratedDocument<EntryAnalysisType>,
+  messageData: UpdateChatRequestBody,
+  conversation: HydratedDocument<EntryConversationType>
 ) {
-  // Get an entry with the analysis
-  const entry = await Entry.findById(entryId);
-  if (!entry) {
-    throw new ExpressError('Entry not found.', 404);
-  }
-  if (!entry.analysis) {
-    throw new ExpressError('Entry analysis not found.', 404);
-  }
-  
-  const newConversation = new EntryConversation({
-    entry: entryId,
-    ...messageData,
-  });
-  /**
-   * I don't think this case will ever get used because joi validation
-   * rejects empty messages, and that happens before hitting this function, but it's defensive
-   */
-  if (!newConversation.messages || newConversation.messages.length === 0) {
-    throw new ExpressError('No message to get completion for.', 404);
-  }
-  
-  // Associate the conversation with the entry
-  entry.conversation = newConversation.id;
-  await entry.save();
-  
   const llmResponse = await CdGptServices.getChatContent(
     configId,
-    entry.analysis.toString(),
-    messageData.messages[0].message_content
+    analysis.id,
+    messageData.messages[0].message_content,
+    conversation.messages
   );
-  
-  // If the chat is not empty, update the llm_response
-  if (llmResponse) {
-    newConversation.messages[0].llm_response = llmResponse;
-  }
-  await newConversation.save();
 
-  return newConversation;
+  // If the chat is not empty, update the llm_response
+  if (llmResponse) { // TODO: this will drop chats that fail to get llm response. Is that fine?
+    messageData.messages[0].llm_response = llmResponse;
+    conversation.messages?.push(messageData.messages[0]);
+    await conversation.save();
+  }
+  return conversation;
+}
+
+async function _verifyEntryConversation(
+  chatId: string
+) {
+  const conversation = await EntryConversation.findById(chatId);
+  if (!conversation) {
+    throw new ExpressError('Entry conversation not found.', 404);
+  }
+  if (!conversation.messages) {
+    throw new ExpressError('Entry conversation messages not found.', 404);
+  }
+  const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
+  if (!analysis) {
+    throw new ExpressError('Entry analysis not found.', 404);
+  }
+  return { conversation, analysis };
 }

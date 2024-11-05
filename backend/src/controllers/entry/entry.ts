@@ -1,4 +1,3 @@
-import * as CdGptServices from '../../models/services/CdGpt.js';
 import * as EntryServices from '../../models/services/entry/entry.js';
 import {
   Entry,
@@ -7,6 +6,7 @@ import {
   Journal,
 } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
+import { ChatMessage } from '../../models/entry/entryConversation.js';
 import ExpressError from '../../utils/ExpressError.js';
 import mongoose from 'mongoose';
 
@@ -23,6 +23,10 @@ export interface UpdateEntryRequestBody {
     public: boolean;
     shared_with: string[];
   };
+}
+
+export interface UpdateChatRequestBody {
+  messages: ChatMessage[];
 }
 
 /**
@@ -207,19 +211,25 @@ export const updateEntryAnalysis = async (
   try {
     const configId = await verifyJournalExists(journalId);
 
-    const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
-  
-    if (errMessage) {
-      req.flash('info', errMessage);
+    try {
+      const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
+    
+      if (errMessage) {
+        req.flash('info', errMessage);
+      }
+      req.flash('success', 'Successfully generated a new analysis.');
+      res
+        .status(200)
+        .json({
+          ...entryAnalysis.toObject(),
+          entry: entry.toObject(),
+          flash: req.flash(),
+        });
+    } catch (updateError) {
+      // Possible error from failing to find matching documents for entryId
+      // Setting appropriate error code here
+      throw new ExpressError((updateError as Error).message, 404);
     }
-    req.flash('success', 'Successfully generated a new analysis.');
-    res
-      .status(200)
-      .json({
-        ...entryAnalysis.toObject(),
-        entry: entry.toObject(),
-        flash: req.flash(),
-      });
   } catch (error) {
     return next(error);
   }
@@ -248,7 +258,7 @@ export const createEntryConversation = async (
   next: NextFunction
 ) => {
   const { entryId, journalId } = req.params;
-  const messageData = req.body;
+  const messageData: UpdateChatRequestBody = req.body;
 
   // Create new EntryConversation
   try {
@@ -278,62 +288,16 @@ export const updateEntryConversation = async (
   next: NextFunction
 ) => {
   const { chatId, journalId } = req.params;
-  const messageData = req.body;
-
-  // Get the config from the journal
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
-    return next(new ExpressError('Journal not found.', 404));
-  }
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
-
-  const conversation = await EntryConversation.findById(chatId);
-  if (!conversation) {
-    return next(new ExpressError('Entry conversation not found.', 404));
-  }
-  if (!conversation.messages) {
-    return next(
-      new ExpressError('Entry conversation messages not found.', 404)
-    );
-  }
-  const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
-  if (!analysis) {
-    return next(new ExpressError('Entry analysis not found.', 404));
-  }
+  const messageData: UpdateChatRequestBody = req.body;
 
   try {
-    const llmResponse = await CdGptServices.getChatContent(
-      journal.config.toString(),
-      analysis.id,
-      messageData.messages[0].message_content,
-      conversation.messages
-    );
+    const configId = await verifyJournalExists(journalId);
 
-    // If the chat is not empty, update the llm_response
-    if (llmResponse) {
-      messageData.messages[0].llm_response = llmResponse;
-    }
-  } catch (err) {
-    return next(err);
+    const response = await EntryServices.updateEntryConversation(chatId, configId, messageData);
+    res.status(200).json({ ...response.toObject(), flash: req.flash() });
+  } catch (error) {
+    return next(error);
   }
-
-  // TODO: why like this when you've already gotten the chat in memory?
-  const response = await EntryConversation.findOneAndUpdate(
-    { _id: chatId },
-    {
-      $push: {
-        ...messageData,
-      },
-    },
-    { new: true }
-  );
-  if (!response) {
-    return next(new ExpressError('Failed to update entry conversation.', 500));
-  }
-
-  res.status(200).json({ ...response.toObject(), flash: req.flash() });
 };
 
 /**
