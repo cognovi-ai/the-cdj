@@ -336,7 +336,7 @@ export const updateEntryConversation = async (
     return next(new ExpressError('Journal config not found.', 404));
   }
   try {
-    const llmResponse = await conversation.getChatContent(
+    const llmResponse = await CdGptServices.getChatContent(
       journal.config.toString(),
       analysis.id,
       messageData.messages[0].message_content,
