@@ -209,7 +209,7 @@ describe('Entry service tests', () => {
       ]
     };
     const mockLlmContent = 'mock llm chat response';
-    jest.spyOn(EntryConversation.prototype, 'getChatContent').mockResolvedValue(mockLlmContent);
+    jest.spyOn(CdGptServices, 'getChatContent').mockResolvedValue(mockLlmContent);
     
     const sut = await EntryServices.createEntryConversation(
       mockEntry.id,
@@ -295,7 +295,7 @@ describe('Entry service tests', () => {
       ]
     };
     const mockLlmContent = '';
-    jest.spyOn(EntryConversation.prototype, 'getChatContent').mockResolvedValue(mockLlmContent);
+    jest.spyOn(CdGptServices, 'getChatContent').mockResolvedValue(mockLlmContent);
     
     const sut = await EntryServices.createEntryConversation(
       mockEntry.id,

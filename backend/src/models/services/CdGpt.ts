@@ -1,5 +1,7 @@
-import CdGpt from '../../assistants/gpts/CdGpt.js';
+import CdGpt, { ChatCompletionResponse } from '../../assistants/gpts/CdGpt.js';
+import { ChatMessage } from '../entry/entryConversation.js';
 import { Config } from '../index.js';
+import ExpressError from '../../utils/ExpressError.js';
 
 async function removeLegacyApiKey(configId: string) {
   const config = await Config.findById(configId);
@@ -69,4 +71,49 @@ export async function getAnalysisContent(configId: string, content: string): Pro
   } else response.analysis_content = affirmation;
 
   return response;
+}
+
+async function getChatCompletion(
+  configModelAnalysis: string,
+  analysisId: string,
+  messages: ChatMessage[],
+  content: string
+) {
+  if (process.env.OPENAI_API_KEY === undefined) {
+    throw new Error(
+      'OpenAI API Key not set. Cannot retrieve conversation response'
+    );
+  }
+  const cdGpt = new CdGpt(
+    process.env.OPENAI_API_KEY,
+    configModelAnalysis
+  );
+
+  await cdGpt.seedChatMessages(analysisId, messages);
+  cdGpt.addUserMessage({ chat: content });
+
+  const response = await cdGpt.getChatCompletion();
+  if (response.error) {
+    throw new ExpressError(response.error.message, 400);
+  }
+
+  return response;
+}
+
+// Get the analysis content for an entry
+export async function getChatContent(
+  configId: string,
+  analysisId: string,
+  content: string,
+  messages: ChatMessage[] = []
+): Promise<string> {
+  const configModelAnalysis = await removeLegacyApiKey(configId);
+  const response: ChatCompletionResponse = await getChatCompletion(
+    configModelAnalysis,
+    analysisId,
+    messages,
+    content
+  );
+
+  return response.choices[0].message.content;
 }

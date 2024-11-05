@@ -272,7 +272,7 @@ export async function createEntryConversation(
   entry.conversation = newConversation.id;
   await entry.save();
   
-  const llmResponse = await newConversation.getChatContent(
+  const llmResponse = await CdGptServices.getChatContent(
     configId,
     entry.analysis.toString(),
     messageData.messages[0].message_content
