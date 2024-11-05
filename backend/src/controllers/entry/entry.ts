@@ -204,54 +204,25 @@ export const updateEntryAnalysis = async (
 ) => {
   const { entryId, journalId } = req.params;
 
-  // Ensure that the journal exists
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
-    return next(new ExpressError('Journal not found.', 404));
-  }
-
-  const entry = await Entry.findById(entryId);
-
-  if (!entry) {
-    return next(new ExpressError('Entry not found.', 404));
-  }
-
-  const entryAnalysis = await EntryAnalysis.findOne({ entry: entryId });
-  if (!entryAnalysis) {
-    return next(new ExpressError('Entry not found.', 404));
-  }
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
   try {
-    const analysis = await CdGptServices.getAnalysisContent(
-      journal.config.toString(),
-      entry.content
-    );
+    const configId = await verifyJournalExists(journalId);
 
-    // Complete the entry and analysis with the analysis content if available
-    if (analysis) {
-      entry.title = analysis.title;
-      entry.mood = analysis.mood;
-      entry.tags = analysis.tags;
-
-      entryAnalysis.analysis_content = analysis.analysis_content;
-
-      entryAnalysis.save();
-      entry.save();
-      req.flash('success', 'Successfully generated a new analysis.');
+    const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
+  
+    if (errMessage) {
+      req.flash('info', errMessage);
     }
-  } catch (err) {
-    req.flash('info', (err as Error).message);
+    req.flash('success', 'Successfully generated a new analysis.');
+    res
+      .status(200)
+      .json({
+        ...entryAnalysis.toObject(),
+        entry: entry.toObject(),
+        flash: req.flash(),
+      });
+  } catch (error) {
+    return next(error);
   }
-
-  res
-    .status(200)
-    .json({
-      ...entryAnalysis.toObject(),
-      entry: entry.toObject(),
-      flash: req.flash(),
-    });
 };
 
 /**
@@ -314,8 +285,10 @@ export const updateEntryConversation = async (
   if (!journal) {
     return next(new ExpressError('Journal not found.', 404));
   }
+  if (!journal.config) {
+    return next(new ExpressError('Journal config not found.', 404));
+  }
 
-  // Get the conversation from the database
   const conversation = await EntryConversation.findById(chatId);
   if (!conversation) {
     return next(new ExpressError('Entry conversation not found.', 404));
@@ -325,16 +298,11 @@ export const updateEntryConversation = async (
       new ExpressError('Entry conversation messages not found.', 404)
     );
   }
-
-  // Get the analysis associated with the entry
   const analysis = await EntryAnalysis.findOne({ entry: conversation.entry });
   if (!analysis) {
     return next(new ExpressError('Entry analysis not found.', 404));
   }
 
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
   try {
     const llmResponse = await CdGptServices.getChatContent(
       journal.config.toString(),
@@ -351,6 +319,7 @@ export const updateEntryConversation = async (
     return next(err);
   }
 
+  // TODO: why like this when you've already gotten the chat in memory?
   const response = await EntryConversation.findOneAndUpdate(
     { _id: chatId },
     {
