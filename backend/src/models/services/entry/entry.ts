@@ -1,3 +1,4 @@
+import * as CdGptServices from '../CdGpt.js';
 import {
   Entry,
   EntryAnalysis,
@@ -197,7 +198,7 @@ export async function updateEntry(
 
 async function _updateEntry(
   updatedEntry: HydratedDocument<EntryType>,
-  oldAnalysis: import('mongoose').Document<unknown, {}, EntryAnalysisType> & Omit<EntryAnalysisType & { _id: import('mongoose').Types.ObjectId; }, 'getAnalysisContent'> & EntryAnalysisMethods,
+  oldAnalysis: HydratedDocument<EntryAnalysisType>,
   configId: string
 ) {
   // Creating return object to push error handling into service rather than controller
@@ -205,7 +206,7 @@ async function _updateEntry(
     entry: updatedEntry,
   };
   try {
-    const analysis = await oldAnalysis.getAnalysisContent(
+    const analysis = await CdGptServices.getAnalysisContent(
       configId,
       updatedEntry.content
     );

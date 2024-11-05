@@ -2,14 +2,17 @@
  * @jest-environment node
  */
 
+import * as CdGptServices from '../../../../src/models/services/CdGpt.js';
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { ChatMessage } from '../../../../src/models/entry/entryConversation.js';
-import { EntryType } from '../../../../src/models/entry/entry.js';
 import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
+
+jest.mock('../../../../src/models/services/CdGpt.js');
+const mockedCdGptServices = jest.mocked(CdGptServices);
 
 describe('Entry service tests', () => {
   let mockUser: HydratedDocument<UserType>;
@@ -126,12 +129,11 @@ describe('Entry service tests', () => {
   });
 
   it('creates Entry with valid journal id, config id, and content', async () => {
-    const mockEntryContent: EntryType = {
-      journal: mockJournal.id,
+    const mockEntryContent = {
       content: 'mock content',
     };
     const mockConfig = await Config.create({ model: {} });
-    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
+    mockedCdGptServices.getAnalysisContent.mockResolvedValue(undefined);
 
     const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
     const testAnalysis = await EntryAnalysis.findById(sut.analysis);
@@ -146,8 +148,7 @@ describe('Entry service tests', () => {
   });
 
   it('creates Entry with valid journal id, config id, and content with analysis returned', async () => {
-    const mockEntryContent: EntryType = {
-      journal: mockJournal.id,
+    const mockEntryContent = {
       content: 'mock content',
     };
     const mockConfig = await Config.create({ model: {} });
@@ -157,7 +158,7 @@ describe('Entry service tests', () => {
       tags: ['test', 'mock'],
       analysis_content: 'mock analysis content',
     };
-    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
+    mockedCdGptServices.getAnalysisContent.mockResolvedValue(mockAnalysisContent);
 
     const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
     const testAnalysis = await EntryAnalysis.findById(sut.analysis);
@@ -173,12 +174,12 @@ describe('Entry service tests', () => {
   });
 
   it('returns error message when getting analysis content throws error', async () => {
-    const mockEntryContent: EntryType = {
+    const mockEntryContent = {
       journal: mockJournal.id,
       content: 'mock content',
     };
     const mockConfig = await Config.create({ model: {} });
-    jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockRejectedValue(new Error('test error message'));
+    mockedCdGptServices.getAnalysisContent.mockRejectedValue(new Error('test error message'));
 
     const { errMessage, entry: sut } = await EntryServices.createEntry(mockJournal.id, mockConfig.id, mockEntryContent);
     const testAnalysis = await EntryAnalysis.findById(sut.analysis);
@@ -320,7 +321,7 @@ describe('Entry service tests', () => {
         title: 'mock title'
       };
       const mockConfig = await Config.create({ model: {} });
-      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
+      mockedCdGptServices.getAnalysisContent.mockResolvedValue(undefined);
   
       const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
@@ -350,7 +351,7 @@ describe('Entry service tests', () => {
         tags: ['test', 'mock'],
         analysis_content: 'mock analysis content',
       };
-      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
+      mockedCdGptServices.getAnalysisContent.mockResolvedValue(mockAnalysisContent);
   
       const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
@@ -375,7 +376,7 @@ describe('Entry service tests', () => {
         title: 'mock title'
       };
       const mockConfig = await Config.create({ model: {} });
-      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockRejectedValue(new Error('test error message'));
+      mockedCdGptServices.getAnalysisContent.mockRejectedValue(new Error('test error message'));
   
       const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent);
       const testAnalysis = await EntryAnalysis.findById(sut.analysis);
