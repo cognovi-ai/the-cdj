@@ -8,6 +8,7 @@ import { EntryConversationType } from '../../entry/entryConversation.js';
 import { EntryType } from '../../entry/entry.js';
 import ExpressError from '../../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
+import { UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
 
 /**
  * Shape of data in request body when creating EntryConversation
@@ -19,6 +20,11 @@ interface MessageData {
     message_content: string,
     llm_response: string
   }[]
+}
+
+interface EntryUpdateResponse {
+  errMessage?: string;
+  entry: HydratedDocument<EntryType>;
 }
 
 /**
@@ -124,57 +130,24 @@ export async function getEntryConversation(entryId: string) {
  * respond noramlly.
  * @param journalId id of journal where creating new entry
  * @param configId id of config to use
- * @param entryContent body of entry, see EntryType
+ * @param entryData body of entry
  * @returns new Entry document with reference to EntryAnalysis
  */
 export async function createEntry(
   journalId: string,
   configId: string,
-  entryData: object,
-): Promise<{
-    errMessage?: string,
-    entry: HydratedDocument<EntryType>,
-  }> {
+  entryData: UpdateEntryRequestBody,
+) {
   // Create new Entry and corresponding EntryAnalysis
   const newEntry = new Entry({ journal: journalId, ...entryData });
   const newAnalysis = new EntryAnalysis({
     entry: newEntry.id,
   });
-  
+
   // Associate the entry with the analysis
   newEntry.analysis = newAnalysis.id;
 
-  // Creating return object to push error handling into service rather than controller
-  const createEntryResult: {
-    errMessage?: string,
-    entry: HydratedDocument<EntryType>,
-  } = {
-    entry: newEntry,
-  };
-
-  // Get the analysis content for the entry
-  try {
-    const analysis = await newAnalysis.getAnalysisContent(
-      configId,
-      newEntry.content
-    );
-  
-    // Complete the entry and analysis with the analysis content if available
-    if (analysis) {
-      newEntry.title = analysis.title;
-      newEntry.mood = analysis.mood;
-      newEntry.tags = analysis.tags;
-  
-      // TODO: you might validate here instead, not use middleware
-      newAnalysis.analysis_content = analysis.analysis_content;
-    }
-  } catch (err) {
-    createEntryResult.errMessage = (err as Error).message;
-  } finally {
-    await newEntry.save();
-    await newAnalysis.save();
-  }
-  return createEntryResult;
+  return await _updateEntry(newEntry, newAnalysis, configId);
 }
 
 /**
@@ -183,15 +156,15 @@ export async function createEntry(
  * 
  * @param entryId 
  * @param configId 
- * @param entryData 
+ * @param entryData body of entry
  * @returns 
  */
 export async function updateEntry(
   entryId: string,
   configId: string,
-  entryContent: string,
-  entryTitle: string
+  entryData: UpdateEntryRequestBody,
 ) {
+  const { title: entryTitle, content: entryContent } = entryData;
   const updatedEntry = await getEntryById(entryId);
   if (!updatedEntry) {
     throw new Error('Entry not found.');
@@ -201,40 +174,45 @@ export async function updateEntry(
     throw new Error('Entry analysis not found.');
   }
   
-  // Creating return object to push error handling into service rather than controller
-  const updateEntryResult: {
-    errMessage?: string,
-    entry: HydratedDocument<EntryType>,
-  } = {
-    entry: updatedEntry,
-  };
-
   if (entryContent) {
-    // Update the entry with the new data
     updatedEntry.content = entryContent;
-    try {
-      // TODO: consider moving LLM content retrieval out of service layer
-      const analysis = await oldAnalysis.getAnalysisContent(
-        configId,
-        updatedEntry.content
-      );
-
-      if (analysis) {
-        updatedEntry.title = analysis.title;
-        updatedEntry.mood = analysis.mood;
-        updatedEntry.tags = analysis.tags;
-
-        oldAnalysis.analysis_content = analysis.analysis_content;
-      }
-    } catch (analysisError) {
-      updateEntryResult.errMessage = (analysisError as Error).message;
-    } finally {
-      await updatedEntry.save();
-      await oldAnalysis.save();
-    }
+    return await _updateEntry(updatedEntry, oldAnalysis, configId);
   } else if (entryTitle) {
     updatedEntry.title = entryTitle;
     await updatedEntry.save();
+  }
+  return { entry: updatedEntry };
+}
+
+async function _updateEntry(
+  updatedEntry: HydratedDocument<EntryType>,
+  oldAnalysis: import('mongoose').Document<unknown, {}, EntryAnalysisType> & Omit<EntryAnalysisType & { _id: import('mongoose').Types.ObjectId; }, 'getAnalysisContent'> & EntryAnalysisMethods,
+  configId: string
+) {
+  // Creating return object to push error handling into service rather than controller
+  const updateEntryResult: EntryUpdateResponse = {
+    entry: updatedEntry,
+  };
+  try {
+    const analysis = await oldAnalysis.getAnalysisContent(
+      configId,
+      updatedEntry.content
+    );
+  
+    // Complete the entry and analysis with the analysis content if available
+    if (analysis) {
+      updatedEntry.title = analysis.title;
+      updatedEntry.mood = analysis.mood;
+      updatedEntry.tags = analysis.tags;
+  
+      // TODO: you might validate here instead, not use middleware
+      oldAnalysis.analysis_content = analysis.analysis_content;
+    }
+  } catch (analysisError) {
+    updateEntryResult.errMessage = (analysisError as Error).message;
+  } finally {
+    await updatedEntry.save();
+    await oldAnalysis.save();
   }
   return updateEntryResult;
 }
