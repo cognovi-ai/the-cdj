@@ -251,24 +251,8 @@ describe('CdGpt Services tests', () => {
     });
   
     it('should throw an error if response.error is defined', async () => {
-      const { OPENAI_API_KEY } = process.env;
-      process.env.OPENAI_API_KEY = 'test-api-key';
-  
       jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({ model: {} }));
-    
-      const mockPopulate = jest.fn().mockResolvedValue({
-        entry: 'mockEntryId',
-        analysis_content: 'mockAnalysisContent',
-        created_at: new Date(),
-        updated_at: new Date()
-      });
-  
-      jest.spyOn(EntryAnalysis, 'findById').mockImplementation(() => ({
-        populate: mockPopulate
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }) as any);
-  
-      jest.spyOn(CdGpt.prototype, 'getChatCompletion').mockResolvedValue({
+      mockedCdGpt.prototype.getChatCompletion.mockResolvedValue({
         id: 'mock-id',
         object: 'chat.completion',
         created: Date.now(),
@@ -283,14 +267,11 @@ describe('CdGpt Services tests', () => {
           name: 'ErrorName',
           message: 'test error'
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      });
   
       await expect(CdGptServices.getChatContent('configId', 'analysisId', 'content', []))
         .rejects
         .toThrow(ExpressError);
-  
-      process.env.OPENAI_API_KEY = OPENAI_API_KEY;
     });
   
     it('catches string thrown when trying to remove legacy API key', async () => {
