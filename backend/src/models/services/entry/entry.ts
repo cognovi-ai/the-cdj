@@ -12,9 +12,9 @@ import { HydratedDocument } from 'mongoose';
 import { UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
 
 /**
- * Shape of data in request body when creating EntryConversation
  * TODO: consider moving this somewhere else. Might not be best fit here
  * given that it's for enforcing user input
+ * Shape of data in request body when creating EntryConversation
  */
 interface MessageData {
   messages: {
@@ -177,23 +177,45 @@ export async function updateEntry(
   entryData: UpdateEntryRequestBody,
 ) {
   const { title: entryTitle, content: entryContent } = entryData;
-  const updatedEntry = await getEntryById(entryId);
-  if (!updatedEntry) {
+  const { entry, entryAnalysis } = await _verifyEntry(entryId);
+
+  if (entryContent) {
+    entry.content = entryContent;
+    return await _updateEntry(entry, entryAnalysis, configId);
+  } else if (entryTitle) {
+    entry.title = entryTitle;
+    await entry.save();
+  }
+  return { entry: entry };
+}
+
+/**
+ * 
+ * @param entryId 
+ * @param configId 
+ * @returns 
+ */
+export async function updateEntryAnalysis(
+  entryId: string,
+  configId: string,
+) {
+  const { entry, entryAnalysis } = await _verifyEntry(entryId);
+  return {
+    ...await _updateEntry(entry, entryAnalysis, configId),
+    entryAnalysis: entryAnalysis 
+  };
+}
+
+async function _verifyEntry(entryId: string) {
+  const entry = await getEntryById(entryId);
+  if (!entry) {
     throw new Error('Entry not found.');
   }
-  const oldAnalysis = await getEntryAnalysisById(entryId);
-  if (!oldAnalysis) {
+  const entryAnalysis = await getEntryAnalysisById(entryId);
+  if (!entryAnalysis) {
     throw new Error('Entry analysis not found.');
   }
-  
-  if (entryContent) {
-    updatedEntry.content = entryContent;
-    return await _updateEntry(updatedEntry, oldAnalysis, configId);
-  } else if (entryTitle) {
-    updatedEntry.title = entryTitle;
-    await updatedEntry.save();
-  }
-  return { entry: updatedEntry };
+  return { entry, entryAnalysis };
 }
 
 async function _updateEntry(
@@ -250,7 +272,7 @@ export async function createEntryConversation(
   // Get an entry with the analysis
   const entry = await Entry.findById(entryId);
   if (!entry) {
-    throw new ExpressError('Entry not found.', 404); // TODO: reconsider having HTTP codes in domain logic
+    throw new ExpressError('Entry not found.', 404);
   }
   if (!entry.analysis) {
     throw new ExpressError('Entry analysis not found.', 404);
