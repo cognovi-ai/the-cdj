@@ -39,6 +39,26 @@ export async function getAllEntriesInJournal(
   return [];
 }
 
+export async function getEntryById(entryId: string) {
+  try {
+    const entry = await Entry.findById(entryId);
+    return entry;
+  } catch (error) {
+    console.error(error);
+  }
+  return null;
+}
+
+export async function getEntryAnalysisById(entryId: string) {
+  try {
+    const analysis = await EntryAnalysis.findOne({ entry: entryId });
+    return analysis;
+  } catch (error) {
+    console.error(error);
+  }
+  return null;
+}
+
 /**
  * Gets Entry with all referenced properties populated.
  *
@@ -47,12 +67,17 @@ export async function getAllEntriesInJournal(
  * @returns Populated entry document matching entryId
  */
 export async function getPopulatedEntry(entryId: string) {
-  return await Entry
-    .findById(entryId)
-    .populate<{
-      analysis: EntryAnalysisType,
-      conversation: EntryConversationType
-    }>('analysis conversation');
+  try {
+    return await Entry
+      .findById(entryId)
+      .populate<{
+        analysis: EntryAnalysisType,
+        conversation: EntryConversationType
+      }>('analysis conversation');
+  } catch (error) {
+    console.error(error);
+  }
+  return null;
 }
 
 /**
@@ -153,6 +178,68 @@ export async function createEntry(
 }
 
 /**
+ * TODO: try to combine with createEntry
+ * try moving reads for existing objects into controller
+ * 
+ * @param entryId 
+ * @param configId 
+ * @param entryData 
+ * @returns 
+ */
+export async function updateEntry(
+  entryId: string,
+  configId: string,
+  entryContent: string,
+  entryTitle: string
+) {
+  const updatedEntry = await getEntryById(entryId);
+  if (!updatedEntry) {
+    throw new Error('Entry not found.');
+  }
+  const oldAnalysis = await getEntryAnalysisById(entryId);
+  if (!oldAnalysis) {
+    throw new Error('Entry analysis not found.');
+  }
+  
+  // Creating return object to push error handling into service rather than controller
+  const updateEntryResult: {
+    errMessage?: string,
+    entry: HydratedDocument<EntryType>,
+  } = {
+    entry: updatedEntry,
+  };
+
+  if (entryContent) {
+    // Update the entry with the new data
+    updatedEntry.content = entryContent;
+    try {
+      // TODO: consider moving LLM content retrieval out of service layer
+      const analysis = await oldAnalysis.getAnalysisContent(
+        configId,
+        updatedEntry.content
+      );
+
+      if (analysis) {
+        updatedEntry.title = analysis.title;
+        updatedEntry.mood = analysis.mood;
+        updatedEntry.tags = analysis.tags;
+
+        oldAnalysis.analysis_content = analysis.analysis_content;
+      }
+    } catch (analysisError) {
+      updateEntryResult.errMessage = (analysisError as Error).message;
+    } finally {
+      await updatedEntry.save();
+      await oldAnalysis.save();
+    }
+  } else if (entryTitle) {
+    updatedEntry.title = entryTitle;
+    await updatedEntry.save();
+  }
+  return updateEntryResult;
+}
+
+/**
  * TODO: continue breaking up this function
  * Creates new EntryConversation for an Entry and populates with LLM response
  * 
@@ -173,7 +260,7 @@ export async function createEntryConversation(
   // Get an entry with the analysis
   const entry = await Entry.findById(entryId);
   if (!entry) {
-    throw new ExpressError('Entry not found.', 404);
+    throw new ExpressError('Entry not found.', 404); // TODO: reconsider having HTTP codes in domain logic
   }
   if (!entry.analysis) {
     throw new ExpressError('Entry analysis not found.', 404);

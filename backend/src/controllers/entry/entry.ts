@@ -9,6 +9,17 @@ import { NextFunction, Request, Response } from 'express';
 import ExpressError from '../../utils/ExpressError.js';
 import mongoose from 'mongoose';
 
+interface UpdateEntryRequestBody {
+  title: string;
+  content: string;
+  mood?: string;
+  tags?: string[];
+  privacy_settings: {
+    public: boolean;
+    shared_swith: string[];
+  };
+}
+
 /**
  * Get all entries in a specific journal.
  */
@@ -39,25 +50,22 @@ export const createEntry = async (
   const { journalId } = req.params;
   const entryData = req.body;
 
-  // Verify journal and journal.config exist
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
-    return next(new ExpressError('Journal not found.', 404));
-  }
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
+  try {
+    const configId = await verifyJournalExists(journalId);
 
-  const { errMessage, entry: newEntry } = await EntryServices.createEntry(
-    journalId,
-    journal.config.toString(),
-    entryData
-  );
-
-  if (errMessage) {
-    req.flash('info', errMessage);
+    const { errMessage, entry: newEntry } = await EntryServices.createEntry(
+      journalId,
+      configId,
+      entryData
+    );
+  
+    if (errMessage) {
+      req.flash('info', errMessage);
+    }
+    res.status(201).json({ ...newEntry.toObject(), flash: req.flash() });
+  } catch (err) {
+    return next(err);
   }
-  res.status(201).json({ ...newEntry.toObject(), flash: req.flash() });
 };
 
 /**
@@ -88,57 +96,33 @@ export const updateEntry = async (
   next: NextFunction
 ) => {
   const { entryId, journalId } = req.params;
-  const entryData = req.body;
+  const entryData: UpdateEntryRequestBody = req.body;
 
-  // Verify journal and journal.config exist
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
-    return next(new ExpressError('Journal not found.', 404));
-  }
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
+  try {
+    const configId = await verifyJournalExists(journalId);
 
-  const updatedEntry = await Entry.findById(entryId);
-  if (!updatedEntry) {
-    return next(new ExpressError('Entry not found.', 404));
-  }
-
-  if (entryData.content) {
-    // Update the entry with the new data
-    updatedEntry.content = entryData.content;
-
-    // Update the analysis content for the entry with a new analysis
-    const oldAnalysis = await EntryAnalysis.findOne({ entry: entryId });
-    if (!oldAnalysis) {
-      return next(new ExpressError('Entry analysis not found.', 404));
-    }
     try {
-      const analysis = await oldAnalysis.getAnalysisContent(
-        journal.config.toString(),
-        updatedEntry.content
-      );
-
-      if (analysis) {
-        updatedEntry.title = analysis.title;
-        updatedEntry.mood = analysis.mood;
-        updatedEntry.tags = analysis.tags;
-
-        oldAnalysis.analysis_content = analysis.analysis_content;
+      const { errMessage, entry: updatedEntry } = await EntryServices
+        .updateEntry(
+          entryId,
+          configId,
+          entryData.content,
+          entryData.title
+        );
+  
+      if (errMessage) {
+        req.flash('info', errMessage);
       }
-    } catch (analysisError) {
-      req.flash('info', (analysisError as Error).message);
-    } finally {
-      await updatedEntry.save();
-      await oldAnalysis.save();
+      req.flash('success', 'Successfully updated entry.');
+      res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
+    } catch (updateError) {
+      // Possible error from failing to find matching documents for entryId
+      // Setting appropriate error code here
+      throw new ExpressError((updateError as Error).message, 404);
     }
-  } else if (entryData.title) {
-    updatedEntry.title = entryData.title;
-    await updatedEntry.save();
+  } catch (err) {
+    return next(err);
   }
-
-  req.flash('success', 'Successfully updated entry.');
-  res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
 };
 
 /**
@@ -291,20 +275,13 @@ export const createEntryConversation = async (
   const { entryId, journalId } = req.params;
   const messageData = req.body;
 
-  // Verify journal and journal.config exist
-  const journal = await Journal.findById(journalId);
-  if (!journal) {
-    return next(new ExpressError('Journal not found.', 404));
-  }
-  if (!journal.config) {
-    return next(new ExpressError('Journal config not found.', 404));
-  }
-
   // Create new EntryConversation
   try {
+    const configId = await verifyJournalExists(journalId);
+
     const response = await EntryServices.createEntryConversation(
       entryId,
-      journal.config.toString(),
+      configId,
       messageData
     );
 
@@ -385,3 +362,20 @@ export const updateEntryConversation = async (
 
   res.status(200).json({ ...response.toObject(), flash: req.flash() });
 };
+
+/**
+ * Checks if journal with jounalId exists and returns configId in journal.
+ * 
+ * @param journalId id of journal to check
+ * @returns configId
+ */
+async function verifyJournalExists(journalId: string): Promise<string> {
+  const journal = await Journal.findById(journalId);
+  if (!journal) {
+    throw new ExpressError('Journal not found.', 404);
+  }
+  if (!journal.config) {
+    throw new ExpressError('Journal config not found.', 404);
+  }
+  return journal.config.toString();
+}
