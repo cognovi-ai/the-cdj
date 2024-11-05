@@ -307,4 +307,110 @@ describe('Entry service tests', () => {
     expect((sut.messages as ChatMessage[])[0].message_content).toBe(mockMessageData.messages[0].message_content);
     expect((sut.messages as ChatMessage[])[0].llm_response).toBe(mockMessageData.messages[0].llm_response);
   });
+
+
+  describe('updateEntry refactoring tests, combine with createEntry', () => {
+    it('updates Entry with valid journal id, config id, and content', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+      mockEntry.analysis = mockEntryAnalysis.id;
+      await mockEntry.save();
+      const updateContent = {
+        content: 'mock content',
+        title: 'mock title'
+      };
+      const mockConfig = await Config.create({ model: {} });
+      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(undefined);
+  
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+  
+      expect(errMessage).toBeUndefined();
+      expect(sut.title).toBe('Untitled');
+      expect(sut.journal.toString()).toBe(mockJournal.id);
+      expect(sut.content).toBe('mock content');
+      expect(sut.tags).toStrictEqual([]);
+      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+    });
+  
+    it('updates Entry with valid journal id, config id, and content with analysis returned', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+      mockEntry.analysis = mockEntryAnalysis.id;
+      await mockEntry.save();
+      const updateContent = {
+        content: 'mock content',
+        title: 'mock title'
+      };
+      const mockConfig = await Config.create({ model: {} });
+      const mockAnalysisContent = {
+        title: 'Mock Title',
+        mood: 'mock mood',
+        tags: ['test', 'mock'],
+        analysis_content: 'mock analysis content',
+      };
+      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockResolvedValue(mockAnalysisContent);
+  
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+  
+      expect(errMessage).toBeUndefined();
+      expect(sut.title).toBe(mockAnalysisContent.title);
+      expect(sut.journal.toString()).toBe(mockJournal.id);
+      expect(sut.mood).toBe(mockAnalysisContent.mood);
+      expect(sut.content).toBe('mock content');
+      expect(sut.tags).toStrictEqual(mockAnalysisContent.tags);
+      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+      expect(testAnalysis?.analysis_content).toBe(mockAnalysisContent.analysis_content);
+    });
+  
+    it('returns error message when getting analysis content throws error', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+      mockEntry.analysis = mockEntryAnalysis.id;
+      await mockEntry.save();
+      const updateContent = {
+        content: 'mock content',
+        title: 'mock title'
+      };
+      const mockConfig = await Config.create({ model: {} });
+      jest.spyOn(EntryAnalysis.prototype, 'getAnalysisContent').mockRejectedValue(new Error('test error message'));
+  
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, updateContent.content, updateContent.title);
+      const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+  
+      expect(errMessage).toBe('test error message');
+      expect(sut.title).toBe('Untitled');
+      expect(sut.journal.toString()).toBe(mockJournal.id);
+      expect(sut.mood).toBeUndefined();
+      expect(sut.content).toBe('mock content');
+      expect(sut.tags).toStrictEqual([]);
+      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+    });
+
+    it('updates title when content is empty', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockEntryAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
+      mockEntry.analysis = mockEntryAnalysis.id;
+      await mockEntry.save();
+      const updateContent = {
+        title: 'mock title'
+      };
+      const mockConfig = await Config.create({ model: {} });
+  
+      const { errMessage, entry: sut } = await EntryServices.updateEntry(mockEntry.id, mockConfig.id, undefined, updateContent.title);
+      const testAnalysis = await EntryAnalysis.findById(sut.analysis);
+  
+      expect(errMessage).toBeUndefined();
+      expect(sut.title).toBe(updateContent.title);
+      expect(sut.journal.toString()).toBe(mockJournal.id);
+      expect(sut.mood).toBeUndefined();
+      expect(sut.content).toBe('mock content');
+      expect(sut.tags).toStrictEqual([]);
+      expect(sut.analysis?.toString()).toBe(testAnalysis?.id);
+      expect(testAnalysis?.analysis_content).toBe('Analysis not available');
+    });
+  });
 });
