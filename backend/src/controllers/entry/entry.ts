@@ -1,14 +1,8 @@
 import * as EntryServices from '../../models/services/entry/entry.js';
-import {
-  Entry,
-  EntryAnalysis,
-  EntryConversation,
-  Journal,
-} from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import { ChatMessage } from '../../models/entry/entryConversation.js';
 import ExpressError from '../../utils/ExpressError.js';
-import mongoose from 'mongoose';
+import { Journal } from '../../models/index.js';
 
 /**
  * Request body for create and update Entry operations,
@@ -142,41 +136,17 @@ export const deleteEntry = async (
   next: NextFunction
 ) => {
   const { entryId } = req.params;
-
-  // Start a session and transaction for atomicity
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    // Delete the entry
-    const response = await Entry.findByIdAndDelete(entryId, { session });
-
-    if (!response) {
-      return next(new ExpressError('Entry not found.', 404));
+    await EntryServices.deleteEntry(entryId);
+    req.flash('success', 'Successfully deleted entry.');
+    res.status(200).json({ flash: req.flash() });
+  } catch (err) {
+    const errMessage = (err as Error).message;
+    if (errMessage === 'Entry not found.') {
+      return next(new ExpressError((err as Error).message, 404));  
     }
-
-    // Delete associated documents
-    await EntryConversation.deleteMany({ entry: entryId }, { session });
-    await EntryAnalysis.deleteMany({ entry: entryId }, { session });
-
-    // Commit the transaction
-    await session.commitTransaction();
-  } catch {
-    // If an error occurs, abort the transaction
-    await session.abortTransaction();
-    return next(
-      new ExpressError(
-        'An error occurred while attempting to delete the entry.',
-        500
-      )
-    );
-  } finally {
-    // End the session
-    session.endSession();
+    return next(new ExpressError('An error occurred while attempting to delete the entry.', 500));
   }
-
-  req.flash('success', 'Successfully deleted entry.');
-  res.status(200).json({ flash: req.flash() });
 };
 
 /**

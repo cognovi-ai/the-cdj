@@ -5,11 +5,11 @@ import {
   EntryConversation,
 } from '../../index.js';
 import { UpdateChatRequestBody, UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import { EntryConversationType } from '../../entry/entryConversation.js';
 import { EntryType } from '../../entry/entry.js';
 import ExpressError from '../../../utils/ExpressError.js';
-import { HydratedDocument } from 'mongoose';
 
 /**
  * Return value of operations that create or update Entry
@@ -195,6 +195,41 @@ export async function updateEntryAnalysis(
 }
 
 /**
+ * Deletes Entry by ID and associated EntryConversation and EntryAnalysis.
+ * @param entryId id of entry to delete
+ */
+export async function deleteEntry(
+  entryId: string
+): Promise<void> {
+  // Start a session and transaction for atomicity
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Delete the entry
+    const response = await Entry.findByIdAndDelete(entryId, { session });
+
+    if (!response) {
+      throw new Error('Entry not found.');
+    }
+
+    // Delete associated documents
+    await EntryConversation.deleteMany({ entry: entryId }, { session });
+    await EntryAnalysis.deleteMany({ entry: entryId }, { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+  } catch (error) {
+    // If an error occurs, abort the transaction
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    // End the session
+    session.endSession();
+  }
+}
+
+/**
  * Creates new EntryConversation for an Entry and populates with LLM response
  * 
  * This function throws errors to replicate how the original function
@@ -216,6 +251,7 @@ export async function createEntryConversation(
    * rejects empty messages, and that happens before hitting this function, but it's defensive
    */
   if (!messageData.messages || messageData.messages.length === 0) {
+    // TODO: try removing HTTP stuff from here
     throw new ExpressError('No message to get completion for.', 404);
   }
   // Get an entry with the analysis
@@ -326,6 +362,7 @@ async function _populateChatContent(
 async function _verifyEntryConversation(
   chatId: string
 ) {
+  // TODO: try removing HTTP stuff from here
   const conversation = await EntryConversation.findById(chatId);
   if (!conversation) {
     throw new ExpressError('Entry conversation not found.', 404);

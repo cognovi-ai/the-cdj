@@ -6,6 +6,9 @@ import * as CdGptServices from '../../../../src/models/services/CdGpt.js';
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { EntryAnalysisType } from '../../../../src/models/entry/entryAnalysis.js';
+import { EntryConversationType } from '../../../../src/models/entry/entryConversation.js';
+import { EntryType } from '../../../../src/models/entry/entry.js';
 import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
@@ -471,6 +474,32 @@ describe('Entry service tests', () => {
       expect(sut.messages![0].message_content).toBe('message_content');
       expect(sut.messages![0].llm_response).toBe('test chat llm response');
     });
-    
+  });
+
+  describe('Delete Entry tests', () => {
+    let mockEntry: HydratedDocument<EntryType>;
+    let mockAnalysis: HydratedDocument<EntryAnalysisType>;
+    let mockChat: HydratedDocument<EntryConversationType>;
+
+    beforeEach(async () => {
+      mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
+      mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
+      await mockChat.save();
+      await mockAnalysis.save();
+      await mockEntry.save();
+    });
+
+    it('deletes Entry, EntryAnalysis, and EntryConversation by ID', async () => {
+      await EntryServices.deleteEntry(mockEntry.id);
+
+      await expect(Entry.findById(mockEntry.id)).resolves.toBeNull();
+      await expect(EntryAnalysis.findById(mockAnalysis.id)).resolves.toBeNull();
+      await expect(EntryConversation.findById(mockChat.id)).resolves.toBeNull();
+    });
+
+    it('aborts delete transcation on error', async () => {
+      expect(false).toBe(true);
+    });
   });
 });
