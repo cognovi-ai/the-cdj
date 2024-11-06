@@ -6,9 +6,6 @@ import * as CdGptServices from '../../../../src/models/services/CdGpt.js';
 import * as EntryServices from '../../../../src/models/services/entry/entry.js';
 import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { EntryAnalysisType } from '../../../../src/models/entry/entryAnalysis.js';
-import { EntryConversationType } from '../../../../src/models/entry/entryConversation.js';
-import { EntryType } from '../../../../src/models/entry/entry.js';
 import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
@@ -477,20 +474,14 @@ describe('Entry service tests', () => {
   });
 
   describe('Delete Entry tests', () => {
-    let mockEntry: HydratedDocument<EntryType>;
-    let mockAnalysis: HydratedDocument<EntryAnalysisType>;
-    let mockChat: HydratedDocument<EntryConversationType>;
-
-    beforeEach(async () => {
-      mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
-      mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
-      mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
+    it('deletes Entry, EntryAnalysis, and EntryConversation by ID', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
+      const mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
       await mockChat.save();
       await mockAnalysis.save();
       await mockEntry.save();
-    });
 
-    it('deletes Entry, EntryAnalysis, and EntryConversation by ID', async () => {
       await EntryServices.deleteEntry(mockEntry.id);
 
       await expect(Entry.findById(mockEntry.id)).resolves.toBeNull();
@@ -498,8 +489,31 @@ describe('Entry service tests', () => {
       await expect(EntryConversation.findById(mockChat.id)).resolves.toBeNull();
     });
 
+    it('throws error if entry not found', async () => {
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
+      const mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
+      await mockChat.save();
+      await mockAnalysis.save();
+
+      await expect(EntryServices.deleteEntry(mockEntry.id)).rejects.toThrow('Entry not found.');
+      await expect(EntryAnalysis.findById(mockAnalysis.id)).resolves.toBeDefined();
+      await expect(EntryConversation.findById(mockChat.id)).resolves.toBeDefined();
+    });
+
     it('aborts delete transcation on error', async () => {
-      expect(false).toBe(true);
+      const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
+      const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
+      const mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
+      await mockChat.save();
+      await mockAnalysis.save();
+      await mockEntry.save();
+      jest.spyOn(EntryAnalysis, 'deleteMany').mockRejectedValue(new Error('test transaction atomicity'));
+
+      await expect(EntryServices.deleteEntry(mockEntry.id)).rejects.toThrow('test transaction atomicity');
+      await expect(Entry.findById(mockEntry.id)).resolves.toBeDefined();
+      await expect(EntryAnalysis.findById(mockAnalysis.id)).resolves.toBeDefined();
+      await expect(EntryConversation.findById(mockChat.id)).resolves.toBeDefined();
     });
   });
 });
