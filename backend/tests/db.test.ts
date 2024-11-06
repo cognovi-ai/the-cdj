@@ -1,6 +1,3 @@
-/* eslint-disable jest/no-disabled-tests */
-/* eslint-disable sort-imports */
-
 import 'dotenv/config';
 
 import connectDB from '../src/db.js';
@@ -27,8 +24,9 @@ describe('connectDB', () => {
     process.env = originalEnv;
   });
 
-  it.skip('should connect to MongoDB Atlas in production environment', async () => {
+  it('should connect to MongoDB Atlas in production environment', async () => {
     process.env.NODE_ENV = 'production';
+    process.env.ATLAS_URI = 'testuri';
     const atlasUri = process.env.ATLAS_URI;
 
     await connectDB('testdb');
