@@ -212,7 +212,7 @@ export const deleteEntry = async (req: Request, res: Response, next: NextFunctio
 export const getEntryAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   const { entryId } = req.params;
 
-  const entryAnalysis = await EntryServices.getPopluatedEntryAnalysis(entryId);
+  const entryAnalysis = await EntryServices.getPopulatedEntryAnalysis(entryId);
 
   if (!entryAnalysis) {
     return next(new ExpressError('Entry analysis not found.', 404));

@@ -91,7 +91,7 @@ describe('Entry service tests', () => {
     expect(sut.conversation.messages).toBeDefined();
   });
 
-  it('gets EntryAnalysis by entryId entry populated with Entry', async () => {
+  it('gets EntryAnalysis by entryId populated with Entry', async () => {
     const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
     const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
     mockEntry.analysis = mockAnalysis.id;

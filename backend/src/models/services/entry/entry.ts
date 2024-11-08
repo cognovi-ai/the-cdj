@@ -12,7 +12,8 @@ import { HydratedDocument } from 'mongoose';
 
 
 /**
- * Returns array of all entries in a journal
+ * Returns array of all entries in a journal.
+ *
  * @param journalId Journal._id as string
  * @returns array of documents in journal with journalId
  */
@@ -29,7 +30,8 @@ export async function getAllEntriesInJournal(
 }
 
 /**
- * Gets Entry with all referenced properties populated
+ * Gets Entry with all referenced properties populated.
+ *
  * @param entryId string of Entry._id to get
  * @param paths string of properties to populate
  * @returns Populated entry document matching entryId
@@ -44,11 +46,12 @@ export async function getPopulatedEntry(entryId: string) {
 }
 
 /**
- * Gets EntryAnalysis corresponding to entryId and populates with its Entry
+ * Gets EntryAnalysis corresponding to entryId and populates with its Entry.
+ *
  * @param entryId string of Entry._id to get
  * @returns populated EntryAnalysis document matching entryId
  */
-export async function getPopluatedEntryAnalysis(entryId: string) {
+export async function getPopulatedEntryAnalysis(entryId: string) {
   try {
     return await EntryAnalysis
       .findOne({ entry: entryId })
@@ -62,7 +65,8 @@ export async function getPopluatedEntryAnalysis(entryId: string) {
 }
 
 /**
- * Gets EntryConversation corresponding to entryId
+ * Gets EntryConversation corresponding to entryId.
+ *
  * @param entryId string of Entry._id to get
  * @returns EntryConversation matching entryId
  */
