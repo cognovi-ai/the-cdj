@@ -98,7 +98,7 @@ describe('Entry service tests', () => {
     await mockAnalysis.save();
     await mockEntry.save();
 
-    const sut = await EntryServices.getPopluatedEntryAnalysis(mockEntry.id);
+    const sut = await EntryServices.getPopulatedEntryAnalysis(mockEntry.id);
     if (sut === null) {
       expect(NULL_CHECK_MESSAGE).toBe(false);
       return;
@@ -110,7 +110,7 @@ describe('Entry service tests', () => {
   });
 
   it('returns null on error when getting populated EntryAnalysis', async () => {
-    const sut = await EntryServices.getPopluatedEntryAnalysis('bad id');
+    const sut = await EntryServices.getPopulatedEntryAnalysis('bad id');
     
     expect(sut).toBeNull();
   });
