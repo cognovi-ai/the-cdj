@@ -41,28 +41,23 @@ describe('Middleware Tests', () => {
         new ExpressError('You must be logged in to access this page.', 401)
       );
     });
-
-    it('should call next with error if req.isAuthenticated is undefined', () => {
-      req.isAuthenticated = undefined;
-
-      isAuthenticated(req as Request, res as Response, next);
-
-      expect(next).toHaveBeenCalledWith(
-        new ExpressError('You must be logged in to access this page.', 401)
-      );
-    });
   });
 
   describe('isLoggedIn', () => {
     let req: Partial<Request>;
     let res: Partial<Response>;
     let next: NextFunction;
+    const { JWT_SECRET } = process.env;
 
     beforeEach(() => {
       req = {};
       res = {};
       next = jest.fn();
       process.env.JWT_SECRET = 'testsecret';
+    });
+
+    afterAll(() => {
+      process.env.JWT_SECRET = JWT_SECRET;
     });
 
     it('should call next and set req.token if token is valid', () => {
@@ -118,6 +113,7 @@ describe('Middleware Tests', () => {
     let res: Partial<Response>;
     let next: NextFunction;
     let mockUser: Partial<UserType>;
+    const { RELEASE_PHASE } = process.env;
 
     beforeEach(() => {
       req = {
@@ -149,6 +145,10 @@ describe('Middleware Tests', () => {
 
       (User.findOne as jest.Mock).mockResolvedValue(null);
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
+    });
+
+    afterAll(() => {
+      process.env.RELEASE_PHASE = RELEASE_PHASE;
     });
 
     it('should call next if RELEASE_PHASE is not beta', async () => {

@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/hiyaryan/the-cdj#readme",
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.7",
     "concurrently": "^8.2.2",
     "jsdoc": "^4.0.2"
   }

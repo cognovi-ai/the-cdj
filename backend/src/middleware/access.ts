@@ -1,4 +1,3 @@
-// Middleware.ts
 import { NextFunction, Request, Response } from 'express';
 import ExpressError from '../utils/ExpressError.js';
 import User from '../models/user.js';
@@ -17,7 +16,7 @@ export const isAuthenticated = (
   res: Response,
   next: NextFunction
 ): void => {
-  if (req.isAuthenticated && req.isAuthenticated()) {
+  if (req.isAuthenticated()) {
     return next();
   }
   return next(
