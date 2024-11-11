@@ -69,6 +69,10 @@ entryAnalysisSchema.methods.getAnalysisContent = async function (configId: strin
       }
     }
   }
+  if (!config.model.analysis) {
+    config.model.analysis = '';
+  }
+  
 
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('API key is not available)');
