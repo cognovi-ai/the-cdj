@@ -273,7 +273,7 @@ export async function createEntryConversation(
   );
   
   if (llmResponse) {
-    // messages defined because messageData.mesages defined
+    // Messages defined because messageData.mesages defined
     newConversation.messages![0].llm_response = llmResponse;
   }
   await newConversation.save();
