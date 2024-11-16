@@ -33,24 +33,29 @@ interface UserToken extends JwtPayload {
 /**
  * Update the journal by accepted fields.
  */
-export const updateJournal = async (req: Request, res: Response, next: NextFunction) => {
+export const updateJournal = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { journalId } = req.params;
   const { title } = req.body;
 
   try {
-    const journal = await Journal.findById(journalId);
-    if (!journal) return next(new ExpressError('Journal not found.', 404));
+    const updatedJournal = await AccountServices.updateJournal(journalId, title);
 
-    if (title) {
-      journal.title = title;
-      await journal.save();
+    if (updatedJournal) {
       req.flash('success', 'Journal title updated successfully.');
     } else {
       req.flash('warning', 'Journal title not updated.');
     }
+    
 
     res.status(200).json({ flash: req.flash() });
-  } catch {
+  } catch(err) {
+    if (!(err instanceof ExpressError)) {
+      return next(new ExpressError((err as Error).message, 404));
+    }
     return next(
       new ExpressError(
         'An error occurred while attempting to update the journal.',

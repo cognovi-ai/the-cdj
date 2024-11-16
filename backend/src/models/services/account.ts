@@ -37,3 +37,21 @@ export async function getAccount(
   }
   return result;
 }
+
+/**
+ * Updates title of Journal with journalId.
+ * 
+ * @param journalId string of journalId
+ * @returns journal with updates on success, null on failure
+ */
+export async function updateJournal(journalId: string, title: string) {
+  const journal = await Journal.findById(journalId);
+  if (!journal) throw new Error('Journal not found.');
+
+  if (title) {
+    journal.title = title;
+    await journal.save();
+    return journal;
+  }
+  return null;
+}
