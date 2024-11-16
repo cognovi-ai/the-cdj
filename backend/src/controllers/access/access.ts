@@ -1,3 +1,4 @@
+import * as AccountServices from '../../models/services/account.js';
 import {
   Config,
   Entry,
@@ -15,6 +16,7 @@ import crypto from 'crypto';
 import passport from 'passport';
 import { validateJournal } from '../../middleware/validation.js';
 
+
 /**
  * Used for JWT login, where token payload is User.id
  */
@@ -24,6 +26,7 @@ interface TokenRequest extends Request {
 
 /**
  * JWT with added payload fields. User.id used for JWT login
+ * TODO: refactor this to be payload, or find way to use JwtPayload fields
  */
 interface UserToken extends JwtPayload {
   id: string;
@@ -62,26 +65,27 @@ export const updateJournal = async (req: Request, res: Response, next: NextFunct
 /**
  * Get the user associated with a journal.
  */
-export const getAccount = async (req: Request, res: Response, next: NextFunction) => {
+export const getAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { journalId } = req.params;
 
   try {
-    const journal = await Journal.findById(journalId);
-    if (!journal) return next(new ExpressError('Journal not found.', 404));
-
-    const user = await User.findById(journal.user);
-    if (!user) return next(new ExpressError('User not found.', 404));
-
-    // Journal config is optional
-    const config = await Config.findById(journal.config);
+    const {
+      setConfigMessage,
+      user,
+      config
+    } = await AccountServices.getAccount(journalId);
 
     // If the config doesn't exist instruct the user to set it up
-    if (!config?.model.analysis || !config?.model.chat)
-      req.flash('info', 'Click the Config tab to complete your journal setup.');
-
+    if (setConfigMessage) {
+      req.flash('info', setConfigMessage);
+    }
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
-    return next(err);
+    return next(new ExpressError((err as Error).message, 404));
   }
 };
 
