@@ -38,7 +38,7 @@ describe('Validation Middleware Tests', () => {
   let next: NextFunction;
 
   const mockValidation = (Model: any, method: string, error = null, value = {}) => {
-    Model[method].mockReturnValue({ error, value });
+    Model[method].mockReturnValueOnce({ error, value });
   };
 
   const createMockError: any = (message: string) => {
