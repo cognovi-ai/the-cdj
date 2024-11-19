@@ -16,7 +16,7 @@ import passportLocalMongoose from 'passport-local-mongoose';
 
 if (process.env.NODE_ENV !== 'production') dotenv.config();
 
-export interface UserType extends PassportLocalDocument, Express.User {
+export interface UserType extends PassportLocalDocument {
   fname: string,
   lname: string,
   email: string,
@@ -30,7 +30,6 @@ export interface UserType extends PassportLocalDocument, Express.User {
   betaAccessToken?: string,
   betaAccessTokenExpires?: Date,
   betaAccess?: boolean,
-  id: string // Added for compatibility with Express.User
 
   // Instance Methods
   comparePassword(candidatePassword: string): Promise<unknown>,

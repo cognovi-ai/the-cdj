@@ -10,7 +10,6 @@ import {
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import ExpressError from '../../utils/ExpressError.js';
-import { HydratedDocument } from 'mongoose';
 import { UserType } from '../../models/user.js';
 import crypto from 'crypto';
 import passport from 'passport';
@@ -252,7 +251,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   type AuthenticateInfo = {
     message: string;
   };
-  passport.authenticate('local', async (err: Error, user: HydratedDocument<UserType> | null, info: AuthenticateInfo) => {
+  passport.authenticate('local', async (err: Error, user: UserType | null, info: AuthenticateInfo) => {
     if (err) {
       return next(err);
     }
