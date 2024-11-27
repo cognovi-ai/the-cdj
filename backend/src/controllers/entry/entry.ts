@@ -100,26 +100,23 @@ export const updateEntry = async (
 
   try {
     const configId = await verifyJournalExists(journalId);
+    const { errMessage, entry: updatedEntry } = await EntryServices
+      .updateEntry(
+        entryId,
+        configId,
+        entryData,
+      );
 
-    try {
-      const { errMessage, entry: updatedEntry } = await EntryServices
-        .updateEntry(
-          entryId,
-          configId,
-          entryData,
-        );
-  
-      if (errMessage) {
-        req.flash('info', errMessage);
-      }
-      req.flash('success', 'Successfully updated entry.');
-      res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
-    } catch (updateError) {
-      // Handle error if no documents match entryId
-      throw new ExpressError((updateError as Error).message, 404);
+    if (errMessage) {
+      req.flash('info', errMessage);
     }
+    req.flash('success', 'Successfully updated entry.');
+    res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
   } catch (err) {
-    return next(err);
+    if (err instanceof ExpressError) {
+      return next(err);
+    }
+    return next(new ExpressError((err as Error).message, 404));
   }
 };
 
@@ -177,26 +174,25 @@ export const updateEntryAnalysis = async (
   try {
     const configId = await verifyJournalExists(journalId);
 
-    try {
-      const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
+    const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
     
-      if (errMessage) {
-        req.flash('info', errMessage);
-      }
-      req.flash('success', 'Successfully generated a new analysis.');
-      res
-        .status(200)
-        .json({
-          ...entryAnalysis.toObject(),
-          entry: entry.toObject(),
-          flash: req.flash(),
-        });
-    } catch (updateError) {
-      // Handle error if no documents match entryId
-      throw new ExpressError((updateError as Error).message, 404);
+    if (errMessage) {
+      req.flash('info', errMessage);
     }
+    req.flash('success', 'Successfully generated a new analysis.');
+    res
+      .status(200)
+      .json({
+        ...entryAnalysis.toObject(),
+        entry: entry.toObject(),
+        flash: req.flash(),
+      });
   } catch (error) {
-    return next(error);
+    if (error instanceof ExpressError) {
+      return next(error);
+    }
+    // Handle error if no documents match entryId
+    return next(new ExpressError((error as Error).message, 404));
   }
 };
 
