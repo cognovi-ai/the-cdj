@@ -3,7 +3,7 @@ import {
   EntryAnalysis,
   EntryConversation,
 } from '../../index.js';
-import { UpdateChatRequestBody, UpdateEntryRequestBody } from '../../../controllers/entry/entry.js';
+import { EntryConversationRequestBody, EntryRequestBody } from '../../../controllers/entry/entry.js';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { EntryAnalysisType } from '../../entry/entryAnalysis.js';
 import { EntryConversationType } from '../../entry/entryConversation.js';
@@ -139,7 +139,7 @@ export async function getEntryConversation(entryId: string) {
 export async function createEntry(
   journalId: string,
   configId: string,
-  entryData: UpdateEntryRequestBody,
+  entryData: EntryRequestBody,
 ) {
   // Create new Entry and corresponding EntryAnalysis
   const newEntry = new Entry({ journal: journalId, ...entryData });
@@ -165,7 +165,7 @@ export async function createEntry(
 export async function updateEntry(
   entryId: string,
   configId: string,
-  entryData: UpdateEntryRequestBody,
+  entryData: EntryRequestBody,
 ) {
   const { title: entryTitle, content: entryContent } = entryData;
   const { entry, entryAnalysis } = await _verifyEntry(entryId);
@@ -251,7 +251,7 @@ export async function deleteEntry(
 export async function createEntryConversation(
   entryId: string,
   configId: string,
-  messageData: UpdateChatRequestBody
+  messageData: EntryConversationRequestBody
 ) {
   /**
    * I don't think this case will ever get used because joi validation
@@ -301,7 +301,7 @@ export async function createEntryConversation(
 export async function updateEntryConversation(
   chatId: string,
   configId: string,
-  messageData: UpdateChatRequestBody
+  messageData: EntryConversationRequestBody
 ) {
   const { conversation, analysis } = await _verifyEntryConversation(chatId);
 
@@ -382,7 +382,7 @@ async function _updateEntry(
 async function _populateChatContent(
   configId: string,
   analysis: HydratedDocument<EntryAnalysisType>,
-  messageData: UpdateChatRequestBody,
+  messageData: EntryConversationRequestBody,
   // Can't use HydratedDocument<EntryConversationType> because it doesn't have model methods
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conversation: any

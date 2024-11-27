@@ -6,9 +6,8 @@ import { Journal } from '../../models/index.js';
 
 /**
  * Request body for create and update Entry operations,
- * i.e. all requests that go through validateEntry
  */
-export interface UpdateEntryRequestBody {
+export interface EntryRequestBody {
   title?: string;
   content?: string;
   mood?: string;
@@ -19,13 +18,13 @@ export interface UpdateEntryRequestBody {
   };
 }
 
-export interface UpdateChatRequestBody {
+/**
+ * Request body type for POST and PUT EntryConversation operations
+ */
+export interface EntryConversationRequestBody {
   messages: ChatMessage[];
 }
 
-/**
- * Get all entries in a specific journal.
- */
 export const getAllEntries = async (
   req: Request,
   res: Response
@@ -42,8 +41,6 @@ export const getAllEntries = async (
 
 /**
  * Create a new entry and analysis in a specific journal.
- * Request params journalId: string
- * Request body matches joiEntrySchema, but might be missing fields
  */
 export const createEntry = async (
   req: Request,
@@ -51,7 +48,7 @@ export const createEntry = async (
   next: NextFunction
 ) => {
   const { journalId } = req.params;
-  const entryData: UpdateEntryRequestBody = req.body;
+  const entryData: EntryRequestBody = req.body;
 
   try {
     const configId = await verifyJournalExists(journalId);
@@ -99,7 +96,7 @@ export const updateEntry = async (
   next: NextFunction
 ) => {
   const { entryId, journalId } = req.params;
-  const entryData: UpdateEntryRequestBody = req.body;
+  const entryData: EntryRequestBody = req.body;
 
   try {
     const configId = await verifyJournalExists(journalId);
@@ -118,8 +115,7 @@ export const updateEntry = async (
       req.flash('success', 'Successfully updated entry.');
       res.status(200).json({ ...updatedEntry.toObject(), flash: req.flash() });
     } catch (updateError) {
-      // Possible error from failing to find matching documents for entryId
-      // Setting appropriate error code here
+      // Handle error if no documents match entryId
       throw new ExpressError((updateError as Error).message, 404);
     }
   } catch (err) {
@@ -196,8 +192,7 @@ export const updateEntryAnalysis = async (
           flash: req.flash(),
         });
     } catch (updateError) {
-      // Possible error from failing to find matching documents for entryId
-      // Setting appropriate error code here
+      // Handle error if no documents match entryId
       throw new ExpressError((updateError as Error).message, 404);
     }
   } catch (error) {
@@ -228,9 +223,8 @@ export const createEntryConversation = async (
   next: NextFunction
 ) => {
   const { entryId, journalId } = req.params;
-  const messageData: UpdateChatRequestBody = req.body;
+  const messageData: EntryConversationRequestBody = req.body;
 
-  // Create new EntryConversation
   try {
     const configId = await verifyJournalExists(journalId);
 
@@ -240,7 +234,6 @@ export const createEntryConversation = async (
       messageData
     );
 
-    // Craft response body
     const entryConversation = response ? response.toObject() : {};
     req.flash('success', 'Successfully created conversation.');
     res.status(201).json({ ...entryConversation, flash: req.flash() });
@@ -258,7 +251,7 @@ export const updateEntryConversation = async (
   next: NextFunction
 ) => {
   const { chatId, journalId } = req.params;
-  const messageData: UpdateChatRequestBody = req.body;
+  const messageData: EntryConversationRequestBody = req.body;
 
   try {
     const configId = await verifyJournalExists(journalId);
@@ -271,7 +264,7 @@ export const updateEntryConversation = async (
 };
 
 /**
- * Checks if journal with jounalId exists and returns configId in journal.
+ * Checks if journal with journalId exists and returns configId in journal.
  * 
  * @param journalId id of journal to check
  * @returns configId
