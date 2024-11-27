@@ -11,9 +11,9 @@ import { EntryType } from '../../entry/entry.js';
 import ExpressError from '../../../utils/ExpressError.js';
 
 /**
- * Return value of operations that create or update Entry
- */
-interface EntryUpdateResponse {
+ * EntryResponse type returned by PUT and POST entry operations.
+*/
+interface EntryResponse {
   errMessage?: string;
   entry: HydratedDocument<EntryType>;
 }
@@ -27,13 +27,7 @@ interface EntryUpdateResponse {
 export async function getAllEntriesInJournal(
   journalId: string
 ): Promise<HydratedDocument<EntryType>[]> {
-  try {
-    const res = await Entry.find({ journal: journalId });
-    return res;
-  } catch (err) {
-    console.error(err);
-  }
-  return [];
+  return await Entry.find({ journal: journalId });
 }
 
 /**
@@ -43,13 +37,7 @@ export async function getAllEntriesInJournal(
  * @returns Entry or null
  */
 export async function getEntryById(entryId: string) {
-  try {
-    const entry = await Entry.findById(entryId);
-    return entry;
-  } catch (error) {
-    console.error(error);
-  }
-  return null;
+  return await Entry.findById(entryId);
 }
 
 /**
@@ -59,13 +47,7 @@ export async function getEntryById(entryId: string) {
  * @returns EntryAnalysis or null
  */
 export async function getEntryAnalysisById(entryId: string) {
-  try {
-    const analysis = await EntryAnalysis.findOne({ entry: entryId });
-    return analysis;
-  } catch (error) {
-    console.error(error);
-  }
-  return null;
+  return await EntryAnalysis.findOne({ entry: entryId });
 }
 
 /**
@@ -76,17 +58,12 @@ export async function getEntryAnalysisById(entryId: string) {
  * @returns Populated entry document matching entryId
  */
 export async function getPopulatedEntry(entryId: string) {
-  try {
-    return await Entry
-      .findById(entryId)
-      .populate<{
-        analysis: EntryAnalysisType,
-        conversation: EntryConversationType
-      }>('analysis conversation');
-  } catch (error) {
-    console.error(error);
-  }
-  return null;
+  return await Entry
+    .findById(entryId)
+    .populate<{
+      analysis: EntryAnalysisType,
+      conversation: EntryConversationType
+    }>('analysis conversation');
 }
 
 /**
@@ -96,16 +73,11 @@ export async function getPopulatedEntry(entryId: string) {
  * @returns populated EntryAnalysis document matching entryId
  */
 export async function getPopulatedEntryAnalysis(entryId: string) {
-  try {
-    return await EntryAnalysis
-      .findOne({ entry: entryId })
-      .populate<{
-        entry: EntryType,
-      }>('entry');
-  } catch (err) {
-    console.error(err);
-  }
-  return null;
+  return await EntryAnalysis
+    .findOne({ entry: entryId })
+    .populate<{
+      entry: EntryType,
+    }>('entry');
 }
 
 /**
@@ -115,21 +87,12 @@ export async function getPopulatedEntryAnalysis(entryId: string) {
  * @returns EntryConversation matching entryId
  */
 export async function getEntryConversation(entryId: string) {
-  try {
-    return await EntryConversation.findOne({ entry: entryId });
-  } catch (err) {
-    console.error(err);
-  }
-  return null;
+  return await EntryConversation.findOne({ entry: entryId });
 }
 
 /**
  * Creates a new Entry and corresponding EntryAnalysis in Journal
  * with journalId with entryContent as content
- *
- * This function doesn't throw errors because the original controller
- * handled them by creating a flash message with the error and continuing to
- * respond normally.
  * 
  * @param journalId id of journal where creating new entry
  * @param configId id of config to use
@@ -141,13 +104,11 @@ export async function createEntry(
   configId: string,
   entryData: EntryRequestBody,
 ) {
-  // Create new Entry and corresponding EntryAnalysis
   const newEntry = new Entry({ journal: journalId, ...entryData });
   const newAnalysis = new EntryAnalysis({
     entry: newEntry.id,
   });
 
-  // Associate the entry with the analysis
   newEntry.analysis = newAnalysis.id;
 
   return await _updateEntry(newEntry, newAnalysis, configId);
@@ -160,7 +121,7 @@ export async function createEntry(
  * @param entryId id of Entry to update
  * @param configId id of Config for LLM
  * @param entryData body of entry
- * @returns updated Entry and error message if error ocurred
+ * @returns updated Entry and error message if error occurred
  */
 export async function updateEntry(
   entryId: string,
@@ -207,41 +168,30 @@ export async function updateEntryAnalysis(
 export async function deleteEntry(
   entryId: string
 ): Promise<void> {
-  // Start a session and transaction for atomicity
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Delete the entry
     const response = await Entry.findByIdAndDelete(entryId, { session });
 
     if (!response) {
       throw new Error('Entry not found.');
     }
 
-    // Delete associated documents
     await EntryConversation.deleteMany({ entry: entryId }, { session });
     await EntryAnalysis.deleteMany({ entry: entryId }, { session });
 
-    // Commit the transaction
     await session.commitTransaction();
   } catch (error) {
-    // If an error occurs, abort the transaction
     await session.abortTransaction();
     throw error;
   } finally {
-    // End the session
     session.endSession();
   }
 }
 
 /**
  * Creates new EntryConversation for an Entry and populates with LLM response
- * 
- * This function throws errors to replicate how the original function
- * handled them, which was to create a new error and call the error handler.
- * The controller is responsible for catching errors and calling
- * the error handler when using this function.
  * 
  * @param entryId id of Entry to create EntryConversation for
  * @param messageData user-submitted messages to create conversation for
@@ -253,12 +203,9 @@ export async function createEntryConversation(
   configId: string,
   messageData: EntryConversationRequestBody
 ) {
-  /**
-   * I don't think this case will ever get used because joi validation
-   * rejects empty messages, and that happens before hitting this function, but it's defensive
-   */
+  // Joi validation should catch this before it gets here
+  // TODO: #198 test this case to check if conditional is necessary
   if (!messageData.messages || messageData.messages.length === 0) {
-    // TODO: try removing HTTP stuff from here
     throw new ExpressError('No message to get completion for.', 404);
   }
   // Get an entry with the analysis
@@ -269,10 +216,9 @@ export async function createEntryConversation(
     messages: messageData.messages,
   });
 
-  // Associate the conversation with the entry
   entry.conversation = newConversation.id;
   
-  // TODO: try to use _populateChatContent. Can't currently because this doesn't append; it modifies in place
+  // TODO: #199 try to use _populateChatContent. Can't currently because this doesn't append; it modifies in place
   const llmResponse = await newConversation.getChatContent(
     configId,
     entryAnalysis.id,
@@ -309,7 +255,7 @@ export async function updateEntryConversation(
 }
 
 /**
- * Private function for checking if Entry and EntryAnalysis associated with
+ * Helper function for checking if Entry and EntryAnalysis associated with
  * entryId exist.
  * 
  * @param entryId id associated with Entry and EntryAnalysis to check
@@ -328,7 +274,7 @@ async function _verifyEntry(entryId: string) {
 }
 
 /**
- * Private function for updating Entry and EntryAnalysis with LLM content.
+ * Helper function for updating Entry and EntryAnalysis with LLM content.
  * 
  * @param updatedEntry Entry to update
  * @param oldAnalysis EntryAnalysis to update with LLM content
@@ -337,22 +283,22 @@ async function _verifyEntry(entryId: string) {
  */
 async function _updateEntry(
   updatedEntry: HydratedDocument<EntryType>,
-  // Can't use HydratedDocument<EntryAnalysisType> because it doesn't have model methods
+  // TODO: #173, may not need to pass in oldAnalysis
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   oldAnalysis: any, 
   configId: string
 ) {
   // Creating return object to push error handling into service rather than controller
-  const updateEntryResult: EntryUpdateResponse = {
+  const updateEntryResponse: EntryResponse = {
     entry: updatedEntry,
   };
   try {
+    // TODO: #173, move getAnalysisContent out of EntryAnalysis
     const analysis = await oldAnalysis.getAnalysisContent(
       configId,
       updatedEntry.content
     );
   
-    // Complete the entry and analysis with the analysis content if available
     if (analysis) {
       updatedEntry.title = analysis.title;
       updatedEntry.mood = analysis.mood;
@@ -362,16 +308,16 @@ async function _updateEntry(
       oldAnalysis.analysis_content = analysis.analysis_content;
     }
   } catch (analysisError) {
-    updateEntryResult.errMessage = (analysisError as Error).message;
+    updateEntryResponse.errMessage = (analysisError as Error).message;
   } finally {
     await updatedEntry.save();
     await oldAnalysis.save();
   }
-  return updateEntryResult;
+  return updateEntryResponse;
 }
 
 /**
- * Private function for updating EntryConversation with LLM content based on messageData.
+ * Helper function for updating EntryConversation with LLM content based on messageData.
  * 
  * @param configId id of Config for LLM
  * @param analysis EntryAnalysis
@@ -383,7 +329,7 @@ async function _populateChatContent(
   configId: string,
   analysis: HydratedDocument<EntryAnalysisType>,
   messageData: EntryConversationRequestBody,
-  // Can't use HydratedDocument<EntryConversationType> because it doesn't have model methods
+  // TODO: #174
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conversation: any
 ): Promise<HydratedDocument<EntryConversationType>> {
@@ -394,8 +340,11 @@ async function _populateChatContent(
     conversation.messages
   );
 
-  // If the chat is not empty, update the llm_response
-  if (llmResponse) { // TODO: this will drop chats that fail to get llm response. Is that fine?
+  /*
+  FIXME: User messages should save even if llmResponse fails. Need to decouple user and 
+  LLM chat messages.
+  */
+  if (llmResponse) {
     messageData.messages[0].llm_response = llmResponse;
     conversation.messages?.push(messageData.messages[0]);
     await conversation.save();
@@ -404,7 +353,7 @@ async function _populateChatContent(
 }
 
 /**
- * Private function for checking if EntryConversation and EntryAnalysis
+ * Helper function for checking if EntryConversation and EntryAnalysis
  * associated with chatId exist.
  * 
  * @param chatId id of EntryConversation to verify
@@ -413,7 +362,6 @@ async function _populateChatContent(
 async function _verifyEntryConversation(
   chatId: string
 ) {
-  // TODO: try removing HTTP stuff from here
   const conversation = await EntryConversation.findById(chatId);
   if (!conversation) {
     throw new ExpressError('Entry conversation not found.', 404);

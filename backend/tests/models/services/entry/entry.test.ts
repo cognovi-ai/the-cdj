@@ -35,12 +35,6 @@ describe('Entry service tests', () => {
       expect(entries).toHaveLength(0);
     });
 
-    it('returns empty list on error when getting all entries', async () => {
-      const entries = await EntryServices.getAllEntriesInJournal('bad id');
-
-      expect(entries).toHaveLength(0);
-    });
-
     it('gets all entries in a journal', async () => {
       const mockEntry1 = new Entry({ journal: mockJournal.id, content: 'mock content' });
       const mockEntry2 = new Entry({ journal: mockJournal.id, content: 'mock content' });
@@ -101,12 +95,6 @@ describe('Entry service tests', () => {
       expect(sut!.entry.journal.toString()).toBe(mockJournal.id);
     });
 
-    it('returns null on error when getting populated EntryAnalysis', async () => {
-      const sut = await EntryServices.getPopulatedEntryAnalysis('bad id');
-    
-      expect(sut).toBeNull();
-    });
-
     it('gets EntryConversation by entryId', async () => {
       const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
       const mockConversation = new EntryConversation({ entry: mockEntry, messages: [] });
@@ -116,12 +104,6 @@ describe('Entry service tests', () => {
       const sut = await EntryServices.getEntryConversation(mockEntry.id);
 
       expect(sut!.id).toBe(mockConversation.id);
-    });
-
-    it('returns null on error when getting EntryConversation', async () => {
-      const sut = await EntryServices.getEntryConversation('bad id');
-    
-      expect(sut).toBeNull();
     });
   });
 
