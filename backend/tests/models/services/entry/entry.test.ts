@@ -479,7 +479,7 @@ describe('Entry service tests', () => {
       await expect(EntryConversation.findById(mockChat.id)).resolves.toBeDefined();
     });
 
-    it('aborts delete transcation on error', async () => {
+    it('aborts delete transaction on error', async () => {
       const mockEntry = new Entry({ journal: mockJournal.id, content: 'mock content' });
       const mockAnalysis = new EntryAnalysis({ entry: mockEntry, analysis_content: 'test content', created_at: new Date(0), updated_at: new Date(0) });
       const mockChat = new EntryConversation({ entry: mockEntry, messages: [] });
