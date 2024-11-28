@@ -203,8 +203,7 @@ export async function createEntryConversation(
   configId: string,
   messageData: EntryConversationRequestBody
 ) {
-  // Joi validation should catch this before it gets here
-  // TODO: #198 test this case to check if conditional is necessary
+  // TODO: #198 check if this conditional is necessary; Joi validation should catch this before this line
   if (!messageData.messages || messageData.messages.length === 0) {
     throw new ExpressError('No message to get completion for.', 404);
   }
@@ -329,7 +328,7 @@ async function _populateChatContent(
   configId: string,
   analysis: HydratedDocument<EntryAnalysisType>,
   messageData: EntryConversationRequestBody,
-  // TODO: #174
+  // TODO: #174 define conversation type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conversation: any
 ): Promise<HydratedDocument<EntryConversationType>> {

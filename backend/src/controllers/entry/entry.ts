@@ -5,7 +5,7 @@ import ExpressError from '../../utils/ExpressError.js';
 import { Journal } from '../../models/index.js';
 
 /**
- * Request body for create and update Entry operations,
+ * Request body type for POST and PUT Entry operations
  */
 export interface EntryRequestBody {
   title?: string;
