@@ -15,7 +15,6 @@ import crypto from 'crypto';
 import passport from 'passport';
 import { validateJournal } from '../../middleware/validation.js';
 
-
 /**
  * Used for JWT login, where token payload is User.id
  */
@@ -73,14 +72,14 @@ export const getAccount = async (
 
   try {
     const {
-      setConfigMessage,
+      configMessage,
       user,
       config
     } = await AccountServices.getAccount(journalId);
 
     // If the config doesn't exist instruct the user to set it up
-    if (setConfigMessage) {
-      req.flash('info', setConfigMessage);
+    if (configMessage) {
+      req.flash('info', configMessage);
     }
     res.status(200).json({ user, config, flash: req.flash() });
   } catch (err) {
@@ -247,7 +246,6 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
  * Login a user.
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  // DL: not super sure what type info arg is, but seems to have this interface
   type AuthenticateInfo = {
     message: string;
   };

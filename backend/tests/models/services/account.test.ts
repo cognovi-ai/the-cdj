@@ -34,11 +34,11 @@ describe('Account services tests', () => {
       config: mockConfig.id,
     });
 
-    const { user, config, setConfigMessage } = await AccountServices.getAccount(mockJournal.id);
+    const { user, config, configMessage } = await AccountServices.getAccount(mockJournal.id);
     
     expect(user.id).toBe(mockUser.id);
     expect(config!.id).toBe(mockConfig.id);
-    expect(setConfigMessage).toBeUndefined();
+    expect(configMessage).toBeUndefined();
   });
 
   it('gets user, config, and message for getAccount when config not set', async () => {
@@ -49,11 +49,11 @@ describe('Account services tests', () => {
     });
     const mockJournal = await Journal.create({ user: mockUser.id });
 
-    const { user, config, setConfigMessage } = await AccountServices.getAccount(mockJournal.id);
+    const { user, config, configMessage } = await AccountServices.getAccount(mockJournal.id);
     
     expect(user.id).toBe(mockUser.id);
     expect(config).toBe(config);
-    expect(setConfigMessage).toBe('Click the Config tab to complete your journal setup.');
+    expect(configMessage).toBe('Click the Config tab to complete your journal setup.');
   });
 
   it('throws error if journal not found', async () => {

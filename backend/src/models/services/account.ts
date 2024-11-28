@@ -4,9 +4,11 @@ import { HydratedDocument } from 'mongoose';
 import { UserType } from '../user.js';
 
 /**
+ * Get the user account information associated with a journal.
  * 
- * @param journalId 
- * @returns 
+ * @param journalId the id of the journal associated with the account
+ * @returns an object with the user and config for the journal and an optional 
+ * message to set the config
  */
 export async function getAccount(
   journalId: string,
@@ -23,7 +25,7 @@ export async function getAccount(
   const result: {
     config: HydratedDocument<ConfigType> | null,
     user: HydratedDocument<UserType>,
-    setConfigMessage?: string
+    configMessage?: string
   } = {
     config: config,
     user: user,
@@ -31,7 +33,7 @@ export async function getAccount(
 
   // If the config doesn't exist instruct the user to set it up
   if (!config || !config.model.analysis || !config.model.chat) {
-    result.setConfigMessage = 'Click the Config tab to complete your journal setup.';
+    result.configMessage = 'Click the Config tab to complete your journal setup.';
   }
   return result;
 }
