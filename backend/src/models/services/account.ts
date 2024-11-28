@@ -1,6 +1,8 @@
 import { Config, Journal, User } from '../index.js';
 import { ConfigType } from '../config.js';
+import ExpressError from '../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
+import { JournalType } from '../journal.js';
 import { UserType } from '../user.js';
 
 /**
@@ -54,4 +56,81 @@ export async function updateJournal(journalId: string, title: string) {
     return journal;
   }
   return null;
+}
+
+/**
+ * Updates User with userId with properties defined in profile object.
+ * 
+ * @param userId id of User to update
+ * @param profile object with fname, lname, and email properties
+ * @returns updated User if exists, else null
+ */
+export async function updateProfile(
+  userId: string,
+  profile: object
+) {
+  const updateProfileResponse: { user: HydratedDocument<UserType> | null, errorMessage: string | null } = {
+    user: null,
+    errorMessage: null
+  };
+  try {
+    updateProfileResponse.user = await User.findByIdAndUpdate(userId, profile, { new: true });
+    return updateProfileResponse;
+  } catch {
+    updateProfileResponse.errorMessage = 'The email address provided cannot be used.';
+    return updateProfileResponse;
+  }
+}
+
+/**
+ * Updates User password to newPassword if oldPassword matches current password.
+ * 
+ * @param userId id of User to update
+ * @param oldPassword user's original password
+ * @param newPassword user's new password
+ */
+export async function updatePassword(
+  userId: string,
+  oldPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = await User.findById(userId);
+  if (!user) throw new ExpressError('User not found.', 404);
+
+  const isMatch = await user.comparePassword(oldPassword);
+  if (!isMatch) throw new ExpressError('Password is incorrect.', 401);
+
+  await user.setPassword(newPassword);
+  await user.save();
+}
+
+/**
+ * Updates User Config with information in config.
+ * Creates Config and links to journal if undefined.
+ * 
+ * @param configId id of Config to update
+ * @param journal Journal document linked to Config with configId
+ * @param config Config JSON with properties to update
+ */
+export async function updateConfig(
+  configId: string | undefined,
+  journal: HydratedDocument<JournalType>,
+  config: ConfigType
+): Promise<void> {
+  let response = await Config.findById(configId);
+
+  if (!response) {
+    response = new Config(config);
+    journal.config = response._id;
+    await journal.save();
+  }
+
+  const { model } = config;
+
+  if (model) {
+    response.model.chat = model.chat ?? undefined;
+    response.model.analysis = model.analysis ?? undefined;
+  }
+
+  await response.save();
 }

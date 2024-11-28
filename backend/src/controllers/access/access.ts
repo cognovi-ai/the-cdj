@@ -9,6 +9,7 @@ import {
 } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { ConfigType } from '../../models/config.js';
 import ExpressError from '../../utils/ExpressError.js';
 import { UserType } from '../../models/user.js';
 import crypto from 'crypto';
@@ -24,10 +25,25 @@ interface TokenRequest extends Request {
 
 /**
  * JWT with added payload fields. User.id used for JWT login
- * TODO: refactor this to be payload, or find way to use JwtPayload fields
  */
 interface UserToken extends JwtPayload {
   id: string;
+}
+
+/**
+ * Request.body for account controller
+ */
+interface AccountRequestBody {
+  profile?: {
+    fname?: string;
+    lname?: string;
+    email?: string;
+  };
+  password?: {
+    oldPassword: string;
+    newPassword: string;
+  };
+  config?: ConfigType;
 }
 
 /**
@@ -95,76 +111,40 @@ export const getAccount = async (
 /**
  * Update the User and Config models by journalId.
  */
-export const updateAccount = async (req: Request, res: Response, next: NextFunction) => {
+export const updateAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { journalId } = req.params;
+  const { profile, password, config } = req.body as AccountRequestBody;
 
   try {
     const journal = await Journal.findById(journalId);
     if (!journal) return next(new ExpressError('Journal not found.', 404));
 
-    const { profile, password, config } = req.body;
-
     // Update the User model with the profile data
     if (profile) {
-      // Find and update the user associated with the journal
-      const user = await User.findByIdAndUpdate(journal.user, profile).catch(
-        () => {
-          req.flash('warning', 'The email address provided cannot be used.');
-        }
-      );
+      const { user, errorMessage } = await AccountServices.updateProfile(journal.user.toString(), profile);
+      if (errorMessage) req.flash('warning', 'The email address provided cannot be used.');
       if (!user) return next(new ExpressError('User not found.', 404));
       req.flash('success', 'Profile updated successfully.');
     }
-
+    
     // Update the user's password
     if (password) {
-      const user = await User.findById(journal.user);
-      if (!user) return next(new ExpressError('User not found.', 404));
-
       const { oldPassword, newPassword } = password;
-
-      // Re-authenticate the user with the oldPassword
-      const isMatch = await user.comparePassword(oldPassword);
-      if (!isMatch) {
-        return next(new ExpressError('Password is incorrect.', 401));
+      try {
+        await AccountServices.updatePassword(journal.user.toString(), oldPassword, newPassword);
+      } catch (error) {
+        return next(error);
       }
-
-      // Update the user's password
-      await user.setPassword(newPassword);
-      await user.save();
-
       req.flash('success', 'Password updated successfully.');
     }
 
     // Update the Config model with the config data
     if (config) {
-      // Find config by journalId
-      let response = await Config.findById(journal.config);
-
-      // If the config doesn't exist, create it
-      if (!response) {
-        response = new Config(config);
-        journal.config = response._id;
-        await journal.save();
-      }
-
-      // Update the optional fields of the config
-      const { model } = config;
-
-      if (model) {
-        // Update chat and analysis fields if they exist in the request body
-        response.model.chat = undefined;
-        response.model.analysis = undefined;
-        if (model.chat !== undefined) {
-          response.model.chat = model.chat;
-        }
-        if (model.analysis !== undefined) {
-          response.model.analysis = model.analysis;
-        }
-      }
-
-      await response.save();
-
+      await AccountServices.updateConfig(journal.config?.toString(), journal, config);
       req.flash('success', 'Config updated successfully.');
     }
 
