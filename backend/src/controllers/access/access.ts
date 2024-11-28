@@ -551,7 +551,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     if (!newUser) return;
 
     // Call validateJournal middleware
-    validateJournal(req, res, async (err: ExpressError) => {
+    validateJournal(req, res, async (err: string) => {
       if (err) return next(err); // Handle validation errors
 
       // Create default config
