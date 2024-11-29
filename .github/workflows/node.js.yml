@@ -37,7 +37,9 @@ jobs:
       - name: Set up .env file
         working-directory: backend
         run: |
-          echo "${{ secrets.TEST_ENV_VARS }}" > .env
+          cat << 'EOF' > .env
+          ${{ secrets.TEST_ENV_VARS }}
+          EOF
         shell: bash
 
       - name: Run linter
