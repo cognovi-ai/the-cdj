@@ -16,6 +16,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: test
 
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +33,12 @@ jobs:
       - name: Install dependencies
         working-directory: backend
         run: npm ci
+
+      - name: Set up .env file
+        working-directory: backend
+        run: |
+          echo "${{ secrets.TEST_ENV_VARS }}" > .env
+        shell: bash
 
       - name: Run linter
         working-directory: backend
