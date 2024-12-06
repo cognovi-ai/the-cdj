@@ -180,7 +180,10 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
       await AccountServices.deleteAccount(journalId);
       req.flash('success', 'Account deleted successfully.');
       res.status(200).json({ flash: req.flash() });      
-    } catch {
+    } catch (err) {
+      if (err instanceof ExpressError) {
+        return next(err);
+      }
       return next(
         new ExpressError(
           'An error occurred while attempting to delete the account.',
@@ -434,7 +437,10 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 
     req.flash('success', 'Password reset successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch {
+  } catch (err) {
+    if (err instanceof ExpressError) {
+      return next(err);
+    }
     return next(
       new ExpressError(
         'An error occurred while attempting to reset the password.',
@@ -512,7 +518,10 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     }
     req.flash('success', 'Email verified successfully.');
     res.status(200).json({ flash: req.flash() });
-  } catch {
+  } catch (err) {
+    if (err instanceof ExpressError) {
+      return next(err);
+    }
     return next(
       new ExpressError(
         'An error occurred while attempting to verify the email.',
