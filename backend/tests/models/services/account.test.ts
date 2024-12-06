@@ -28,6 +28,7 @@ describe('Account services tests', () => {
 
   afterEach(async () => {
     await mongoose.connection.dropDatabase();
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -437,6 +438,70 @@ describe('Account services tests', () => {
       expect(journal?.title).toBe(journalTitle);
       expect(journal?.user.toString()).toBe(newUser.id);
       expect(journal?.config?.toString()).toBe(config?.id);
+    });
+  });
+
+  describe('verifyEmail', () => {
+    const mockSendBetaRequestEmail = jest.fn();
+
+    beforeEach(() => {
+      jest.spyOn(User.prototype, 'sendBetaRequestEmail').mockImplementation(mockSendBetaRequestEmail);
+    });
+    
+    it('should verify a user’s email when a valid token is provided', async () => {
+      const token = mockUser.generateEmailVerificationToken();
+      await mockUser.save();
+  
+      const verifiedUser = await AccountServices.verifyEmail(token);
+  
+      const updatedUser = await User.findById(mockUser.id);
+      expect(updatedUser?.emailVerified).toBe(true);
+      expect(updatedUser?.verifyEmailToken).toBeUndefined();
+      expect(updatedUser?.verifyEmailTokenExpires).toBeUndefined();
+      expect(verifiedUser.id).toBe(mockUser.id);
+    });
+  
+    it('should throw an error if the token is invalid', async () => {
+      mockUser.generateEmailVerificationToken();
+      await mockUser.save();
+  
+      const invalidToken = 'invalid-token';
+      await expect(AccountServices.verifyEmail(invalidToken)).rejects.toThrow(
+        'Email verification token is invalid.'
+      );
+    });
+  
+    it('should throw an error if no matching user is found for the token', async () => {
+      const randomToken = 'random-token';
+      await expect(AccountServices.verifyEmail(randomToken)).rejects.toThrow(
+        'Email verification token is invalid.'
+      );
+    });
+  
+    it('should send a beta access email if the user is in beta phase and does not already have beta access', async () => {
+      const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
+      process.env.RELEASE_PHASE = 'beta';
+      const token = mockUser.generateEmailVerificationToken();
+      await mockUser.save();
+  
+      await AccountServices.verifyEmail(token);
+        
+      expect(mockSendBetaRequestEmail).toHaveBeenCalledTimes(1);
+      process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
+    });
+  
+    it('should not send a beta access email if the user already has beta access', async () => {
+      const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
+      process.env.RELEASE_PHASE = 'beta';
+  
+      const token = mockUser.generateEmailVerificationToken();
+      mockUser.betaAccess = true;
+      await mockUser.save();
+  
+      await AccountServices.verifyEmail(token);
+  
+      expect(mockSendBetaRequestEmail).not.toHaveBeenCalled();
+      process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
     });
   });
 });

@@ -11,7 +11,6 @@ import ExpressError from '../../utils/ExpressError.js';
 import { UserType } from '../../models/user.js';
 import crypto from 'crypto';
 import passport from 'passport';
-import { validateJournal } from '../../middleware/validation.js';
 
 /**
  * Used for JWT login, where token payload is User.id
@@ -529,42 +528,17 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
   const { token } = req.body;
 
   try {
-    // Hash the incoming token
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await AccountServices.verifyEmail(token);
 
-    // Search for user by hashed token
-    const user = await User.findOne({
-      verifyEmailToken: hashedToken,
-    });
-
-    if (!user) {
-      // No user found
-      return next(
-        new ExpressError('Email verification token is invalid.', 400)
-      );
-    }
-
-    // Confirm email
-    user.emailVerified = true;
-    user.verifyEmailToken = undefined;
-    user.verifyEmailTokenExpires = undefined;
-
-    // Send email to admin to approve the user for beta access
-    if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
-      user.sendBetaRequestEmail(user.generateBetaAccessToken());
+    if (user.betaAccessToken) {
       req.flash(
         'info',
         'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.'
       );
     }
-
-    // Save the updated user
-    await user.save();
-
     req.flash('success', 'Email verified successfully.');
     res.status(200).json({ flash: req.flash() });
   } catch {
-    // Handle any errors here
     return next(
       new ExpressError(
         'An error occurred while attempting to verify the email.',

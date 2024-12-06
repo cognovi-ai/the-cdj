@@ -4,6 +4,7 @@ import ExpressError from '../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
 import { JournalType } from '../journal.js';
 import { UserType } from '../user.js';
+import crypto from 'crypto';
 
 /**
  * Get the user account information associated with a journal.
@@ -212,4 +213,45 @@ export async function createAccount(
   });
 
   return { newUser, newJournal };
+}
+
+/**
+ * Verifies a user's email address using a provided token.
+ * 
+ * This function hashes the provided token and searches for a user
+ * with a matching `verifyEmailToken`. If a matching user is found,
+ * their email is marked as verified, and the verification token and
+ * expiration fields are cleared. If the application is in the beta
+ * release phase and the user does not yet have beta access, a beta
+ * access request email is sent.
+ *
+ * @async
+ * @function verifyEmail
+ * @param token - The email verification token provided by the user.
+ * @returns A promise that resolves to the updated user object.
+ * @throws {ExpressError} Throws an error if the token is invalid or no matching user is found.
+ */
+export async function verifyEmail(
+  token: string
+) {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    verifyEmailToken: hashedToken,
+  });
+  
+  if (!user) {
+    throw new ExpressError('Email verification token is invalid.', 400);
+  }
+  
+  user.emailVerified = true;
+  user.verifyEmailToken = undefined;
+  user.verifyEmailTokenExpires = undefined;
+  
+  if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
+    user.sendBetaRequestEmail(user.generateBetaAccessToken());
+  }
+  
+  await user.save();
+  return user;
 }
