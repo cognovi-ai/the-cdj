@@ -5,10 +5,10 @@
 import * as AccountServices from '../../../src/models/services/account.js';
 import { Config, Entry, Journal, User } from '../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
+import user, { UserType } from '../../../src/models/user.js';
 import { ConfigType } from '../../../src/models/config.js';
 import ExpressError from '../../../src/utils/ExpressError.js';
 import { JournalType } from '../../../src/models/journal.js';
-import { UserType } from '../../../src/models/user.js';
 import connectDB from '../../../src/db.js';
 
 describe('Account services tests', () => {
@@ -502,6 +502,76 @@ describe('Account services tests', () => {
   
       expect(mockSendBetaRequestEmail).not.toHaveBeenCalled();
       process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
+    });
+  });
+
+  describe('resetPassword', () => {  
+    it('should reset the password when a valid token is provided', async () => {
+      const mockSetPassword = jest.fn();
+      const mockSendPasswordResetConfirmationEmail = jest.fn();
+      jest.spyOn(User.prototype, 'setPassword')
+        .mockImplementation(mockSetPassword);
+      jest.spyOn(User.prototype, 'sendPasswordResetConfirmationEmail')
+        .mockImplementation(mockSendPasswordResetConfirmationEmail);
+
+      const token = mockUser.generatePasswordResetToken();
+      await mockUser.save();
+  
+      await AccountServices.resetPassword(token, 'newPassword123');
+  
+      const updatedUser = await User.findById(mockUser.id);
+      expect(mockUser.setPassword).toHaveBeenCalledWith('newPassword123');
+      expect(updatedUser?.resetPasswordToken).toBeUndefined();
+      expect(updatedUser?.resetPasswordExpires).toBeUndefined();
+  
+      expect(mockUser.sendPasswordResetConfirmationEmail).toHaveBeenCalled();
+    });
+  
+    it('should throw an error if the token is invalid', async () => {
+      mockUser.generatePasswordResetToken();
+      await mockUser.save();
+  
+      const invalidToken = 'invalid-token';
+      await expect(AccountServices.resetPassword(invalidToken, 'newPassword123')).rejects.toThrow(
+        'Password reset token is invalid or has expired.'
+      );
+    });
+  
+    it('should throw an error if the token has expired', async () => {
+      const token = mockUser.generatePasswordResetToken();
+      mockUser.resetPasswordExpires = new Date(Date.now() - 3600000);
+      await mockUser.save();
+  
+      await expect(AccountServices.resetPassword(token, 'newPassword123')).rejects.toThrow(
+        'Password reset token is invalid or has expired.'
+      );
+    });
+  
+    it('should ensure the resetPasswordToken and resetPasswordExpires fields are cleared after a successful reset', async () => {
+      const token = mockUser.generatePasswordResetToken();
+      await mockUser.save();
+  
+      await AccountServices.resetPassword(token, 'newPassword123');
+  
+      const updatedUser = await User.findById(mockUser.id);
+      expect(updatedUser?.resetPasswordToken).toBeUndefined();
+      expect(updatedUser?.resetPasswordExpires).toBeUndefined();
+    });
+  
+    it('should send a password reset confirmation email after successfully resetting the password', async () => {
+      const mockSetPassword = jest.fn();
+      const mockSendPasswordResetConfirmationEmail = jest.fn();
+      jest.spyOn(User.prototype, 'setPassword')
+        .mockImplementation(mockSetPassword);
+      jest.spyOn(User.prototype, 'sendPasswordResetConfirmationEmail')
+        .mockImplementation(mockSendPasswordResetConfirmationEmail);
+      
+      const token = mockUser.generatePasswordResetToken();
+      await mockUser.save();
+
+      await AccountServices.resetPassword(token, 'newPassword123');
+  
+      expect(mockSendPasswordResetConfirmationEmail).toHaveBeenCalled();
     });
   });
 });

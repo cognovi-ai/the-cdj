@@ -430,37 +430,11 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   const { newPassword, token } = req.body;
 
   try {
-    // Hash the incoming token
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-    // Search for user by hashed token and check if token hasn't expired
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      // No user found, or token has expired
-      return next(
-        new ExpressError('Password reset token is invalid or has expired.', 400)
-      );
-    }
-
-    // Reset password
-    await user.setPassword(newPassword);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    // Save the updated user
-    await user.save();
-
-    // Send a confirmation email for the password reset
-    await user.sendPasswordResetConfirmationEmail();
+    await AccountServices.resetPassword(newPassword, token);
 
     req.flash('success', 'Password reset successfully.');
     res.status(200).json({ flash: req.flash() });
   } catch {
-    // Handle any errors here
     return next(
       new ExpressError(
         'An error occurred while attempting to reset the password.',

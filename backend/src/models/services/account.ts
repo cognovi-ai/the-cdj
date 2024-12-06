@@ -255,3 +255,42 @@ export async function verifyEmail(
   await user.save();
   return user;
 }
+
+/**
+ * Resets a user's password using a provided reset token.
+ * 
+ * This function verifies the validity of the password reset token and ensures
+ * that it has not expired. If the token is valid, it updates the user's password,
+ * clears the reset token and expiration fields, and sends a confirmation email
+ * to the user notifying them of the password change.
+ *
+ * @async
+ * @function resetPassword
+ * @param token - The password reset token provided by the user.
+ * @param newPassword - The new password to set for the user.
+ * @returns Resolves when the password has been successfully reset.
+ * @throws {ExpressError} Throws an error if the token is invalid or has expired.
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<void> {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new ExpressError('Password reset token is invalid or has expired.', 400);
+  }
+
+  await user.setPassword(newPassword);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+
+  await user.sendPasswordResetConfirmationEmail();
+}
