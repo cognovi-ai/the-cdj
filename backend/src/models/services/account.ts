@@ -294,3 +294,68 @@ export async function resetPassword(
 
   await user.sendPasswordResetConfirmationEmail();
 }
+
+/**
+ * Checks if a user is abusing the forgot password functionality during the beta phase.
+ * 
+ * If the user does not have beta access but their beta access token is still valid, 
+ * this function sends an alert to the user, invalidates their beta access, and 
+ * flags the issue by throwing an error. The admin is also notified of the abuse.
+ * 
+ * @param user - The user object to validate for abuse of the forgot password functionality.
+ * 
+ * @throws {ExpressError} - Throws a 403 error if the user does not have beta access 
+ * and their beta access token is valid, or if they are flagged for abuse.
+ */
+async function checkForForgotPasswordAbuse(user: UserType) {
+  if (
+    user.betaAccessTokenExpires!.getTime() > Date.now() &&
+    user.betaAccess === false
+  ) {
+    throw new ExpressError('You do not have beta access.', 403);
+  }
+
+  user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
+  user.betaAccess = false;
+  await user.save();
+
+  throw new ExpressError(
+    'You do not have beta access. Admin has been flagged.',
+    403
+  );
+}
+
+/**
+ * Handles the forgot password functionality by generating and sending a password reset email to the user.
+ * 
+ * This function retrieves the user by their email address. If the application is in the beta phase and the 
+ * user does not have beta access, it validates for abuse of the forgot password functionality and may flag 
+ * the user or prevent further actions. If the user is valid, a password reset token is generated, and an 
+ * email is sent to the user with the reset link. The user record is updated accordingly.
+ * 
+ * @param email - The email address of the user requesting a password reset.
+ * 
+ * @throws {ExpressError} - Throws a 400 error if the user cannot be found, a 403 error if beta abuse is detected, 
+ * or a 500 error if the reset token generation or email sending process fails.
+ */
+export async function forgotPassword(email: string) {
+  const user = await User.findByUsername(email, false);
+  if (!user) {
+    throw new ExpressError('Could not send recovery email.', 400);
+  }
+
+  if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
+    await checkForForgotPasswordAbuse(user);
+  }
+  
+  try {
+    const token = user.generatePasswordResetToken();
+    await user.sendPasswordResetEmail(token);
+    await user.save();
+  } catch {
+    throw new ExpressError(
+      'An error occurred while attempting to generate a recovery email.',
+      500
+    );
+  }
+}

@@ -5,10 +5,10 @@
 import * as AccountServices from '../../../src/models/services/account.js';
 import { Config, Entry, Journal, User } from '../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
-import user, { UserType } from '../../../src/models/user.js';
 import { ConfigType } from '../../../src/models/config.js';
 import ExpressError from '../../../src/utils/ExpressError.js';
 import { JournalType } from '../../../src/models/journal.js';
+import { UserType } from '../../../src/models/user.js';
 import connectDB from '../../../src/db.js';
 
 describe('Account services tests', () => {
@@ -572,6 +572,61 @@ describe('Account services tests', () => {
       await AccountServices.resetPassword(token, 'newPassword123');
   
       expect(mockSendPasswordResetConfirmationEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('should generate and send a password reset email for a valid user', async () => {
+      const mockSendPasswordResetEmail = jest.fn();
+      jest.spyOn(User.prototype, 'sendPasswordResetEmail')
+        .mockImplementation(mockSendPasswordResetEmail);
+      mockUser.betaAccess = true;
+      await mockUser.save();
+  
+      await AccountServices.forgotPassword(mockUser.email);
+  
+      const updatedUser = await User.findById(mockUser.id);
+      expect(updatedUser).toBeTruthy();
+      expect(updatedUser?.resetPasswordToken).toBeDefined();
+      expect(updatedUser?.resetPasswordExpires?.getTime()).toBeGreaterThan(new Date().getTime());
+      expect(mockSendPasswordResetEmail).toHaveBeenCalled();
+    });
+  
+    it('should throw an error if the user is not found', async () => {
+      await expect(AccountServices.forgotPassword('nonexistent@example.com')).rejects.toThrow(
+        'Could not send recovery email.'
+      );
+    });
+  
+    it('should throw an error if the user is in beta and has no beta access', async () => {
+      const mockSendAlertForForgotPasswordAbuse = jest.fn();
+      jest.spyOn(User.prototype, 'sendAlertForForgotPasswordAbuse')
+        .mockImplementation(mockSendAlertForForgotPasswordAbuse);
+      mockUser.betaAccess = false;
+      mockUser.betaAccessTokenExpires = new Date(0);
+      await mockUser.save();
+      
+      const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
+      process.env.RELEASE_PHASE = 'beta';
+  
+      await expect(AccountServices.forgotPassword(mockUser.email)).rejects.toThrow(
+        'You do not have beta access. Admin has been flagged.'
+      );
+
+      const updatedUser = await User.findById(mockUser.id);
+      expect(updatedUser?.betaAccess).toBe(false);
+
+      process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
+    });
+  
+    it('should throw an error if there is an issue generating or sending the email', async () => {
+      jest.spyOn(User.prototype, 'sendPasswordResetEmail').mockRejectedValue(new Error('Email error'));
+      mockUser.betaAccess = true;
+      await mockUser.save();
+  
+      await expect(AccountServices.forgotPassword(mockUser.email)).rejects.toThrow(
+        'An error occurred while attempting to generate a recovery email.'
+      );
     });
   });
 });

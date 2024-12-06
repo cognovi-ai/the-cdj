@@ -368,62 +368,16 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
  * Forgot password.
  */
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
-  // Search for user by email
   const { email } = req.body;
 
-  // Search for user by email
-  // TODO: not sure what selectHashSaltFields should be set to. Guessing false
-  User.findByUsername(email, false, async (err, user) => {
-    if (err) return next(err);
+  try {
+    await AccountServices.forgotPassword(email);
 
-    // If user doesn't exist, return error
-    if (!user)
-      return next(new ExpressError('Could not send recovery email.', 400));
-
-    // A decision has not been made if betaAccess is undefined
-    if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
-      // Prevent spamming the email server
-      if (
-        user.betaAccessTokenExpires > Date.now() &&
-        user.betaAccess === false
-      ) {
-        return next(new ExpressError('You do not have beta access.', 403));
-      }
-
-      // Send email to admin alert admin of suspicious activity
-      user.sendAlertForForgotPasswordAbuse(user.generateBetaAccessToken());
-      user.betaAccess = false; // Prevent spamming the email server
-      await user.save();
-
-      return next(
-        new ExpressError(
-          'You do not have beta access. Admin has been flagged.',
-          403
-        )
-      );
-    }
-
-    try {
-      // Generate a password reset token
-      const token = await user.generatePasswordResetToken();
-
-      // Send password reset email
-      await user.sendPasswordResetEmail(token);
-
-      // Save the user with the new token and expiry
-      await user.save();
-
-      req.flash('success', 'Recovery email sent successfully.');
-      res.status(200).json({ flash: req.flash() });
-    } catch {
-      return next(
-        new ExpressError(
-          'An error occurred while attempting to generate a recovery email.',
-          500
-        )
-      );
-    }
-  });
+    req.flash('success', 'Recovery email sent successfully.');
+    res.status(200).json({ flash: req.flash() });
+  } catch (err) {
+    return next(err);
+  }
 };
 
 /**
