@@ -3,7 +3,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as AccountServices from '../../../src/models/services/account.js';
-import { Config, Journal, User } from '../../../src/models/index.js';
+import { Config, Entry, Journal, User } from '../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { ConfigType } from '../../../src/models/config.js';
 import ExpressError from '../../../src/utils/ExpressError.js';
@@ -280,6 +280,134 @@ describe('Account services tests', () => {
       expect(reloadedConfig?.model.chat).toBe('updatedChatModel');
       expect(reloadedConfig?.model.analysis).toBeUndefined();
       expect(reloadedConfig?.apiKey).toBe('apiKey');
+    });
+  });
+
+  describe('deleteConfig', () => {
+    it('should delete the associated config if the journal exists', async () => {
+      const config = await Config.create({
+        model: { chat: 'chatModel', analysis: 'analysisModel' },
+      });
+      const journal = await Journal.create({ 
+        user: mockUser.id,
+        config: config.id
+      });
+  
+      await AccountServices.deleteConfig(journal.id.toString());
+  
+      const deletedConfig = await Config.findById(config.id);
+      const deletedJournal = await Journal.findById(journal.id);
+  
+      expect(deletedConfig).toBeNull();
+      expect(deletedJournal).not.toBeNull();
+    });
+  
+    it('should throw an error if the journal does not exist', async () => {
+      const nonExistentJournalId = new mongoose.Types.ObjectId().toString();
+  
+      await expect(AccountServices.deleteConfig(nonExistentJournalId))
+        .rejects
+        .toThrow(ExpressError);
+      await expect(AccountServices.deleteConfig(nonExistentJournalId))
+        .rejects
+        .toThrow('Journal not found.');
+    });
+  
+    it('should throw an error if the config does not exist', async () => {
+      const nonExistentConfigId = new mongoose.Types.ObjectId();
+      const journal = await Journal.create({
+        user: mockUser.id,
+        config: nonExistentConfigId
+      });
+  
+      await expect(AccountServices.deleteConfig(journal.id))
+        .rejects
+        .toThrow(ExpressError);
+      await expect(AccountServices.deleteConfig(journal.id))
+        .rejects
+        .toThrow('Config not found.');
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should delete the journal, user, entries, and related data', async () => {
+      const config = await Config.create({
+        model: { chat: 'chatModel', analysis: 'analysisModel' },
+      });
+      const journal = await Journal.create({
+        user: mockUser.id,
+        config: config.id
+      });
+  
+      await Entry.create({
+        journal: journal.id,
+        analysis: new mongoose.Types.ObjectId(),
+        conversation: new mongoose.Types.ObjectId(),
+        content: 'entry1 content'
+      });
+      await Entry.create({
+        journal: journal.id,
+        analysis: new mongoose.Types.ObjectId(),
+        conversation: new mongoose.Types.ObjectId(),
+        content: 'entry2 content'
+      });
+  
+      await AccountServices.deleteAccount(journal.id);
+
+      const deletedJournal = await Journal.findById(journal.id);
+      const deletedUser = await User.findById(mockUser.id);
+      const deletedConfig = await Config.findById(config.id);
+      const remainingEntries = await Entry.find({ journal: journal.id });
+  
+      expect(deletedJournal).toBeNull();
+      expect(deletedUser).toBeNull();
+      expect(deletedConfig).toBeNull();
+      expect(remainingEntries).toHaveLength(0);
+    });
+  
+    it('should throw an error if the journal does not exist', async () => {
+      const nonExistentJournalId = new mongoose.Types.ObjectId().toString();
+  
+      await expect(AccountServices.deleteAccount(nonExistentJournalId)).rejects.toThrow(ExpressError);
+      await expect(AccountServices.deleteAccount(nonExistentJournalId)).rejects.toThrow('Journal not found.');
+    });
+  
+    it('should throw an error if the user does not exist', async () => {
+      const config = await Config.create({
+        model: { chat: 'chatModel', analysis: 'analysisModel' },
+      });
+      const journal = await Journal.create({
+        user: new mongoose.Types.ObjectId(),
+        config: config.id
+      });
+  
+      await expect(AccountServices.deleteAccount(journal.id))
+        .rejects
+        .toThrow(ExpressError);
+      await expect(AccountServices.deleteAccount(journal.id))
+        .rejects
+        .toThrow('User not found.');
+    });
+  
+    it('should handle journals with no entries gracefully', async () => {
+      const config = await Config.create({
+        model: { chat: 'chatModel', analysis: 'analysisModel' },
+      });
+      const journal = await Journal.create({
+        title: 'Test Journal',
+        user: mockUser.id,
+        config: config.id
+      });
+  
+      await AccountServices.deleteAccount(journal.id);
+  
+      const deletedJournal = await Journal.findById(journal.id);
+      const deletedUser = await User.findById(mockUser.id);
+      const deletedConfig = await Config.findById(config.id);
+  
+      expect(deletedJournal).toBeNull();
+      expect(deletedUser).toBeNull();
+      expect(deletedConfig).toBeNull();
     });
   });
 });

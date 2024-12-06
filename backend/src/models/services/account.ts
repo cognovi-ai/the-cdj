@@ -1,4 +1,4 @@
-import { Config, Journal, User } from '../index.js';
+import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../index.js';
 import { ConfigType } from '../config.js';
 import ExpressError from '../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
@@ -8,7 +8,7 @@ import { UserType } from '../user.js';
 /**
  * Get the user account information associated with a journal.
  * 
- * @param journalId the id of the journal associated with the account
+ * @param journalId id of journal associated with the account
  * @returns an object with the user and config for the journal and an optional 
  * message to set the config
  */
@@ -43,7 +43,7 @@ export async function getAccount(
 /**
  * Updates title of Journal with journalId.
  * 
- * @param journalId string of journalId
+ * @param journalId id of journal associated with the account
  * @returns journal with updates on success, null on failure
  */
 export async function updateJournal(journalId: string, title: string) {
@@ -133,4 +133,47 @@ export async function updateConfig(
   }
 
   await response.save();
+}
+
+/**
+ * Deletes config associated with journalId if it exists.
+ * 
+ * @param journalId id of journal associated with the account
+ * @returns 
+ */
+export async function deleteConfig(journalId: string): Promise<void> {
+  const journal = await Journal.findById(journalId);
+  if (!journal) throw new ExpressError('Journal not found.', 404);
+
+  const config = await Config.findByIdAndDelete(journal.config);
+  if (!config) throw new ExpressError('Config not found.', 404);
+}
+
+/**
+ * Deletes User, all Entries, EntryAnalyses, and EntryConversations, Config, and Journal
+ * associated with journalId.
+ * 
+ * @param journalId id of journal associated with the account
+ * @returns 
+ */
+export async function deleteAccount(
+  journalId: string
+) {
+  const journal = await Journal.findById(journalId);
+  if (!journal) throw new ExpressError('Journal not found.', 404);
+
+  const user = await User.findByIdAndDelete(journal.user);
+  if (!user) throw new ExpressError('User not found.', 404);
+
+  const entries = await Entry.find({ journal: journalId });
+
+  for (const entry of entries) {
+    await EntryAnalysis.findByIdAndDelete(entry.analysis);
+    await EntryConversation.findByIdAndDelete(entry.conversation);
+    await Entry.findByIdAndDelete(entry.id);
+  }
+
+  await Config.findByIdAndDelete(journal.config);
+
+  await Journal.findByIdAndDelete(journalId);
 }

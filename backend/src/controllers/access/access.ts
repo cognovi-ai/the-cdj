@@ -1,9 +1,6 @@
 import * as AccountServices from '../../models/services/account.js';
 import {
   Config,
-  Entry,
-  EntryAnalysis,
-  EntryConversation,
   Journal,
   User,
 } from '../../models/index.js';
@@ -173,13 +170,7 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
 
   if (deletionItem === 'config') {
     try {
-      const journal = await Journal.findById(journalId);
-      if (!journal) return next(new ExpressError('Journal not found.', 404));
-
-      // Delete the journal's config
-      const config = await Config.findByIdAndDelete(journal.config);
-      if (!config) return next(new ExpressError('Config not found.', 404));
-
+      await AccountServices.deleteConfig(journalId);
       req.flash('success', 'Config deleted successfully.');
       res.status(200).json({ flash: req.flash() });
     } catch (err) {
@@ -187,35 +178,9 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
     }
   } else if (deletionItem === 'account') {
     try {
-      const journal = await Journal.findById(journalId);
-      if (!journal) return next(new ExpressError('Journal not found.', 404));
-
-      // Delete the journal's user
-      const user = await User.findByIdAndDelete(journal.user);
-      if (!user) return next(new ExpressError('User not found.', 404));
-
-      // Delete the journal's entries
-      const entries = await Entry.find({ journal: journalId });
-
-      for (const entry of entries) {
-        // Delete the entry's analysis
-        await EntryAnalysis.findByIdAndDelete(entry.analysis);
-
-        // Delete the entry's conversation
-        await EntryConversation.findByIdAndDelete(entry.conversation);
-
-        // Delete the entry
-        await Entry.findByIdAndDelete(entry._id);
-      }
-
-      // Delete the journal's config
-      await Config.findByIdAndDelete(journal.config);
-
-      // Delete the journal
-      await Journal.findByIdAndDelete(journalId);
-
+      await AccountServices.deleteAccount(journalId);
       req.flash('success', 'Account deleted successfully.');
-      res.status(200).json({ flash: req.flash() });
+      res.status(200).json({ flash: req.flash() });      
     } catch {
       return next(
         new ExpressError(
