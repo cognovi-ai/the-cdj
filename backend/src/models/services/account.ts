@@ -177,3 +177,39 @@ export async function deleteAccount(
 
   await Journal.findByIdAndDelete(journalId);
 }
+
+/**
+ * Creates a new account by registering a user, creating a configuration,
+ * and associating the user with a journal.
+ *
+ * @param fname The first name of the user.
+ * @param lname The last name of the user.
+ * @param email The email address of the user.
+ * @param password The password for the user account.
+ * @param journalTitle The title of the journal to create for the user.
+ * @returns A promise that resolves to an object containing the newly created user and journal.
+ */
+export async function createAccount(
+  fname: string,
+  lname: string,
+  email: string,
+  password: string,
+  journalTitle: string,
+) {
+  const newUser = await User.register(
+    new User({ email, fname, lname }),
+    password
+  );
+
+  const newConfig = await Config.create({
+    model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
+  });
+
+  const newJournal = await Journal.create({
+    user: newUser.id,
+    title: journalTitle,
+    config: newConfig.id,
+  });
+
+  return { newUser, newJournal };
+}

@@ -410,4 +410,33 @@ describe('Account services tests', () => {
       expect(deletedConfig).toBeNull();
     });
   });
+
+  describe('createAccount', () => {
+    it('should create a new user, configuration, and journal', async () => {
+      const fname = 'John';
+      const lname = 'Doe';
+      const email = 'john.doe@example.com';
+      const password = 'securePassword';
+      const journalTitle = 'My First Journal';
+  
+      const { newUser, newJournal } = await AccountServices.createAccount(fname, lname, email, password, journalTitle);
+  
+      const user = await User.findById(newUser.id);
+      expect(user).not.toBeNull();
+      expect(user?.email).toBe(email);
+      expect(user?.fname).toBe(fname);
+      expect(user?.lname).toBe(lname);
+  
+      const config = await Config.findById(newJournal.config);
+      expect(config).not.toBeNull();
+      expect(config?.model.analysis).toBe('gpt-3.5-turbo-1106');
+      expect(config?.model.chat).toBe('gpt-4');
+  
+      const journal = await Journal.findById(newJournal.id);
+      expect(journal).not.toBeNull();
+      expect(journal?.title).toBe(journalTitle);
+      expect(journal?.user.toString()).toBe(newUser.id);
+      expect(journal?.config?.toString()).toBe(config?.id);
+    });
+  });
 });

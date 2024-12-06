@@ -489,49 +489,27 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
  * Register a new user.
  */
 export const register = async (req: Request, res: Response, next: NextFunction) => {
-  const { fname, lname, email, password } = req.body;
+  const { fname, lname, email, password, title } = req.body;
 
   try {
-    const newUser = await User.register(
-      new User({ email, fname, lname }),
-      password
-    ).catch((err) => {
-      return next(err);
-    });
+    const { newUser, newJournal }= await AccountServices.createAccount(
+      fname,
+      lname,
+      email,
+      password,
+      title
+    );
+    req.login(newUser, (err) => {
+      if (err) return next(err);
 
-    if (!newUser) return;
-
-    // Call validateJournal middleware
-    validateJournal(req, res, async (err: ExpressError) => {
-      if (err) return next(err); // Handle validation errors
-
-      // Create default config
-      const newConfig = new Config({
-        model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
-      });
-      await newConfig.save();
-
-      // Continue with creating the journal if validation is successful
-      const newJournal = new Journal({
-        user: newUser._id,
-        title: req.body.title,
-        config: newConfig._id,
-      });
-      await newJournal.save();
-
-      // Continue with the rest of the registration process
-      req.login(newUser, (err) => {
-        if (err) return next(err);
-
-        req.flash(
-          'success',
-          `Welcome, ${fname}. You've been registered successfully.`
-        );
-        res.status(200).json({
-          journalId: newJournal._id,
-          journalTitle: newJournal.title,
-          flash: req.flash(),
-        });
+      req.flash(
+        'success',
+        `Welcome, ${fname}. You've been registered successfully.`
+      );
+      res.status(200).json({
+        journalId: newJournal.id,
+        journalTitle: newJournal.title,
+        flash: req.flash(),
       });
     });
   } catch {
