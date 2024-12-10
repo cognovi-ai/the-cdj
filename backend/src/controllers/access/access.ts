@@ -232,7 +232,7 @@ const handleFailedLogin = async (req: Request, res: Response, next: NextFunction
 /**
  * Generates a JWT for persistent login.
  */
-const generateToken = (userId: string): string | null => {
+const generateToken = (userId: string): string => {
   const { JWT_SECRET } = process.env;
   if (!JWT_SECRET) {
     throw new Error('JWT secret not defined');
@@ -265,7 +265,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     let token: string;
     if (req.body.remember) {
       try {
-        generateToken(user.id);
+        token = generateToken(user.id);
       } catch (err) {
         req.flash('error', (err as Error).message);
       }
@@ -306,40 +306,48 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 /**
+ * Show info message only for the first 12 hours based on `iat` timestamp.
+ * 
+ * @param token JWT
+ * @returns true if current time within 12 hours of token.iat, false otherwise
+ */
+function isWithinTwelveHours(token: UserToken) {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const TWELVE_HOURS = 43200; // 12 hours in seconds
+  token.iat = token.iat ?? currentTime - 30; // Backdate JWT by 30 seconds if undefined
+  return token.iat + TWELVE_HOURS > currentTime;
+}
+
+/**
  * Login a user with a token.
  */
 export const tokenLogin = async (req: Request, res: Response, next: NextFunction) => {
-  if ((req as TokenRequest).token) {
+  try {
     const { token } = req as TokenRequest;
+    if (!token) {
+      return next(new ExpressError('Token is invalid or has expired.', 403));
+    }
 
-    // Retrieve the user's journal
-    const journal = await Journal.findOne({ user: token.id }).populate< { user: UserType } >('user');
-
-    // If user has no journal or the token is expired, return error
+    const journal = await AccountServices.getPopulatedJournal(token.id);
     if (!journal) {
       return next(new ExpressError('Journal not found.', 404));
     }
 
-    // Log the user in
-    req.logIn(journal.user, async function (err) {
+    req.logIn(journal.user, async (err) => {
       if (err) {
         return next(err);
       }
 
-      // Give existing users beta access
-      if (process.env.RELEASE_PHASE === 'beta' && !journal.user?.betaAccess) {
+      // Grant beta access if applicable
+      if (process.env.RELEASE_PHASE === 'beta' && !journal.user.betaAccess) {
         journal.user.betaAccess = true;
         await journal.user.save();
 
         req.flash('info', 'You have been granted beta access.');
       }
 
-      // Show info message only for first 12 hours by iat timestamp
-      if (token.iat === undefined) {
-        // TODO: Intended behavior here? Currently backdate jwt by 30 seconds if undefined
-        token.iat = Math.floor(Date.now() / 1000) - 30;
-      }
-      if (token.iat + 43200 > Date.now() / 1000) {
+      const withinTwelveHours = isWithinTwelveHours(token);
+      if (withinTwelveHours) {
         req.flash('info', 'Logging out will prevent automatic future logins.');
       }
 
@@ -354,8 +362,8 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
         flash: req.flash(),
       });
     });
-  } else {
-    return next(new ExpressError('Token is invalid or has expired.', 403));
+  } catch (error) {
+    return next(error);
   }
 };
 

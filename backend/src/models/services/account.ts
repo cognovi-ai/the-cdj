@@ -41,6 +41,12 @@ export async function getAccount(
   return result;
 }
 
+export async function getPopulatedJournal(userId: string) {
+  return await Journal
+    .findOne({ user: userId })
+    .populate<{ user: UserType }>('user');
+}
+
 /**
  * Updates title of Journal with journalId.
  * 
