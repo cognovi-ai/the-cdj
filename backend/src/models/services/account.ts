@@ -359,3 +359,39 @@ export async function forgotPassword(email: string) {
     );
   }
 }
+
+/**
+ * Ensures that a journal exists for a given user. If no journal is found, a new one
+ * is created with a default configuration and saved to the database.
+ *
+ * @param userId - The ID of the user for whom the journal is being checked or created.
+ * @returns A promise that resolves to the user's journal, either retrieved or newly created.
+ *
+ * @throws Will propagate any errors that occur during database operations.
+ *
+ * @example
+ * ```typescript
+ * const userId = "12345";
+ * const journal = await ensureUserJournal(userId);
+ * console.log(journal);
+ * ```
+ */
+export async function ensureUserJournal (userId: string) {
+  let journal = await Journal.findOne({ user: userId });
+
+  if (!journal) {
+    const newConfig = new Config({
+      model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
+    });
+    await newConfig.save();
+
+    journal = new Journal({
+      user: userId,
+      config: newConfig.id,
+    });
+
+    await journal.save();
+  }
+
+  return journal;
+}

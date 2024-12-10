@@ -1,9 +1,5 @@
 import * as AccountServices from '../../models/services/account.js';
-import {
-  Config,
-  Journal,
-  User,
-} from '../../models/index.js';
+import { Journal, User } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { ConfigType } from '../../models/config.js';
@@ -40,6 +36,10 @@ interface AccountRequestBody {
     newPassword: string;
   };
   config?: ConfigType;
+}
+
+export interface AuthenticateInfo {
+  message: string;
 }
 
 /**
@@ -195,51 +195,67 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
 };
 
 /**
+ * Handle behavior and HTTP response after authentication fails.
+ * 
+ * If user has been denied beta access, a 403 HTTP error is returned.
+ * If user does not have beta access and has not verified their email, a token is generated
+ * and an email is sent to verify their email, then a 403 HTTP error is returned.
+ * Otherwise, a 403 HTTP error is returned.
+ */
+const handleFailedLogin = async (req: Request, res: Response, next: NextFunction, user: UserType, info: AuthenticateInfo) => {
+  if (user.betaAccess === false) {
+    req.flash('warning', `You do not have ${process.env.RELEASE_PHASE} access.`);
+    return res.status(403).json({ flash: req.flash() });
+  }
+
+  if (user.betaAccess === undefined) {
+    if (!user.emailVerified) {
+      user.sendBetaAccessVerificationEmail(user.generateEmailVerificationToken());
+      await user.save();
+
+      req.flash(
+        'info',
+        'You must verify your email address to have your beta request reviewed. Please check your mailbox for messages from The CDJ Team.'
+      );
+    } else {
+      req.flash(
+        'info',
+        'Your request for beta access is pending approval. We will notify you via email upon approval. Please check your mailbox for messages from The CDJ Team.'
+      );
+    }
+    return res.status(403).json({ flash: req.flash() });
+  }
+
+  return next(new ExpressError(info.message, 403));
+};
+
+/**
+ * Generates a JWT for persistent login.
+ */
+const generateToken = (userId: string): string | null => {
+  const { JWT_SECRET } = process.env;
+  if (!JWT_SECRET) {
+    throw new Error('JWT secret not defined');
+  }
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' });
+};
+
+/**
  * Login a user.
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  type AuthenticateInfo = {
-    message: string;
-  };
   passport.authenticate('local', async (err: Error, user: UserType | null, info: AuthenticateInfo) => {
     if (err) {
       return next(err);
     }
 
+    // Handle unsuccessful authentication attempt
     if (!user) {
       const { email } = req.body;
       const susUser = await User.findOne({ email });
 
       if (susUser) {
-        // Handle login failure
-        if (susUser.betaAccess === false) {
-          req.flash(
-            'warning',
-            `You do not have ${process.env.RELEASE_PHASE} access.`
-          );
-          return res.status(403).json({ flash: req.flash() });
-        } else if (susUser.betaAccess === undefined) {
-          if (!susUser.emailVerified) {
-            susUser.sendBetaAccessVerificationEmail(
-              susUser.generateEmailVerificationToken()
-            );
-
-            susUser.save();
-
-            req.flash(
-              'info',
-              'You must verify your email address in order for your beta request to be reviewed. Please check your mailbox for messages from The CDJ Team.'
-            );
-          } else {
-            req.flash(
-              'info',
-              'Your request for beta access is pending approval. We will notify you by email as soon as possible when you are approved. Please check your mailbox for messages from The CDJ Team.'
-            );
-          }
-          return res.status(403).json({ flash: req.flash() });
-        }
-
-        return next(new ExpressError(info.message, 403));
+        return handleFailedLogin(req, res, next, susUser, info);
       } else {
         return next(new ExpressError('Email or password is incorrect.', 401));
       }
@@ -249,25 +265,20 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     let token: string;
     if (req.body.remember) {
       try {
-        const { JWT_SECRET } = process.env;
-        if (JWT_SECRET === undefined) {
-          throw new Error('JWT secret not defined');
-        }
-        token = jwt.sign({ id: user._id }, JWT_SECRET, {
-          expiresIn: '7d',
-        });
+        generateToken(user.id);
       } catch (err) {
         req.flash('error', (err as Error).message);
       }
     }
 
+    // Initiate login session for user
     req.logIn(user, async (err) => {
       if (err) {
         return next(err);
       }
 
       // Give existing users beta access
-      if (process.env.RELEASE_PHASE === 'beta' && !user?.betaAccess) {
+      if (process.env.RELEASE_PHASE === 'beta' && !user.betaAccess) {
         user.betaAccess = true;
         await user.save();
 
@@ -275,23 +286,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       }
 
       // Retrieve the user's journal
-      let journal = await Journal.findOne({ user: user._id });
-
-      // May not have a journal if the user must be approved for access
-      if (!journal) {
-        // Create default config
-        const newConfig = new Config({
-          model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
-        });
-        await newConfig.save();
-
-        journal = new Journal({
-          user: user._id,
-          config: newConfig._id,
-        });
-
-        await journal.save();
-      }
+      const journal = await AccountServices.ensureUserJournal(user.id);
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
 
@@ -301,7 +296,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       );
 
       res.status(200).json({
-        journalId: journal._id,
+        journalId: journal.id,
         journalTitle: journal.title,
         flash: req.flash(),
         token,

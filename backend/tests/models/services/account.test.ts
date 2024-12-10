@@ -629,4 +629,40 @@ describe('Account services tests', () => {
       );
     });
   });
+
+  describe('ensureUserJournal (Integration Tests)', () => {
+    it('should return an existing journal if one exists for the user', async () => {
+      const existingJournal = new Journal({ user: mockUser.id });
+      await existingJournal.save();
+  
+      const result = await AccountServices.ensureUserJournal(mockUser.id);
+  
+      expect(result.id).toEqual(existingJournal.id);
+      expect(result.user.toString()).toEqual(mockUser.id);
+    });
+  
+    it('should create a new journal and config if none exists for the user', async () => {
+      const result = await AccountServices.ensureUserJournal(mockUser.id);
+  
+      expect(result.user.toString()).toEqual(mockUser.id);
+      expect(result.config).toBeDefined();
+  
+      const savedConfig = await Config.findById(result.config);
+      expect(savedConfig).not.toBeNull();
+      expect(savedConfig?.model.analysis).toEqual('gpt-3.5-turbo-1106');
+      expect(savedConfig?.model.chat).toEqual('gpt-4');
+    });
+  
+    it('should handle multiple calls gracefully by reusing the existing journal', async () => {
+      const firstCall = await AccountServices.ensureUserJournal(mockUser.id);
+      const secondCall = await AccountServices.ensureUserJournal(mockUser.id);
+  
+      expect(firstCall.id).toEqual(secondCall.id);
+  
+      const journalCount = await Journal.countDocuments({ user: mockUser.id });
+      const configCount = await Config.countDocuments({});
+      expect(journalCount).toBe(1);
+      expect(configCount).toBe(1);
+    });
+  });
 });
