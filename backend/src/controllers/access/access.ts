@@ -390,7 +390,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   const { newPassword, token } = req.body;
 
   try {
-    await AccountServices.resetPassword(newPassword, token);
+    await AccountServices.resetPassword(token, newPassword);
 
     req.flash('success', 'Password reset successfully.');
     res.status(200).json({ flash: req.flash() });
