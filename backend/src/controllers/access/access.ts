@@ -1,4 +1,4 @@
-import * as AccountServices from '../../models/services/account.js';
+import * as AccessServices from '../../models/services/access.js';
 import { Journal, User } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -25,7 +25,7 @@ interface UserToken extends JwtPayload {
 /**
  * Expected request body for PUT requests to the account endpoint.
  */
-interface AccountRequestBody {
+interface UpdateAccountRequestBody {
   profile?: {
     fname?: string;
     lname?: string;
@@ -37,158 +37,6 @@ interface AccountRequestBody {
   };
   config?: ConfigType;
 }
-
-/**
- * Update the journal by accepted fields.
- */
-export const updateJournal = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { journalId } = req.params;
-  const { title } = req.body;
-
-  try {
-    const updatedJournal = await AccountServices.updateJournal(journalId, title);
-
-    if (updatedJournal) {
-      req.flash('success', 'Journal title updated successfully.');
-    } else {
-      req.flash('warning', 'Journal title not updated.');
-    }
-    
-
-    res.status(200).json({ flash: req.flash() });
-  } catch(err) {
-    if (!(err instanceof ExpressError)) {
-      return next(new ExpressError((err as Error).message, 404));
-    }
-    return next(
-      new ExpressError(
-        'An error occurred while attempting to update the journal.',
-        500
-      )
-    );
-  }
-};
-
-/**
- * Get the user associated with a journal.
- */
-export const getAccount = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { journalId } = req.params;
-
-  try {
-    const {
-      configMessage,
-      user,
-      config
-    } = await AccountServices.getAccount(journalId);
-
-    // If the config doesn't exist instruct the user to set it up
-    if (configMessage) {
-      req.flash('info', configMessage);
-    }
-    res.status(200).json({ user, config, flash: req.flash() });
-  } catch (err) {
-    return next(new ExpressError((err as Error).message, 404));
-  }
-};
-
-/**
- * Update the User and Config models by journalId.
- */
-export const updateAccount = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { journalId } = req.params;
-  const { profile, password, config } = req.body as AccountRequestBody;
-
-  try {
-    const journal = await Journal.findById(journalId);
-    if (!journal) return next(new ExpressError('Journal not found.', 404));
-
-    // Update the User model with the profile data
-    if (profile) {
-      const { user, errorMessage } = await AccountServices.updateProfile(journal.user.toString(), profile);
-      if (errorMessage) req.flash('warning', 'The email address provided cannot be used.');
-      if (!user) return next(new ExpressError('User not found.', 404));
-      req.flash('success', 'Profile updated successfully.');
-    }
-    
-    // Update the user's password
-    if (password) {
-      const { oldPassword, newPassword } = password;
-      try {
-        await AccountServices.updatePassword(journal.user.toString(), oldPassword, newPassword);
-      } catch (error) {
-        return next(error);
-      }
-      req.flash('success', 'Password updated successfully.');
-    }
-
-    // Update the Config model with the config data
-    if (config) {
-      await AccountServices.updateConfig(journal.config?.toString(), journal, config);
-      req.flash('success', 'Config updated successfully.');
-    }
-
-    // If the email was updated, re-authenticate the user
-    if (profile?.email || password) {
-      req.flash('info', 'Please log in again with your new credentials.');
-    }
-
-    res.status(200).json({ flash: req.flash() });
-  } catch {
-    return next(
-      new ExpressError(
-        'An error occurred while attempting to update the account.',
-        500
-      )
-    );
-  }
-};
-
-/**
- * Delete an item from the account endpoint of a journal.
- */
-export const deleteItem = async (req: Request, res: Response, next: NextFunction) => {
-  const { journalId } = req.params;
-  const { deletionItem } = req.query;
-
-  if (deletionItem === 'config') {
-    try {
-      await AccountServices.deleteConfig(journalId);
-      req.flash('success', 'Config deleted successfully.');
-      res.status(200).json({ flash: req.flash() });
-    } catch (err) {
-      return next(err);
-    }
-  } else if (deletionItem === 'account') {
-    try {
-      await AccountServices.deleteAccount(journalId);
-      req.flash('success', 'Account deleted successfully.');
-      res.status(200).json({ flash: req.flash() });      
-    } catch (err) {
-      if (err instanceof ExpressError) {
-        return next(err);
-      }
-      return next(
-        new ExpressError(
-          'An error occurred while attempting to delete the account.',
-          500
-        )
-      );
-    }
-  }
-};
 
 /**
  * Handle behavior and HTTP response after authentication fails.
@@ -237,6 +85,171 @@ function generateToken (userId: string): string {
 }
 
 /**
+ * Show info message only for the first 12 hours based on `iat` timestamp.
+ * 
+ * @param token JWT
+ * @returns true if current time within 12 hours of token.iat, false otherwise
+ */
+function isWithinTwelveHours(token: UserToken) {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const TWELVE_HOURS = 43200; // 12 hours in seconds
+  token.iat = token.iat ?? currentTime - 30; // Backdate JWT by 30 seconds if undefined
+  return token.iat + TWELVE_HOURS > currentTime;
+}
+
+/**
+ * Update the journal by accepted fields.
+ */
+export const updateJournal = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { journalId } = req.params;
+  const { title } = req.body;
+
+  try {
+    const updatedJournal = await AccessServices.updateJournalTitle(journalId, title);
+
+    if (updatedJournal) {
+      req.flash('success', 'Journal title updated successfully.');
+    } else {
+      req.flash('warning', 'Journal title not updated.');
+    }
+    
+
+    res.status(200).json({ flash: req.flash() });
+  } catch(err) {
+    if (!(err instanceof ExpressError)) {
+      return next(new ExpressError((err as Error).message, 404));
+    }
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to update the journal.',
+        500
+      )
+    );
+  }
+};
+
+/**
+ * Get the user associated with a journal.
+ */
+export const getAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { journalId } = req.params;
+
+  try {
+    const {
+      configMessage,
+      user,
+      config
+    } = await AccessServices.getAccount(journalId);
+
+    // If the config doesn't exist instruct the user to set it up
+    if (configMessage) {
+      req.flash('info', configMessage);
+    }
+    res.status(200).json({ user, config, flash: req.flash() });
+  } catch (err) {
+    return next(new ExpressError((err as Error).message, 404));
+  }
+};
+
+/**
+ * Update the User and Config models by journalId.
+ */
+export const updateAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { journalId } = req.params;
+  const { profile, password, config } = req.body as UpdateAccountRequestBody;
+
+  try {
+    const journal = await Journal.findById(journalId);
+    if (!journal) return next(new ExpressError('Journal not found.', 404));
+
+    // Update the User model with the profile data
+    if (profile) {
+      const { user, errorMessage } = await AccessServices.updateProfile(journal.user.toString(), profile);
+      if (errorMessage) req.flash('warning', 'The email address provided cannot be used.');
+      if (!user) return next(new ExpressError('User not found.', 404));
+      req.flash('success', 'Profile updated successfully.');
+    }
+    
+    // Update the user's password
+    if (password) {
+      const { oldPassword, newPassword } = password;
+      try {
+        await AccessServices.updatePassword(journal.user.toString(), oldPassword, newPassword);
+      } catch (error) {
+        return next(error);
+      }
+      req.flash('success', 'Password updated successfully.');
+    }
+
+    // Update the Config model with the config data
+    if (config) {
+      await AccessServices.updateConfig(journal.config?.toString(), journal, config);
+      req.flash('success', 'Config updated successfully.');
+    }
+
+    // If the email was updated, re-authenticate the user
+    if (profile?.email || password) {
+      req.flash('info', 'Please log in again with your new credentials.');
+    }
+
+    res.status(200).json({ flash: req.flash() });
+  } catch {
+    return next(
+      new ExpressError(
+        'An error occurred while attempting to update the account.',
+        500
+      )
+    );
+  }
+};
+
+/**
+ * Delete an item from the account endpoint of a journal.
+ */
+export const deleteItem = async (req: Request, res: Response, next: NextFunction) => {
+  const { journalId } = req.params;
+  const { deletionItem } = req.query;
+
+  if (deletionItem === 'config') {
+    try {
+      await AccessServices.deleteConfig(journalId);
+      req.flash('success', 'Config deleted successfully.');
+      res.status(200).json({ flash: req.flash() });
+    } catch (err) {
+      return next(err);
+    }
+  } else if (deletionItem === 'account') {
+    try {
+      await AccessServices.deleteAccount(journalId);
+      req.flash('success', 'Account deleted successfully.');
+      res.status(200).json({ flash: req.flash() });      
+    } catch (err) {
+      if (err instanceof ExpressError) {
+        return next(err);
+      }
+      return next(
+        new ExpressError(
+          'An error occurred while attempting to delete the account.',
+          500
+        )
+      );
+    }
+  }
+};
+
+/**
  * Login a user.
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -282,7 +295,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       }
 
       // Retrieve the user's journal
-      const journal = await AccountServices.ensureUserJournal(user.id);
+      const journal = await AccessServices.ensureJournalExists(user.id);
 
       if (token) req.flash('info', 'You will be logged out after 7 days.');
 
@@ -302,19 +315,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 /**
- * Show info message only for the first 12 hours based on `iat` timestamp.
- * 
- * @param token JWT
- * @returns true if current time within 12 hours of token.iat, false otherwise
- */
-function isWithinTwelveHours(token: UserToken) {
-  const currentTime = Math.floor(Date.now() / 1000);
-  const TWELVE_HOURS = 43200; // 12 hours in seconds
-  token.iat = token.iat ?? currentTime - 30; // Backdate JWT by 30 seconds if undefined
-  return token.iat + TWELVE_HOURS > currentTime;
-}
-
-/**
  * Login a user with a token.
  */
 export const tokenLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -324,7 +324,7 @@ export const tokenLogin = async (req: Request, res: Response, next: NextFunction
       return next(new ExpressError('Token is invalid or has expired.', 403));
     }
 
-    const journal = await AccountServices.getPopulatedJournal(token.id);
+    const journal = await AccessServices.getPopulatedJournal(token.id);
     if (!journal) {
       return next(new ExpressError('Journal not found.', 404));
     }
@@ -370,7 +370,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
   const { email } = req.body;
 
   try {
-    await AccountServices.forgotPassword(email);
+    await AccessServices.forgotPassword(email);
 
     req.flash('success', 'Recovery email sent successfully.');
     res.status(200).json({ flash: req.flash() });
@@ -386,7 +386,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   const { newPassword, token } = req.body;
 
   try {
-    await AccountServices.resetPassword(token, newPassword);
+    await AccessServices.resetPassword(token, newPassword);
 
     req.flash('success', 'Password reset successfully.');
     res.status(200).json({ flash: req.flash() });
@@ -424,7 +424,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   const { fname, lname, email, password, title } = req.body;
 
   try {
-    const { newUser, newJournal }= await AccountServices.createAccount(
+    const { newUser, newJournal }= await AccessServices.createAccount(
       fname,
       lname,
       email,
@@ -461,7 +461,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
   const { token } = req.body;
 
   try {
-    const user = await AccountServices.verifyEmail(token);
+    const user = await AccessServices.verifyEmail(token);
 
     if (user.betaAccessToken) {
       req.flash(

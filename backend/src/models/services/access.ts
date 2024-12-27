@@ -59,7 +59,7 @@ export async function getPopulatedJournal(userId: string) {
  * @param journalId id of journal associated with the account
  * @returns journal with updates on success, null on failure
  */
-export async function updateJournal(journalId: string, title: string) {
+export async function updateJournalTitle(journalId: string, title: string) {
   const journal = await Journal.findById(journalId);
   if (!journal) throw new Error('Journal not found.');
 
@@ -387,7 +387,7 @@ export async function forgotPassword(email: string) {
  *
  * @throws Will propagate any errors that occur during database operations.
  */
-export async function ensureUserJournal (userId: string) {
+export async function ensureJournalExists (userId: string) {
   let journal = await Journal.findOne({ user: userId });
 
   if (!journal) {

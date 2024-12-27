@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as AccountServices from '../../../src/models/services/account.js';
+import * as AccessServices from '../../../src/models/services/access.js';
 import { Config, Entry, Journal, User } from '../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { ConfigType } from '../../../src/models/config.js';
@@ -12,14 +12,14 @@ import { UserType } from '../../../src/models/user.js';
 import connectDB from '../../../src/db.js';
 
 describe('Account services tests', () => {
-  let mockUser: UserType;
+  let testUser: UserType;
 
   beforeAll(async () => {
     await connectDB('cdj');
   });
 
   beforeEach(async () => {
-    mockUser = await User.register({
+    testUser = await User.register({
       fname: 'test fname',
       lname: 'test lname',
       email: 'testemail@fake.com',
@@ -37,73 +37,73 @@ describe('Account services tests', () => {
 
   describe('getAccount tests', () => {
     it('gets user and config without message for getAccount when config set', async () => {
-      const mockConfig = await Config.create({
+      const testConfig = await Config.create({
         model: {
           chat: 'test chat model',
           analysis: 'test analysis model'
         }
       });
       const mockJournal = await Journal.create({ 
-        user: mockUser.id,
-        config: mockConfig.id,
+        user: testUser.id,
+        config: testConfig.id,
       });
   
-      const { user, config, configMessage } = await AccountServices.getAccount(mockJournal.id);
+      const { user, config, configMessage } = await AccessServices.getAccount(mockJournal.id);
       
-      expect(user.id).toBe(mockUser.id);
-      expect(config!.id).toBe(mockConfig.id);
+      expect(user.id).toBe(testUser.id);
+      expect(config!.id).toBe(testConfig.id);
       expect(configMessage).toBeUndefined();
     });
   
     it('gets user, config, and message for getAccount when config not set', async () => {
-      const mockJournal = await Journal.create({ user: mockUser.id });
+      const testJournal = await Journal.create({ user: testUser.id });
   
-      const { user, config, configMessage } = await AccountServices.getAccount(mockJournal.id);
+      const { user, config, configMessage } = await AccessServices.getAccount(testJournal.id);
       
-      expect(user.id).toBe(mockUser.id);
+      expect(user.id).toBe(testUser.id);
       expect(config).toBe(config);
       expect(configMessage).toBe('Click the Config tab to complete your journal setup.');
     });
   
     it('throws error if journal not found', async () => {
-      const mockJournal = new Journal({ user: mockUser.id });
+      const testJournal = new Journal({ user: testUser.id });
       await expect(
-        AccountServices.getAccount(mockJournal.id)
+        AccessServices.getAccount(testJournal.id)
       ).rejects.toThrow('Journal not found.');
     });
   
     it('throws error if user not found', async () => {
-      await User.findByIdAndDelete(mockUser.id);
-      const mockJournal = await Journal.create({ user: mockUser.id });
+      await User.findByIdAndDelete(testUser.id);
+      const testJournal = await Journal.create({ user: testUser.id });
       await expect(
-        AccountServices.getAccount(mockJournal.id)
+        AccessServices.getAccount(testJournal.id)
       ).rejects.toThrow('User not found.');
     });
   });
 
   describe('updateJournal tests', () => {
     it('returns true if journal updates successfully', async () => {
-      const mockJournal = await Journal.create({ user: mockUser.id });
+      const testJournal = await Journal.create({ user: testUser.id });
   
-      const result = await AccountServices.updateJournal(mockJournal.id, 'New Title');
+      const result = await AccessServices.updateJournalTitle(testJournal.id, 'New Title');
   
       expect(result).toBeDefined();
       expect(result!.title).toBe('New Title');
     });
 
     it('returns false if title is empty', async () => {
-      const mockJournal = await Journal.create({ user: mockUser.id, title: 'Old Title' });
+      const testJournal = await Journal.create({ user: testUser.id, title: 'Old Title' });
   
-      const result = await AccountServices.updateJournal(mockJournal.id, '');
+      const result = await AccessServices.updateJournalTitle(testJournal.id, '');
   
       expect(result).toBeNull();
     });
 
     it('throws error if journal not found', async () => {
-      const mockJournal = new Journal({ user: mockUser.id });
+      const testJournal = new Journal({ user: testUser.id });
   
       await expect(
-        AccountServices.updateJournal(mockJournal.id, 'New Title')
+        AccessServices.updateJournalTitle(testJournal.id, 'New Title')
       ).rejects.toThrow();
     });
   });
@@ -112,10 +112,10 @@ describe('Account services tests', () => {
     it('should update the user profile successfully', async () => {
       const profileUpdate = { fname: 'Jane', lname: 'Doe', email: 'janedoe@example.com' };
 
-      const { user, errorMessage } = await AccountServices.updateProfile(mockUser.id, profileUpdate);
+      const { user, errorMessage } = await AccessServices.updateProfile(testUser.id, profileUpdate);
       
       expect(errorMessage).toBeNull();
-      expect(user!.id).toEqual(mockUser.id);
+      expect(user!.id).toEqual(testUser.id);
       expect(user!.fname).toEqual(profileUpdate.fname);
       expect(user!.lname).toEqual(profileUpdate.lname);
       expect(user!.email).toEqual(profileUpdate.email);
@@ -124,7 +124,7 @@ describe('Account services tests', () => {
     it('should return an error when the userId is invalid', async () => {
       const invalidId = 'invalid-object-id';
 
-      const { user, errorMessage } = await AccountServices.updateProfile(invalidId as any, { fname: 'Invalid' });
+      const { user, errorMessage } = await AccessServices.updateProfile(invalidId as any, { fname: 'Invalid' });
 
       expect(user).toBeNull();
       expect(errorMessage).toEqual('The email address provided cannot be used.');
@@ -136,7 +136,7 @@ describe('Account services tests', () => {
         new Error('Database error')
       );
 
-      const { user, errorMessage } = await AccountServices.updateProfile(mockUser.id, profileUpdate);
+      const { user, errorMessage } = await AccessServices.updateProfile(testUser.id, profileUpdate);
 
       expect(user).toBeNull();
       expect(errorMessage).toEqual('The email address provided cannot be used.');
@@ -148,9 +148,9 @@ describe('Account services tests', () => {
       const oldPassword = 'OldPassword123!';
       const newPassword = 'NewPassword123!';
   
-      await AccountServices.updatePassword(mockUser.id, oldPassword, newPassword);
+      await AccessServices.updatePassword(testUser.id, oldPassword, newPassword);
   
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       const isMatch = await updatedUser?.comparePassword(newPassword);
   
       expect(isMatch).toBe(true);
@@ -166,7 +166,7 @@ describe('Account services tests', () => {
       const newPassword = 'NewPassword123!';
   
       await expect(
-        AccountServices.updatePassword(nonexistentUser.id, oldPassword, newPassword)
+        AccessServices.updatePassword(nonexistentUser.id, oldPassword, newPassword)
       ).rejects.toThrow(new ExpressError('User not found.', 404));
     });
   
@@ -175,7 +175,7 @@ describe('Account services tests', () => {
       const newPassword = 'NewPassword123!';
   
       await expect(
-        AccountServices.updatePassword(mockUser.id, incorrectOldPassword, newPassword)
+        AccessServices.updatePassword(testUser.id, incorrectOldPassword, newPassword)
       ).rejects.toThrow(new ExpressError('Password is incorrect.', 401));
     });
   
@@ -188,10 +188,10 @@ describe('Account services tests', () => {
       );
   
       await expect(
-        AccountServices.updatePassword(mockUser.id, oldPassword, newPassword)
+        AccessServices.updatePassword(testUser.id, oldPassword, newPassword)
       ).rejects.toThrow('Database save failed.');
   
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       const isMatch = await updatedUser?.comparePassword(oldPassword);
   
       expect(isMatch).toBe(true);
@@ -199,59 +199,59 @@ describe('Account services tests', () => {
   });
 
   describe('updateConfig tests', () => {
-    let journal: HydratedDocument<JournalType>;
+    let testJournal: HydratedDocument<JournalType>;
     
     beforeEach(async () => {
-      journal = await Journal.create({
+      testJournal = await Journal.create({
         title: 'Test Journal',
-        user: mockUser.id
+        user: testUser.id
       });
     });
 
     it('should create a new configuration if none exists', async () => {
-      const newConfig: ConfigType = {
+      const testConfig: ConfigType = {
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       } as ConfigType;
   
-      await AccountServices.updateConfig(undefined, journal, newConfig);
+      await AccessServices.updateConfig(undefined, testJournal, testConfig);
   
       const updatedJournal = await Journal
-        .findById(journal.id)
+        .findById(testJournal.id)
         .populate<{ config: ConfigType }>('config');
       expect(updatedJournal?.config).toBeDefined();
-      expect(updatedJournal?.config.model.chat).toBe(newConfig.model.chat);
-      expect(updatedJournal?.config.model.analysis).toBe(newConfig.model.analysis);
+      expect(updatedJournal?.config.model.chat).toBe(testConfig.model.chat);
+      expect(updatedJournal?.config.model.analysis).toBe(testConfig.model.analysis);
     });
   
     it('should update an existing configuration', async () => {
-      const existingConfig = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       } as ConfigType);
   
-      journal.config = existingConfig._id;
-      await journal.save();
+      testJournal.config = testConfig._id;
+      await testJournal.save();
   
       const updatedConfig: ConfigType = {
         model: { chat: 'updatedChatModel', analysis: undefined },
       } as ConfigType;
   
-      await AccountServices.updateConfig(existingConfig.id, journal, updatedConfig);
+      await AccessServices.updateConfig(testConfig.id, testJournal, updatedConfig);
   
-      const reloadedConfig = await Config.findById(existingConfig.id);
+      const reloadedConfig = await Config.findById(testConfig.id);
       expect(reloadedConfig).toBeDefined();
       expect(reloadedConfig?.model.chat).toBe(updatedConfig.model.chat);
       expect(reloadedConfig?.model.analysis).toBeUndefined();
     });
   
     it('should handle an undefined model field in the new configuration', async () => {
-      const newConfig: ConfigType = {
+      const testConfig: ConfigType = {
         model: {},
       } as ConfigType;
   
-      await AccountServices.updateConfig(undefined, journal, newConfig);
+      await AccessServices.updateConfig(undefined, testJournal, testConfig);
   
       const updatedJournal = await Journal
-        .findById(journal.id)
+        .findById(testJournal.id)
         .populate<{ config: ConfigType }>('config');
       expect(updatedJournal!.config).toBeDefined();
       expect(updatedJournal!.config.model).toBeDefined();
@@ -260,21 +260,21 @@ describe('Account services tests', () => {
     });
   
     it('should preserve unrelated fields when updating configuration', async () => {
-      const existingConfig = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
         apiKey: 'apiKey',
       });
   
-      journal.config = existingConfig._id;
-      await journal.save();
+      testJournal.config = testConfig._id;
+      await testJournal.save();
   
       const updatedConfig: ConfigType = {
         model: { chat: 'updatedChatModel' },
       } as ConfigType;
   
-      await AccountServices.updateConfig(existingConfig.id, journal, updatedConfig);
+      await AccessServices.updateConfig(testConfig.id, testJournal, updatedConfig);
   
-      const reloadedConfig = await Config.findById(existingConfig._id);
+      const reloadedConfig = await Config.findById(testConfig._id);
       expect(reloadedConfig).toBeDefined();
       expect(reloadedConfig?.model.chat).toBe('updatedChatModel');
       expect(reloadedConfig?.model.analysis).toBeUndefined();
@@ -284,18 +284,18 @@ describe('Account services tests', () => {
 
   describe('deleteConfig', () => {
     it('should delete the associated config if the journal exists', async () => {
-      const config = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       });
-      const journal = await Journal.create({ 
-        user: mockUser.id,
-        config: config.id
+      const testJournal = await Journal.create({ 
+        user: testUser.id,
+        config: testConfig.id
       });
   
-      await AccountServices.deleteConfig(journal.id.toString());
+      await AccessServices.deleteConfig(testJournal.id.toString());
   
-      const deletedConfig = await Config.findById(config.id);
-      const deletedJournal = await Journal.findById(journal.id);
+      const deletedConfig = await Config.findById(testConfig.id);
+      const deletedJournal = await Journal.findById(testJournal.id);
   
       expect(deletedConfig).toBeNull();
       expect(deletedJournal).not.toBeNull();
@@ -304,25 +304,25 @@ describe('Account services tests', () => {
     it('should throw an error if the journal does not exist', async () => {
       const nonExistentJournalId = new mongoose.Types.ObjectId().toString();
   
-      await expect(AccountServices.deleteConfig(nonExistentJournalId))
+      await expect(AccessServices.deleteConfig(nonExistentJournalId))
         .rejects
         .toThrow(ExpressError);
-      await expect(AccountServices.deleteConfig(nonExistentJournalId))
+      await expect(AccessServices.deleteConfig(nonExistentJournalId))
         .rejects
         .toThrow('Journal not found.');
     });
   
     it('should throw an error if the config does not exist', async () => {
       const nonExistentConfigId = new mongoose.Types.ObjectId();
-      const journal = await Journal.create({
-        user: mockUser.id,
+      const testJournal = await Journal.create({
+        user: testUser.id,
         config: nonExistentConfigId
       });
   
-      await expect(AccountServices.deleteConfig(journal.id))
+      await expect(AccessServices.deleteConfig(testJournal.id))
         .rejects
         .toThrow(ExpressError);
-      await expect(AccountServices.deleteConfig(journal.id))
+      await expect(AccessServices.deleteConfig(testJournal.id))
         .rejects
         .toThrow('Config not found.');
     });
@@ -330,33 +330,33 @@ describe('Account services tests', () => {
 
   describe('deleteAccount', () => {
     it('should delete the journal, user, entries, and related data', async () => {
-      const config = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       });
-      const journal = await Journal.create({
-        user: mockUser.id,
-        config: config.id
+      const testJournal = await Journal.create({
+        user: testUser.id,
+        config: testConfig.id
       });
   
       await Entry.create({
-        journal: journal.id,
+        journal: testJournal.id,
         analysis: new mongoose.Types.ObjectId(),
         conversation: new mongoose.Types.ObjectId(),
         content: 'entry1 content'
       });
       await Entry.create({
-        journal: journal.id,
+        journal: testJournal.id,
         analysis: new mongoose.Types.ObjectId(),
         conversation: new mongoose.Types.ObjectId(),
         content: 'entry2 content'
       });
   
-      await AccountServices.deleteAccount(journal.id);
+      await AccessServices.deleteAccount(testJournal.id);
 
-      const deletedJournal = await Journal.findById(journal.id);
-      const deletedUser = await User.findById(mockUser.id);
-      const deletedConfig = await Config.findById(config.id);
-      const remainingEntries = await Entry.find({ journal: journal.id });
+      const deletedJournal = await Journal.findById(testJournal.id);
+      const deletedUser = await User.findById(testUser.id);
+      const deletedConfig = await Config.findById(testConfig.id);
+      const remainingEntries = await Entry.find({ journal: testJournal.id });
   
       expect(deletedJournal).toBeNull();
       expect(deletedUser).toBeNull();
@@ -367,42 +367,42 @@ describe('Account services tests', () => {
     it('should throw an error if the journal does not exist', async () => {
       const nonExistentJournalId = new mongoose.Types.ObjectId().toString();
   
-      await expect(AccountServices.deleteAccount(nonExistentJournalId)).rejects.toThrow(ExpressError);
-      await expect(AccountServices.deleteAccount(nonExistentJournalId)).rejects.toThrow('Journal not found.');
+      await expect(AccessServices.deleteAccount(nonExistentJournalId)).rejects.toThrow(ExpressError);
+      await expect(AccessServices.deleteAccount(nonExistentJournalId)).rejects.toThrow('Journal not found.');
     });
   
     it('should throw an error if the user does not exist', async () => {
-      const config = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       });
-      const journal = await Journal.create({
+      const testJournal = await Journal.create({
         user: new mongoose.Types.ObjectId(),
-        config: config.id
+        config: testConfig.id
       });
   
-      await expect(AccountServices.deleteAccount(journal.id))
+      await expect(AccessServices.deleteAccount(testJournal.id))
         .rejects
         .toThrow(ExpressError);
-      await expect(AccountServices.deleteAccount(journal.id))
+      await expect(AccessServices.deleteAccount(testJournal.id))
         .rejects
         .toThrow('User not found.');
     });
   
     it('should handle journals with no entries gracefully', async () => {
-      const config = await Config.create({
+      const testConfig = await Config.create({
         model: { chat: 'chatModel', analysis: 'analysisModel' },
       });
-      const journal = await Journal.create({
+      const testJournal = await Journal.create({
         title: 'Test Journal',
-        user: mockUser.id,
-        config: config.id
+        user: testUser.id,
+        config: testConfig.id
       });
   
-      await AccountServices.deleteAccount(journal.id);
+      await AccessServices.deleteAccount(testJournal.id);
   
-      const deletedJournal = await Journal.findById(journal.id);
-      const deletedUser = await User.findById(mockUser.id);
-      const deletedConfig = await Config.findById(config.id);
+      const deletedJournal = await Journal.findById(testJournal.id);
+      const deletedUser = await User.findById(testUser.id);
+      const deletedConfig = await Config.findById(testConfig.id);
   
       expect(deletedJournal).toBeNull();
       expect(deletedUser).toBeNull();
@@ -418,7 +418,7 @@ describe('Account services tests', () => {
       const password = 'securePassword';
       const journalTitle = 'My First Journal';
   
-      const { newUser, newJournal } = await AccountServices.createAccount(fname, lname, email, password, journalTitle);
+      const { newUser, newJournal } = await AccessServices.createAccount(fname, lname, email, password, journalTitle);
   
       const user = await User.findById(newUser.id);
       expect(user).not.toBeNull();
@@ -447,31 +447,31 @@ describe('Account services tests', () => {
     });
     
     it('should verify a user\'s email when a valid token is provided', async () => {
-      const token = mockUser.generateEmailVerificationToken();
-      await mockUser.save();
+      const token = testUser.generateEmailVerificationToken();
+      await testUser.save();
   
-      const verifiedUser = await AccountServices.verifyEmail(token);
+      const verifiedUser = await AccessServices.verifyEmail(token);
   
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       expect(updatedUser?.emailVerified).toBe(true);
       expect(updatedUser?.verifyEmailToken).toBeUndefined();
       expect(updatedUser?.verifyEmailTokenExpires).toBeUndefined();
-      expect(verifiedUser.id).toBe(mockUser.id);
+      expect(verifiedUser.id).toBe(testUser.id);
     });
   
     it('should throw an error if the token is invalid', async () => {
-      mockUser.generateEmailVerificationToken();
-      await mockUser.save();
+      testUser.generateEmailVerificationToken();
+      await testUser.save();
   
       const invalidToken = 'invalid-token';
-      await expect(AccountServices.verifyEmail(invalidToken)).rejects.toThrow(
+      await expect(AccessServices.verifyEmail(invalidToken)).rejects.toThrow(
         'Email verification token is invalid.'
       );
     });
   
     it('should throw an error if no matching user is found for the token', async () => {
       const randomToken = 'random-token';
-      await expect(AccountServices.verifyEmail(randomToken)).rejects.toThrow(
+      await expect(AccessServices.verifyEmail(randomToken)).rejects.toThrow(
         'Email verification token is invalid.'
       );
     });
@@ -479,10 +479,10 @@ describe('Account services tests', () => {
     it('should send a beta access email if the user is in beta phase and does not already have beta access', async () => {
       const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
       process.env.RELEASE_PHASE = 'beta';
-      const token = mockUser.generateEmailVerificationToken();
-      await mockUser.save();
+      const token = testUser.generateEmailVerificationToken();
+      await testUser.save();
   
-      await AccountServices.verifyEmail(token);
+      await AccessServices.verifyEmail(token);
         
       expect(mockSendBetaRequestEmail).toHaveBeenCalledTimes(1);
       process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
@@ -492,11 +492,11 @@ describe('Account services tests', () => {
       const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
       process.env.RELEASE_PHASE = 'beta';
   
-      const token = mockUser.generateEmailVerificationToken();
-      mockUser.betaAccess = true;
-      await mockUser.save();
+      const token = testUser.generateEmailVerificationToken();
+      testUser.betaAccess = true;
+      await testUser.save();
   
-      await AccountServices.verifyEmail(token);
+      await AccessServices.verifyEmail(token);
   
       expect(mockSendBetaRequestEmail).not.toHaveBeenCalled();
       process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
@@ -512,46 +512,46 @@ describe('Account services tests', () => {
       jest.spyOn(User.prototype, 'sendPasswordResetConfirmationEmail')
         .mockImplementation(mockSendPasswordResetConfirmationEmail);
 
-      const token = mockUser.generatePasswordResetToken();
-      await mockUser.save();
+      const token = testUser.generatePasswordResetToken();
+      await testUser.save();
   
-      await AccountServices.resetPassword(token, 'newPassword123');
+      await AccessServices.resetPassword(token, 'newPassword123');
   
-      const updatedUser = await User.findById(mockUser.id);
-      expect(mockUser.setPassword).toHaveBeenCalledWith('newPassword123');
+      const updatedUser = await User.findById(testUser.id);
+      expect(testUser.setPassword).toHaveBeenCalledWith('newPassword123');
       expect(updatedUser?.resetPasswordToken).toBeUndefined();
       expect(updatedUser?.resetPasswordExpires).toBeUndefined();
   
-      expect(mockUser.sendPasswordResetConfirmationEmail).toHaveBeenCalled();
+      expect(testUser.sendPasswordResetConfirmationEmail).toHaveBeenCalled();
     });
   
     it('should throw an error if the token is invalid', async () => {
-      mockUser.generatePasswordResetToken();
-      await mockUser.save();
+      testUser.generatePasswordResetToken();
+      await testUser.save();
   
       const invalidToken = 'invalid-token';
-      await expect(AccountServices.resetPassword(invalidToken, 'newPassword123')).rejects.toThrow(
+      await expect(AccessServices.resetPassword(invalidToken, 'newPassword123')).rejects.toThrow(
         'Password reset token is invalid or has expired.'
       );
     });
   
     it('should throw an error if the token has expired', async () => {
-      const token = mockUser.generatePasswordResetToken();
-      mockUser.resetPasswordExpires = new Date(Date.now() - 3600000);
-      await mockUser.save();
+      const token = testUser.generatePasswordResetToken();
+      testUser.resetPasswordExpires = new Date(Date.now() - 3600000);
+      await testUser.save();
   
-      await expect(AccountServices.resetPassword(token, 'newPassword123')).rejects.toThrow(
+      await expect(AccessServices.resetPassword(token, 'newPassword123')).rejects.toThrow(
         'Password reset token is invalid or has expired.'
       );
     });
   
     it('should ensure the resetPasswordToken and resetPasswordExpires fields are cleared after a successful reset', async () => {
-      const token = mockUser.generatePasswordResetToken();
-      await mockUser.save();
+      const token = testUser.generatePasswordResetToken();
+      await testUser.save();
   
-      await AccountServices.resetPassword(token, 'newPassword123');
+      await AccessServices.resetPassword(token, 'newPassword123');
   
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       expect(updatedUser?.resetPasswordToken).toBeUndefined();
       expect(updatedUser?.resetPasswordExpires).toBeUndefined();
     });
@@ -564,10 +564,10 @@ describe('Account services tests', () => {
       jest.spyOn(User.prototype, 'sendPasswordResetConfirmationEmail')
         .mockImplementation(mockSendPasswordResetConfirmationEmail);
       
-      const token = mockUser.generatePasswordResetToken();
-      await mockUser.save();
+      const token = testUser.generatePasswordResetToken();
+      await testUser.save();
 
-      await AccountServices.resetPassword(token, 'newPassword123');
+      await AccessServices.resetPassword(token, 'newPassword123');
   
       expect(mockSendPasswordResetConfirmationEmail).toHaveBeenCalled();
     });
@@ -578,12 +578,12 @@ describe('Account services tests', () => {
       const mockSendPasswordResetEmail = jest.fn();
       jest.spyOn(User.prototype, 'sendPasswordResetEmail')
         .mockImplementation(mockSendPasswordResetEmail);
-      mockUser.betaAccess = true;
-      await mockUser.save();
+      testUser.betaAccess = true;
+      await testUser.save();
   
-      await AccountServices.forgotPassword(mockUser.email);
+      await AccessServices.forgotPassword(testUser.email);
   
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       expect(updatedUser).toBeTruthy();
       expect(updatedUser?.resetPasswordToken).toBeDefined();
       expect(updatedUser?.resetPasswordExpires?.getTime()).toBeGreaterThan(new Date().getTime());
@@ -591,7 +591,7 @@ describe('Account services tests', () => {
     });
   
     it('should throw an error if the user is not found', async () => {
-      await expect(AccountServices.forgotPassword('nonexistent@example.com')).rejects.toThrow(
+      await expect(AccessServices.forgotPassword('nonexistent@example.com')).rejects.toThrow(
         'Could not send recovery email.'
       );
     });
@@ -600,18 +600,18 @@ describe('Account services tests', () => {
       const mockSendAlertForForgotPasswordAbuse = jest.fn();
       jest.spyOn(User.prototype, 'sendAlertForForgotPasswordAbuse')
         .mockImplementation(mockSendAlertForForgotPasswordAbuse);
-      mockUser.betaAccess = false;
-      mockUser.betaAccessTokenExpires = new Date(0);
-      await mockUser.save();
+      testUser.betaAccess = false;
+      testUser.betaAccessTokenExpires = new Date(0);
+      await testUser.save();
       
       const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
       process.env.RELEASE_PHASE = 'beta';
   
-      await expect(AccountServices.forgotPassword(mockUser.email)).rejects.toThrow(
+      await expect(AccessServices.forgotPassword(testUser.email)).rejects.toThrow(
         'You do not have beta access. Admin has been flagged.'
       );
 
-      const updatedUser = await User.findById(mockUser.id);
+      const updatedUser = await User.findById(testUser.id);
       expect(updatedUser?.betaAccess).toBe(false);
 
       process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
@@ -619,10 +619,10 @@ describe('Account services tests', () => {
   
     it('should throw an error if there is an issue generating or sending the email', async () => {
       jest.spyOn(User.prototype, 'sendPasswordResetEmail').mockRejectedValue(new Error('Email error'));
-      mockUser.betaAccess = true;
-      await mockUser.save();
+      testUser.betaAccess = true;
+      await testUser.save();
   
-      await expect(AccountServices.forgotPassword(mockUser.email)).rejects.toThrow(
+      await expect(AccessServices.forgotPassword(testUser.email)).rejects.toThrow(
         'An error occurred while attempting to generate a recovery email.'
       );
     });
@@ -630,19 +630,19 @@ describe('Account services tests', () => {
 
   describe('ensureJournalExists (Integration Tests)', () => {
     it('should return an existing journal if one exists for the user', async () => {
-      const existingJournal = new Journal({ user: mockUser.id });
-      await existingJournal.save();
+      const testJournal = new Journal({ user: testUser.id });
+      await testJournal.save();
   
-      const result = await AccountServices.ensureUserJournal(mockUser.id);
+      const result = await AccessServices.ensureJournalExists(testUser.id);
   
-      expect(result.id).toEqual(existingJournal.id);
-      expect(result.user.toString()).toEqual(mockUser.id);
+      expect(result.id).toEqual(testJournal.id);
+      expect(result.user.toString()).toEqual(testUser.id);
     });
   
     it('should create a new journal and config if none exists for the user', async () => {
-      const result = await AccountServices.ensureUserJournal(mockUser.id);
+      const result = await AccessServices.ensureJournalExists(testUser.id);
   
-      expect(result.user.toString()).toEqual(mockUser.id);
+      expect(result.user.toString()).toEqual(testUser.id);
       expect(result.config).toBeDefined();
   
       const savedConfig = await Config.findById(result.config);
@@ -652,12 +652,12 @@ describe('Account services tests', () => {
     });
   
     it('should handle multiple calls gracefully by reusing the existing journal', async () => {
-      const firstCall = await AccountServices.ensureUserJournal(mockUser.id);
-      const secondCall = await AccountServices.ensureUserJournal(mockUser.id);
+      const firstCall = await AccessServices.ensureJournalExists(testUser.id);
+      const secondCall = await AccessServices.ensureJournalExists(testUser.id);
   
       expect(firstCall.id).toEqual(secondCall.id);
   
-      const journalCount = await Journal.countDocuments({ user: mockUser.id });
+      const journalCount = await Journal.countDocuments({ user: testUser.id });
       const configCount = await Config.countDocuments({});
       expect(journalCount).toBe(1);
       expect(configCount).toBe(1);
