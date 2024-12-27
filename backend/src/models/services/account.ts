@@ -41,6 +41,12 @@ export async function getAccount(
   return result;
 }
 
+/**
+ * Get all journal information associated with a user.
+ * 
+ * @param userId id of user associated with the journal
+ * @returns populated journal on success, null on failure
+ */
 export async function getPopulatedJournal(userId: string) {
   return await Journal
     .findOne({ user: userId })
@@ -112,8 +118,8 @@ export async function updatePassword(
 }
 
 /**
- * Updates User Config with information in config.
- * Creates Config and links to journal if undefined.
+ * Updates User Config with information in config. If no Config exists, a new 
+ * one is created and linked to the user's Journal.
  * 
  * @param configId id of Config to update
  * @param journal Journal document linked to Config with configId
@@ -146,7 +152,6 @@ export async function updateConfig(
  * Deletes config associated with journalId if it exists.
  * 
  * @param journalId id of journal associated with the account
- * @returns 
  */
 export async function deleteConfig(journalId: string): Promise<void> {
   const journal = await Journal.findById(journalId);
@@ -157,11 +162,10 @@ export async function deleteConfig(journalId: string): Promise<void> {
 }
 
 /**
- * Deletes User, all Entries, EntryAnalyses, and EntryConversations, Config, and Journal
- * associated with journalId.
+ * Deletes the User, each Entry and each of the Entry's EntryAnalyses and 
+ * EntryConversations, the Config and the Journal by journalId.
  * 
  * @param journalId id of journal associated with the account
- * @returns 
  */
 export async function deleteAccount(
   journalId: string
@@ -194,7 +198,8 @@ export async function deleteAccount(
  * @param email The email address of the user.
  * @param password The password for the user account.
  * @param journalTitle The title of the journal to create for the user.
- * @returns A promise that resolves to an object containing the newly created user and journal.
+ * @returns A promise that resolves to an object containing the newly created 
+ * user and journal.
  */
 export async function createAccount(
   fname: string,
@@ -229,13 +234,14 @@ export async function createAccount(
  * their email is marked as verified, and the verification token and
  * expiration fields are cleared. If the application is in the beta
  * release phase and the user does not yet have beta access, a beta
- * access request email is sent.
+ * access request email is sent to Support for approval.
  *
  * @async
  * @function verifyEmail
  * @param token - The email verification token provided by the user.
  * @returns A promise that resolves to the updated user object.
- * @throws {ExpressError} Throws an error if the token is invalid or no matching user is found.
+ * @throws {ExpressError} Throws an error if the token is invalid or no 
+ * matching user is found.
  */
 export async function verifyEmail(
   token: string
@@ -266,9 +272,9 @@ export async function verifyEmail(
  * Resets a user's password using a provided reset token.
  * 
  * This function verifies the validity of the password reset token and ensures
- * that it has not expired. If the token is valid, it updates the user's password,
- * clears the reset token and expiration fields, and sends a confirmation email
- * to the user notifying them of the password change.
+ * that it has not expired. If the token is valid, it updates the user's 
+ * password, clears the reset token and expiration fields, and sends a 
+ * confirmation email to the user notifying them of the password change.
  *
  * @async
  * @function resetPassword
@@ -302,16 +308,18 @@ export async function resetPassword(
 }
 
 /**
- * Checks if a user is abusing the forgot password functionality during the beta phase.
+ * Checks if a user is abusing the forgot password functionality during the 
+ * beta phase.
  * 
- * If the user does not have beta access but their beta access token is still valid, 
- * this function sends an alert to the user, invalidates their beta access, and 
- * flags the issue by throwing an error. The admin is also notified of the abuse.
+ * If the user does not have beta access but their beta access token is still 
+ * valid, this function sends an alert to the user, invalidates their beta 
+ * access, and flags the issue by throwing an error. The admin is also notified 
+ * of the abuse.
  * 
  * @param user - The user object to validate for abuse of the forgot password functionality.
  * 
- * @throws {ExpressError} - Throws a 403 error if the user does not have beta access 
- * and their beta access token is valid, or if they are flagged for abuse.
+ * @throws {ExpressError} - Throws a 403 error if the user does not have beta 
+ * access and their beta access token is valid, or if they are flagged for abuse.
  */
 async function checkForForgotPasswordAbuse(user: UserType) {
   if (
@@ -332,17 +340,21 @@ async function checkForForgotPasswordAbuse(user: UserType) {
 }
 
 /**
- * Handles the forgot password functionality by generating and sending a password reset email to the user.
+ * Handles the forgot password functionality by generating and sending a 
+ * password reset email to the user.
  * 
- * This function retrieves the user by their email address. If the application is in the beta phase and the 
- * user does not have beta access, it validates for abuse of the forgot password functionality and may flag 
- * the user or prevent further actions. If the user is valid, a password reset token is generated, and an 
- * email is sent to the user with the reset link. The user record is updated accordingly.
+ * This function retrieves the user by their email address. If the application 
+ * is in the beta phase and the user does not have beta access, it validates 
+ * for abuse of the forgot password functionality and may flag the user or 
+ * prevent further actions. If the user is valid, a password reset token is 
+ * generated, and an email is sent to the user with the reset link. The user 
+ * record is updated accordingly.
  * 
  * @param email - The email address of the user requesting a password reset.
  * 
- * @throws {ExpressError} - Throws a 400 error if the user cannot be found, a 403 error if beta abuse is detected, 
- * or a 500 error if the reset token generation or email sending process fails.
+ * @throws {ExpressError} - Throws a 400 error if the user cannot be found, a 
+ * 403 error if beta abuse is detected, or a 500 error if the reset token 
+ * generation or email sending process fails.
  */
 export async function forgotPassword(email: string) {
   const user = await User.findByUsername(email, false);
@@ -367,20 +379,13 @@ export async function forgotPassword(email: string) {
 }
 
 /**
- * Ensures that a journal exists for a given user. If no journal is found, a new one
- * is created with a default configuration and saved to the database.
+ * Ensures that a journal exists for a given user. If no journal is found, a 
+ * new one is created with a default configuration and saved to the database.
  *
  * @param userId - The ID of the user for whom the journal is being checked or created.
  * @returns A promise that resolves to the user's journal, either retrieved or newly created.
  *
  * @throws Will propagate any errors that occur during database operations.
- *
- * @example
- * ```typescript
- * const userId = "12345";
- * const journal = await ensureUserJournal(userId);
- * console.log(journal);
- * ```
  */
 export async function ensureUserJournal (userId: string) {
   let journal = await Journal.findOne({ user: userId });

@@ -109,7 +109,6 @@ describe('Account services tests', () => {
   });
 
   describe('updateProfile tests', () => {
-    
     it('should update the user profile successfully', async () => {
       const profileUpdate = { fname: 'Jane', lname: 'Doe', email: 'janedoe@example.com' };
 
@@ -145,7 +144,6 @@ describe('Account services tests', () => {
   });
 
   describe('updatePassword tests', () => {
-
     it('should successfully update the password', async () => {
       const oldPassword = 'OldPassword123!';
       const newPassword = 'NewPassword123!';
@@ -448,7 +446,7 @@ describe('Account services tests', () => {
       jest.spyOn(User.prototype, 'sendBetaRequestEmail').mockImplementation(mockSendBetaRequestEmail);
     });
     
-    it('should verify a user’s email when a valid token is provided', async () => {
+    it('should verify a user\'s email when a valid token is provided', async () => {
       const token = mockUser.generateEmailVerificationToken();
       await mockUser.save();
   
@@ -630,7 +628,7 @@ describe('Account services tests', () => {
     });
   });
 
-  describe('ensureUserJournal (Integration Tests)', () => {
+  describe('ensureJournalExists (Integration Tests)', () => {
     it('should return an existing journal if one exists for the user', async () => {
       const existingJournal = new Journal({ user: mockUser.id });
       await existingJournal.save();

@@ -23,7 +23,7 @@ interface UserToken extends JwtPayload {
 }
 
 /**
- * Request.body for account controller
+ * Expected request body for PUT requests to the account endpoint.
  */
 interface AccountRequestBody {
   profile?: {
@@ -36,10 +36,6 @@ interface AccountRequestBody {
     newPassword: string;
   };
   config?: ConfigType;
-}
-
-export interface AuthenticateInfo {
-  message: string;
 }
 
 /**
@@ -202,7 +198,7 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
  * and an email is sent to verify their email, then a 403 HTTP error is returned.
  * Otherwise, a 403 HTTP error is returned.
  */
-const handleFailedLogin = async (req: Request, res: Response, next: NextFunction, user: UserType, info: AuthenticateInfo) => {
+async function handleFailedLogin (req: Request, res: Response, next: NextFunction, user: UserType, errorMessage: string) {
   if (user.betaAccess === false) {
     req.flash('warning', `You do not have ${process.env.RELEASE_PHASE} access.`);
     return res.status(403).json({ flash: req.flash() });
@@ -226,25 +222,25 @@ const handleFailedLogin = async (req: Request, res: Response, next: NextFunction
     return res.status(403).json({ flash: req.flash() });
   }
 
-  return next(new ExpressError(info.message, 403));
-};
+  return next(new ExpressError(errorMessage, 403));
+}
 
 /**
  * Generates a JWT for persistent login.
  */
-const generateToken = (userId: string): string => {
+function generateToken (userId: string): string {
   const { JWT_SECRET } = process.env;
   if (!JWT_SECRET) {
     throw new Error('JWT secret not defined');
   }
   return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' });
-};
+}
 
 /**
  * Login a user.
  */
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('local', async (err: Error, user: UserType | null, info: AuthenticateInfo) => {
+  passport.authenticate('local', async (err: Error, user: UserType | null, errorMessage: string) => {
     if (err) {
       return next(err);
     }
@@ -255,7 +251,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       const susUser = await User.findOne({ email });
 
       if (susUser) {
-        return handleFailedLogin(req, res, next, susUser, info);
+        return handleFailedLogin(req, res, next, susUser, errorMessage);
       } else {
         return next(new ExpressError('Email or password is incorrect.', 401));
       }
