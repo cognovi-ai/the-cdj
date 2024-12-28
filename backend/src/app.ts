@@ -86,7 +86,6 @@ app.use(passport.authenticate('session'));
 
 // Passport config
 passport.use(User.createStrategy());
-// @ts-expect-error  Error from mismatch between User model and Express.User types. Implemented same way as passport-local-mongoose docs suggest
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
