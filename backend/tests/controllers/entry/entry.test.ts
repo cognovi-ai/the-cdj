@@ -18,6 +18,7 @@ jest.mock('../../../src/utils/ExpressError.js');
 jest.mock('../../../src/models/services/entry/entry.js', () => ({
   getAllEntries: jest.fn(),
   createEntry: jest.fn(),
+  getPopulatedEntry: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -178,6 +179,61 @@ describe('Entry Controller Tests', () => {
       );
   
       await EntryController.createEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next.mock.calls[0][0].message).toBe('Database error');
+    });
+  });
+
+  describe('getAnEntry', () => {
+    it('should return an entry with status 200 when entry exists', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.getPopulatedEntry as jest.Mock).mockResolvedValue({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+      });
+  
+      await EntryController.getAnEntry(req, res, next);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+      });
+    });
+
+    it('should return null for non-existent entry', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.getPopulatedEntry as jest.Mock).mockResolvedValue(null);
+  
+      await EntryController.getAnEntry(req, res, next);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(null);
+    });
+
+    it('should call next with an error if an exception occurs', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.getPopulatedEntry as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+  
+      await EntryController.getAnEntry(req, res, next);
   
       expect(next).toHaveBeenCalledWith(expect.any(Error));
       expect(next.mock.calls[0][0].message).toBe('Database error');
