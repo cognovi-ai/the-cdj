@@ -30,7 +30,7 @@ describe('Entry service tests', () => {
 
   describe('Get Entry service operation tests', () => {
     it('gets no entries in an empty journal', async () => {
-      const entries = await EntryServices.getAllEntriesInJournal(mockJournal.id);
+      const entries = await EntryServices.getAllEntries(mockJournal.id);
 
       expect(entries).toHaveLength(0);
     });
@@ -41,7 +41,7 @@ describe('Entry service tests', () => {
       await mockEntry1.save();
       await mockEntry2.save();
 
-      const entries = await EntryServices.getAllEntriesInJournal(mockJournal.id);
+      const entries = await EntryServices.getAllEntries(mockJournal.id);
 
       expect(entries).toHaveLength(2);
     });
@@ -53,8 +53,8 @@ describe('Entry service tests', () => {
       await mockEntry1.save();
       await mockEntry2.save();
 
-      const entries1 = await EntryServices.getAllEntriesInJournal(mockJournal.id);
-      const entries2 = await EntryServices.getAllEntriesInJournal(mockJournal2.id);
+      const entries1 = await EntryServices.getAllEntries(mockJournal.id);
+      const entries2 = await EntryServices.getAllEntries(mockJournal2.id);
 
       expect(entries1).toHaveLength(1);
       expect(entries2).toHaveLength(1);

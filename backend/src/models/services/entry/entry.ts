@@ -24,7 +24,7 @@ interface EntryResponse {
  * @param journalId Journal._id as string
  * @returns array of documents in journal with journalId
  */
-export async function getAllEntriesInJournal(
+export async function getAllEntries(
   journalId: string
 ): Promise<HydratedDocument<EntryType>[]> {
   return await Entry.find({ journal: journalId });

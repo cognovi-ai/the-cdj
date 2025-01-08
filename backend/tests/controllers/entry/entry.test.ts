@@ -16,7 +16,7 @@ jest.mock('../../../src/utils/ExpressError.js');
 
 // Consolidated mock for services
 jest.mock('../../../src/models/services/entry/entry.js', () => ({
-  getAllEntriesInJournal: jest.fn(),
+  getAllEntries: jest.fn(),
   createEntry: jest.fn(),
 }));
 
@@ -53,7 +53,7 @@ describe('Entry Controller Tests', () => {
       
       const res = mockRes();
   
-      (EntryServices.getAllEntriesInJournal as jest.Mock).mockResolvedValue([
+      (EntryServices.getAllEntries as jest.Mock).mockResolvedValue([
         { title: 'Entry 1', content: 'Content 1' },
         { title: 'Entry 2', content: 'Content 2' }
       ]);
@@ -76,7 +76,7 @@ describe('Entry Controller Tests', () => {
       
       const res = mockRes();
   
-      (EntryServices.getAllEntriesInJournal as jest.Mock).mockResolvedValue([]);
+      (EntryServices.getAllEntries as jest.Mock).mockResolvedValue([]);
   
       await EntryController.getAllEntries(req, res);
   

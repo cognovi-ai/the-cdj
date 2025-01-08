@@ -31,7 +31,7 @@ export const getAllEntries = async (
 ) => {
   const { journalId } = req.params;
 
-  const entries = await EntryServices.getAllEntriesInJournal(journalId);
+  const entries = await EntryServices.getAllEntries(journalId);
 
   if (entries.length === 0) {
     req.flash('info', 'Submit your first entry to get started.');
