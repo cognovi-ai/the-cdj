@@ -69,6 +69,23 @@ describe('Entry Controller Tests', () => {
         flash: {},
       });
     });
+
+    it('should return a flash message when there are no entries', async () => {
+      const req = mockReq();
+      req.params.journalId = 'testJournalId';
+      
+      const res = mockRes();
+  
+      (EntryServices.getAllEntriesInJournal as jest.Mock).mockResolvedValue([]);
+  
+      await EntryController.getAllEntries(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        entries: [],
+        flash: { info: ['Submit your first entry to get started.'] },
+      });
+    });
   });
 
   describe('createEntry', () => {
