@@ -173,6 +173,22 @@ describe('Entry Controller Tests', () => {
   
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
     });
+
+    it('should call next with an error if the journal config is not found', async () => {
+      const req = mockReq();
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: null,
+      });
+      
+      await EntryController.createEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
   
     it('should call next with an error if an exception occurs', async () => {
       const req = mockReq();
