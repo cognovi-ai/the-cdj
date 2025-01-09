@@ -23,6 +23,9 @@ jest.mock('../../../src/models/services/entry/entry.js', () => ({
   deleteEntry: jest.fn(),
   getPopulatedEntryAnalysis: jest.fn(),
   updateEntryAnalysis: jest.fn(),
+  getEntryConversation: jest.fn(),
+  createEntryConversation: jest.fn(),
+  updateEntryConversation: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -577,6 +580,178 @@ describe('Entry Controller Tests', () => {
   
       await EntryController.updateEntryAnalysis(req, res, next);
   
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('getEntryConversation', () => {
+    it('should return entry conversation with status 200 when conversation exists', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      
+      const res = mockRes();
+  
+      (EntryServices.getEntryConversation as jest.Mock).mockResolvedValue({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+        conversation: 'This is a conversation about the test entry.',
+      });
+  
+      await EntryController.getEntryConversation(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+        conversation: 'This is a conversation about the test entry.',
+      });
+    });
+
+    it('should return null for non-existent conversation with status 200', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      
+      const res = mockRes();
+  
+      (EntryServices.getEntryConversation as jest.Mock).mockResolvedValue(null);
+  
+      await EntryController.getEntryConversation(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({});
+    });
+  });
+
+  describe('createEntryConversation', () => {
+    it ('should create an entry conversation successfully and return status 201', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: { message_content: 'This is a test message.' } };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+
+      (EntryServices.createEntryConversation as jest.Mock).mockResolvedValue({
+        entry: 'testEntryId',
+        messages: {
+          message_content: 'This is a test message.',
+          llm_response: 'This is a test response.',
+        },
+      });
+
+      await EntryController.createEntryConversation(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        entry: 'testEntryId',
+        messages: {
+          message_content: 'This is a test message.',
+          llm_response: 'This is a test response.',
+        },
+        flash: {
+          'success': ['Successfully created conversation.']
+        }
+      });
+    });
+
+    it ('should return call next with an error if the journal is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: { message_content: 'This is a test message.' } };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(null);
+
+      await EntryController.createEntryConversation(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it ('should return call next with an error if messages are not provided', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: {} };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      await EntryController.createEntryConversation(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('updateEntryConversation', () => {
+    it ('should update an entry conversation successfully and return status 200', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: { message_content: 'This is an updated test message.' } };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+
+      (EntryServices.updateEntryConversation as jest.Mock).mockResolvedValue({
+        entry: 'testEntryId',
+        messages: {
+          message_content: 'This is an updated test message.',
+          llm_response: 'This is an updated test response.',
+        },
+      });
+
+      await EntryController.updateEntryConversation(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        entry: 'testEntryId',
+        messages: {
+          message_content: 'This is an updated test message.',
+          llm_response: 'This is an updated test response.',
+        },
+        flash: {}
+      });
+    });
+
+    it ('should return call next with an error if the journal is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: { message_content: 'This is an updated test message.' } };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(null);
+
+      await EntryController.updateEntryConversation(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it ('should return call next with an error if messages are not provided', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { messages: {} };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      await EntryController.updateEntryConversation(req, res, next);
+
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
     });
   });

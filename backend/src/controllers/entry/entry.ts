@@ -204,7 +204,7 @@ export const getEntryConversation = async (req: Request, res: Response) => {
 
   const response = await EntryServices.getEntryConversation(entryId);
   const entryConversation = response
-    ? { ...response.toObject(), chatId: response.id }
+    ? { ...response, chatId: response.id }
     : {};
 
   res.status(200).json(entryConversation);
@@ -224,13 +224,12 @@ export const createEntryConversation = async (
   try {
     const configId = await verifyJournalExists(journalId);
 
-    const response = await EntryServices.createEntryConversation(
+    const entryConversation = await EntryServices.createEntryConversation(
       entryId,
       configId,
       messageData
     );
 
-    const entryConversation = response ? response.toObject() : {};
     req.flash('success', 'Successfully created conversation.');
     res.status(201).json({ ...entryConversation, flash: req.flash() });
   } catch (error) {
@@ -253,7 +252,11 @@ export const updateEntryConversation = async (
     const configId = await verifyJournalExists(journalId);
 
     const response = await EntryServices.updateEntryConversation(chatId, configId, messageData);
-    res.status(200).json({ ...response.toObject(), flash: req.flash() });
+
+    /* FIXME: No flash messages are attached to prevent over-displaying--this
+     * seems like something the frontend should handle 
+     */
+    res.status(200).json({ ...response, flash: req.flash() });
   } catch (error) {
     return next(error);
   }
