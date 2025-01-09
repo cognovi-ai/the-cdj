@@ -158,7 +158,7 @@ export const getEntryAnalysis = async (
     return next(new ExpressError('Entry analysis not found.', 404));
   }
 
-  res.status(200).json(entryAnalysis.toObject());
+  res.status(200).json(entryAnalysis);
 };
 
 /**

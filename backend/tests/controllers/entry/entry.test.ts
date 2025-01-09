@@ -19,6 +19,9 @@ jest.mock('../../../src/models/services/entry/entry.js', () => ({
   getAllEntries: jest.fn(),
   createEntry: jest.fn(),
   getPopulatedEntry: jest.fn(),
+  updateEntry: jest.fn(),
+  deleteEntry: jest.fn(),
+  getPopulatedEntryAnalysis: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -237,6 +240,206 @@ describe('Entry Controller Tests', () => {
   
       expect(next).toHaveBeenCalledWith(expect.any(Error));
       expect(next.mock.calls[0][0].message).toBe('Database error');
+    });
+  });
+
+  describe('updateEntry', () => {
+    it('should update an entry successfully and return status 200', async () => {
+      const entry = { title: 'Updated Entry',
+        content: 'This is an updated test entry.', };
+
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = entry;
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+  
+      (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
+        errMessage: null,
+        entry: {
+          toObject: jest.fn().mockReturnValue(entry),
+        },
+      });
+  
+      await EntryController.updateEntry(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        title: 'Updated Entry',
+        content: 'This is an updated test entry.',
+        flash: {
+          'success': ['Successfully updated entry.']
+        }
+      });
+    });
+  
+    it('should return a flash message and 200 status when there is an error message from service', async () => {
+  
+      const entry = { title: 'Updated Entry',
+        content: 'This is an updated test entry.', };
+  
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = entry;
+      
+      const res = mockRes();
+      const next = mockNext();
+      
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({ config: 'testConfigId' });
+  
+      (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
+        errMessage: 'Some warning.',
+        entry: { toObject: jest.fn().mockReturnValue(entry) },
+      });
+      
+      await EntryController.updateEntry(req, res, next);
+      
+      expect(req.flash).toHaveBeenCalledWith('info', 'Some warning.');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        title: 'Updated Entry',
+        content: 'This is an updated test entry.',
+        flash: {
+          'success': ['Successfully updated entry.'],
+          'info': ['Some warning.']
+        }
+      });
+    });
+
+    it('should call next with an error if the journal is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(null);
+      
+      await EntryController.updateEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it('should call next with an error if the entry is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+  
+      (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
+        errMessage: 'Entry not found.',
+        entry: null,
+      });
+  
+      await EntryController.updateEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('deleteEntry', () => {
+    it('should delete an entry successfully and return status 200', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.deleteEntry as jest.Mock).mockResolvedValue(req.params.entryId);
+  
+      await EntryController.deleteEntry(req, res, next);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        flash: {
+          'success': ['Successfully deleted entry.']
+        }
+      });
+    });
+  
+    it('should call next with an error if the entry is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.deleteEntry as jest.Mock).mockRejectedValue(
+        new Error('Entry not found.')
+      );
+  
+      await EntryController.deleteEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it('should call next with an error if an exception occurs', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.deleteEntry as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+  
+      await EntryController.deleteEntry(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('getEntryAnalysis', () => {
+    it('should return entry analysis with status 200 when analysis exists', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.getPopulatedEntryAnalysis as jest.Mock).mockResolvedValue({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+        analysis: 'This is an analysis of the test entry.',
+      });
+  
+      await EntryController.getEntryAnalysis(req, res, next);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        title: 'Test Entry',
+        content: 'This is a test entry.',
+        analysis: 'This is an analysis of the test entry.',
+      });
+    });
+
+    it('should call next with an error if an exception occurs', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (EntryServices.getPopulatedEntryAnalysis as jest.Mock).mockResolvedValue(null);
+  
+      await EntryController.getEntryAnalysis(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
     });
   });
 });
