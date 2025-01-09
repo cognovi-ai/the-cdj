@@ -22,6 +22,7 @@ jest.mock('../../../src/models/services/entry/entry.js', () => ({
   updateEntry: jest.fn(),
   deleteEntry: jest.fn(),
   getPopulatedEntryAnalysis: jest.fn(),
+  updateEntryAnalysis: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -439,6 +440,143 @@ describe('Entry Controller Tests', () => {
   
       await EntryController.getEntryAnalysis(req, res, next);
 
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('updateEntryAnalysis', () => {
+    it('should update entry analysis successfully and return status 200', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { analysis: 'This is an updated analysis of the test entry.' };
+    
+      const res = mockRes();
+      const next = mockNext();
+    
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+    
+      (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
+        errMessage: null,
+        entry: {
+          toObject: jest.fn().mockReturnValue({
+            title: 'Test Entry',
+            content: 'This is a test entry.',
+            analysis: 'This is an updated analysis of the test entry.',
+          }),
+        },
+      });
+    
+      await EntryController.updateEntryAnalysis(req, res, next);
+    
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        entry: {
+          title: 'Test Entry',
+          content: 'This is a test entry.',
+          analysis: 'This is an updated analysis of the test entry.',
+        },
+        flash: {
+          'success': ['Successfully generated a new analysis.']
+        }
+      });
+    });
+
+    it('should return a flash message and 200 status when there is an error message from service', async () => {
+        
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+      req.body = { analysis: 'This is an updated analysis of the test entry.' };
+        
+      const res = mockRes();
+      const next = mockNext();
+        
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({ config: 'testConfigId' });
+    
+      (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
+        errMessage: 'Some warning.',
+        entry: { toObject: jest.fn().mockReturnValue({
+          title: 'Test Entry',
+          content: 'This is a test entry.',
+          analysis: 'This is an updated analysis of the test entry.',
+        }) },
+      });
+        
+      await EntryController.updateEntryAnalysis(req, res, next);
+        
+      expect(req.flash).toHaveBeenCalledWith('info', 'Some warning.');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        entry: {
+          title: 'Test Entry',
+          content: 'This is a test entry.',
+          analysis: 'This is an updated analysis of the test entry.',
+        },
+        flash: {
+          'success': ['Successfully generated a new analysis.'],
+          'info': ['Some warning.']
+        }
+      });
+    });
+  
+    it('should call next with an error if the journal is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(null);
+      
+      await EntryController.updateEntryAnalysis(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it('should call next with an error if the entry is not found', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+  
+      (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
+        errMessage: 'Entry not found.',
+        entry: null,
+      });
+
+      await EntryController.updateEntryAnalysis(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it('should call next with an error if an exception occurs', async () => {
+      const req = mockReq();
+      req.params.entryId = 'testEntryId';
+      req.params.journalId = 'testJournalId';
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      (Models.Journal.findById as jest.Mock).mockResolvedValue({
+        config: 'testConfigId',
+      });
+  
+      (EntryServices.updateEntryAnalysis as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+  
+      await EntryController.updateEntryAnalysis(req, res, next);
+  
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
     });
   });

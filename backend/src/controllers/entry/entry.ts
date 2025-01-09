@@ -183,7 +183,7 @@ export const updateEntryAnalysis = async (
     res
       .status(200)
       .json({
-        ...entryAnalysis.toObject(),
+        ...entryAnalysis,
         entry: entry.toObject(),
         flash: req.flash(),
       });
