@@ -4,14 +4,12 @@ import * as Models from '../../../src/models/index.js';
 import { Request, Response } from 'express';
 import ExpressError from '../../../src/utils/ExpressError.js';
 
-jest.mock('../../../src/models/services/entry/entry.js', () => ({
-  createEntry: jest.fn(),
-}));
 jest.mock('../../../src/models/index.js', () => ({
   Journal: {
     findById: jest.fn(),
   },
 }));
+
 jest.mock('../../../src/utils/ExpressError.js');
 
 // Consolidated mock for services
