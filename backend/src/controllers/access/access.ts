@@ -246,6 +246,8 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
         )
       );
     }
+  } else {
+    return next(new ExpressError('Invalid deletion item.', 400));
   }
 };
 
