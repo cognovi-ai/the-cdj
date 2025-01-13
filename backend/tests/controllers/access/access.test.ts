@@ -1,16 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import * as AccessController from '../../../src/controllers/access/access.js';
 import * as AccessServices from '../../../src/models/services/access.js';
 import * as Models from '../../../src/models/index.js';
 import { Request, Response } from 'express';
 import ExpressError from '../../../src/utils/ExpressError.js';
+import passport from 'passport';
 
 jest.mock('../../../src/models/index.js', () => ({
   Journal: {
     findById: jest.fn(),
   },
+  User: {
+    findOne: jest.fn(),
+  }
 }));
 
 jest.mock('../../../src/utils/ExpressError.js');
+
+// Mock passport authenticate for login
+jest.mock('passport', () => ({
+  authenticate: jest.fn((strategy, callback) => {
+    return (req: Request, res: Response, next: never) => {
+      const mockUser = { id: 'testUserId', fname: 'Test' };
+      callback(null, mockUser, null);
+    };
+  }),
+}));
 
 // Consolidated mock for services
 jest.mock('../../../src/models/services/access.js', () => ({
@@ -21,6 +37,7 @@ jest.mock('../../../src/models/services/access.js', () => ({
   updateConfig: jest.fn(),
   deleteConfig: jest.fn(),
   deleteAccount: jest.fn(),
+  ensureJournalExists: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -33,6 +50,13 @@ const mockReq = () => {
     if (errorType && message) flashStore[errorType] = [message];
     return flashStore;
   }) as never;
+  req.logIn = jest.fn((user, callback) => {
+    if (!user) {
+      return callback(new Error('Failed to log in.'));
+    } else {
+      return callback(null);
+    }
+  }) as jest.Mock;
   return req as Request;
 };
 
@@ -404,6 +428,200 @@ describe('Entry Controller Tests', () => {
       await AccessController.deleteItem(req, res, next);
     
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('login', () => {
+    const ORIGINAL_RELEASE_PHASE = process.env.RELEASE_PHASE;
+
+    beforeAll(() => {
+      process.env.RELEASE_PHASE = '';
+    });
+
+    afterAll(() => {
+      process.env.RELEASE_PHASE = ORIGINAL_RELEASE_PHASE;
+    });
+
+    it('should return a success flash message if the user is logged in', async () => {
+      const req = mockReq();
+      req.body = { email: 'test@test.com' };
+      
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.ensureJournalExists as jest.Mock).mockResolvedValueOnce({
+        id: 'testJournalId',
+        title: 'testJournalTitle',
+      });
+
+      await AccessController.login(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        journalId: 'testJournalId',
+        journalTitle: 'testJournalTitle',
+        flash: {
+          success: ['Welcome back, Test. You\'ve been logged in successfully.'],
+        },
+        token: undefined,
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return a success flash message if the user is logged in and remember is true', async () => {
+      const req = mockReq();
+      req.body = { email: 'test@test.com', remember: true };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.ensureJournalExists as jest.Mock).mockResolvedValueOnce({
+        id: 'testJournalId',
+        title: 'testJournalTitle',
+      });
+
+      await AccessController.login(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        journalId: 'testJournalId',
+        journalTitle: 'testJournalTitle',
+        flash: {
+          info: ['You will be logged out after 7 days.'],
+          success: ['Welcome back, Test. You\'ve been logged in successfully.'],
+        },
+        token: expect.any(String),
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return an error if JWT_SECRET is not set and remember is true', async () => {
+      const ORIGINAL_JWT_SECRET = process.env.JWT_SECRET;
+      delete process.env.JWT_SECRET;
+
+      const req = mockReq();
+      req.body = { email: 'test@test.com', remember: true };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.ensureJournalExists as jest.Mock).mockResolvedValueOnce({
+        id: 'testJournalId',
+        title: 'testJournalTitle',
+      });
+
+      await AccessController.login(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ 'flash': {
+        'error': [
+          'JWT secret not defined',
+        ],
+        'success': [
+          'Welcome back, Test. You\'ve been logged in successfully.',
+        ],
+      },
+      'journalId': 'testJournalId',
+      'journalTitle': 'testJournalTitle',
+      'token': undefined, });
+      expect(next).not.toHaveBeenCalled();
+
+      process.env.JWT_SECRET = ORIGINAL_JWT_SECRET;
+    });
+  
+    it('should call next if passport.authenticate returns an error', async () => {
+      (passport.authenticate as jest.Mock).mockImplementationOnce(
+        (strategy, callback) =>
+          (req: Request, res: Response, next: never) => {
+            callback(new Error('Passport error'), null, null);
+          }
+      );
+  
+      const req = mockReq();
+      req.body = { email: 'error@test.com' };
+
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.login(req, res, next);
+  
+      // We expect next to have been called with the passport error
+      expect(next).toHaveBeenCalledWith(new Error('Passport error'));
+    });
+  
+    it('should handle failed login if user is null but user is found in DB', async () => {
+      (passport.authenticate as jest.Mock).mockImplementationOnce(
+        (strategy, callback) =>
+          (req: Request, res: Response, next: never) => {
+            callback(null, null, 'Some error message');
+          }
+      );
+
+      // DB user found
+      (Models.User.findOne as jest.Mock).mockResolvedValueOnce({ betaAccess: false });
+  
+      const req = mockReq();
+      req.body = { email: 'test@test.com' };
+
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.login(req, res, next);
+  
+      // The 403 status from handleFailedLogin
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        flash: expect.any(Object),
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+  
+    it('should call next if req.logIn fails', async () => {
+      // Keep passport returning a valid user
+      (passport.authenticate as jest.Mock).mockImplementationOnce(
+        (strategy, callback) =>
+          (req: Request, res: Response, next: never) => {
+            callback(null, { id: 'testUserId', fname: 'Test' }, null);
+          }
+      );
+  
+      // Force req.logIn to fail
+      const req = mockReq();
+      req.logIn = jest.fn((user, cb) => cb(new Error('logIn failed'))) as never;
+  
+      req.body = { email: 'fail@login.com' };
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.login(req, res, next);
+  
+      // Should pass the error to next
+      expect(next).toHaveBeenCalledWith(new Error('logIn failed'));
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it('should call next if user does not exist or password is incorrect', async () => {
+      // Could not authenticate the user with the given email and password
+      (passport.authenticate as jest.Mock).mockImplementationOnce(
+        (strategy, callback) =>
+          (req: Request, res: Response, next: never) => {
+            callback(null, null, 'Some error message');
+          }
+      );
+
+      // Suspicious login attempt not detected
+      (Models.User.findOne as jest.Mock).mockResolvedValueOnce(null);
+  
+      const req = mockReq();
+      req.body = { email: 'invalid-login@test.com' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      await AccessController.login(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+      expect(res.status).not.toHaveBeenCalled();
     });
   });
 });
