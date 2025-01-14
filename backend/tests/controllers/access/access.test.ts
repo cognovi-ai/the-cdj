@@ -42,6 +42,7 @@ jest.mock('../../../src/models/services/access.js', () => ({
   forgotPassword: jest.fn(),
   resetPassword: jest.fn(),
   createAccount: jest.fn(),
+  verifyEmail: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -992,6 +993,65 @@ describe('Entry Controller Tests', () => {
       await AccessController.register(req, res, next);
 
 
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+      expect(res.status).not.toHaveBeenCalledWith(200);
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmail', () => {  
+    it('should verify email successfully', async () => {
+      (AccessServices.verifyEmail as jest.Mock).mockResolvedValueOnce({
+        _id: 'testUserId',
+      });
+  
+      const req = mockReq();
+      req.body = {
+        token: 'testVerifyToken',
+      };
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.verifyEmail(req, res, next);
+  
+      expect(AccessServices.verifyEmail).toHaveBeenCalledWith('testVerifyToken');
+      expect(req.flash).toHaveBeenCalledWith('success', 'Email verified successfully.');
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        flash: {
+          success: ['Email verified successfully.'],
+        },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+  
+    it('should call next with an ExpressError if one is thrown', async () => {
+      const testError = new ExpressError('Invalid token', 400);
+      (AccessServices.verifyEmail as jest.Mock).mockRejectedValueOnce(testError);
+  
+      const req = mockReq();
+      req.body = { token: 'badToken' };
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.verifyEmail(req, res, next);
+  
+      expect(next).toHaveBeenCalledWith(testError);
+      expect(res.status).not.toHaveBeenCalledWith(200); 
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  
+    it('should call next with a new ExpressError if a normal error is thrown', async () => {
+      (AccessServices.verifyEmail as jest.Mock).mockRejectedValueOnce(new Error('Test Error'));
+  
+      const req = mockReq();
+      req.body = { token: 'someToken' };
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.verifyEmail(req, res, next);
+  
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
       expect(res.status).not.toHaveBeenCalledWith(200);
       expect(res.json).not.toHaveBeenCalled();
