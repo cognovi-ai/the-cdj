@@ -39,6 +39,8 @@ jest.mock('../../../src/models/services/access.js', () => ({
   deleteAccount: jest.fn(),
   ensureJournalExists: jest.fn(),
   getPopulatedJournal: jest.fn(),
+  forgotPassword: jest.fn(),
+  resetPassword: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -793,6 +795,82 @@ describe('Entry Controller Tests', () => {
       await AccessController.tokenLogin(req, res, next);
   
       expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('should return a success flash message if the email is found', async () => {
+      const req = mockReq();
+      req.body = { email: 'test@test.com' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.forgotPassword as jest.Mock).mockResolvedValueOnce(undefined);
+
+      await AccessController.forgotPassword(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ flash: { success: ['Recovery email sent successfully.'] } });
+    });
+
+    it('should call next with an error if an error is thrown', async () => {
+      const req = mockReq();
+      req.body = { email: 'test@test.com' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.forgotPassword as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+
+      await AccessController.forgotPassword(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should return a success flash message if the password is reset', async () => {
+      const req = mockReq();
+      req.body = { password: 'newPass', token: 'testToken' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.resetPassword as jest.Mock).mockResolvedValueOnce(undefined);
+
+      await AccessController.resetPassword(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ flash: { success: ['Password reset successfully.'] } });
+    });
+
+    it('should call next with an ExpressError if an ExpressError is thrown', async () => {
+      const req = mockReq();
+      req.body = { password: 'newPass', token: 'testToken' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.resetPassword as jest.Mock).mockRejectedValueOnce(new ExpressError('Test error', 400));
+
+      await AccessController.resetPassword(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+
+    it('should call next with an ExpressError if an Error is thrown', async () => {
+      const req = mockReq();
+      req.body = { password: 'newPass', token: 'testToken' };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      (AccessServices.resetPassword as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+
+      await AccessController.resetPassword(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
     });
   });
 });
