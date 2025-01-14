@@ -60,6 +60,7 @@ const mockReq = () => {
       return callback(null);
     }
   }) as jest.Mock;
+  req.logout = jest.fn();
   return req as Request;
 };
 
@@ -871,6 +872,34 @@ describe('Entry Controller Tests', () => {
       await AccessController.resetPassword(req, res, next);
 
       expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+    });
+  });
+
+  describe('logout', () => {
+    it('should return a success flash message if the user is logged out', async () => {
+      const req = mockReq();
+      const res = mockRes();
+      const next = mockNext();
+
+      AccessController.logout(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ 
+        flash: { success: ['Logged out successfully.'] },
+        'message': 'Logged out successfully.',
+      });
+    });
+
+    it('should call next with an error if logout fails', () => {
+      const req = mockReq();
+      const res = mockRes();
+      const next = mockNext();
+    
+      req.logout = jest.fn((callback) => callback(new Error('Logout failed'))) as never;
+    
+      AccessController.logout(req, res, next);
+    
+      expect(next).toHaveBeenCalledWith(new Error('Logout failed'));
     });
   });
 });
