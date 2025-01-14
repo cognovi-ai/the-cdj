@@ -433,7 +433,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       password,
       title
     );
-    req.login(newUser, (err) => {
+    req.logIn(newUser, (err) => {
       if (err) return next(err);
 
       req.flash(

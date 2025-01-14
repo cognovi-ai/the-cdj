@@ -41,6 +41,7 @@ jest.mock('../../../src/models/services/access.js', () => ({
   getPopulatedJournal: jest.fn(),
   forgotPassword: jest.fn(),
   resetPassword: jest.fn(),
+  createAccount: jest.fn(),
 }));
 
 const mockReq = () => {
@@ -900,6 +901,100 @@ describe('Entry Controller Tests', () => {
       AccessController.logout(req, res, next);
     
       expect(next).toHaveBeenCalledWith(new Error('Logout failed'));
+    });
+  });
+
+  describe('register', () => {
+    it('should register a new user successfully', async () => {
+      (AccessServices.createAccount as jest.Mock).mockResolvedValueOnce({
+        newUser: { _id: 'testUserId', fname: 'Test' },
+        newJournal: { id: 'testJournalId', title: 'Test Journal' },
+      });
+  
+      const req = mockReq();
+      req.body = {
+        fname: 'John',
+        lname: 'Doe',
+        email: 'test@test.com',
+        password: 'testPassword',
+        title: 'Test Title',
+      };
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      req.logIn = jest.fn((user, cb) => cb(null)) as never;
+      await AccessController.register(req, res, next);
+  
+      expect(AccessServices.createAccount).toHaveBeenCalledWith(
+        'John',
+        'Doe',
+        'test@test.com',
+        'testPassword',
+        'Test Title'
+      );
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        journalId: 'testJournalId',
+        journalTitle: 'Test Journal',
+        flash: {
+          success: ['Welcome, John. You\'ve been registered successfully.'],
+        },
+      });
+  
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should call next with an error if req.logIn fails', async () => {
+      (AccessServices.createAccount as jest.Mock).mockResolvedValueOnce({
+        newUser: { _id: 'testUserId', fname: 'Test' },
+        newJournal: { id: 'testJournalId', title: 'Test Journal' },
+      });
+  
+      const req = mockReq();
+      req.body = {
+        fname: 'John',
+        lname: 'Doe',
+        email: 'test@test.com',
+        password: 'testPassword',
+        title: 'Test Title',
+      };
+
+      const res = mockRes();
+      const next = mockNext();
+
+      req.logIn = jest.fn((user, cb) => cb(new Error('logIn failed'))) as never;
+      await AccessController.register(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(new Error('logIn failed'));
+      expect(res.status).not.toHaveBeenCalled();
+      expect(res.json).not.toHaveBeenCalled();
+    });
+  
+    it('should handle errors during registration', async () => {
+      (AccessServices.createAccount as jest.Mock).mockRejectedValueOnce(
+        new Error('Something went wrong!')
+      );
+  
+      const req = mockReq();
+      req.body = {
+        fname: 'John',
+        lname: 'Doe',
+        email: 'test@test.com',
+        password: 'testPassword',
+        title: 'Test Title',
+      };
+  
+      const res = mockRes();
+      const next = mockNext();
+  
+      await AccessController.register(req, res, next);
+
+
+      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
+      expect(res.status).not.toHaveBeenCalledWith(200);
+      expect(res.json).not.toHaveBeenCalled();
     });
   });
 });
