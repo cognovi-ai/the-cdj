@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import * as AccessController from '../../../src/controllers/access/access.js';
-import * as AccessServices from '../../../src/models/services/access.js';
+import * as AccessServices from '../../../src/models/services/access/access.js';
 import * as Models from '../../../src/models/index.js';
 import { Request, Response } from 'express';
 import ExpressError from '../../../src/utils/ExpressError.js';
@@ -29,7 +29,7 @@ jest.mock('passport', () => ({
 }));
 
 // Consolidated mock for services
-jest.mock('../../../src/models/services/access.js', () => ({
+jest.mock('../../../src/models/services/access/access.js', () => ({
   updateJournalTitle: jest.fn(),
   getAccount: jest.fn(),
   updateProfile: jest.fn(),

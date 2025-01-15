@@ -1,4 +1,4 @@
-import * as AccessServices from '../../models/services/access.js';
+import * as AccessServices from '../../models/services/access/access.js';
 import { Journal, User } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';

@@ -1,9 +1,9 @@
-import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../index.js';
-import { ConfigType } from '../config.js';
-import ExpressError from '../../utils/ExpressError.js';
+import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../index.js';
+import { ConfigType } from '../../config.js';
+import ExpressError from '../../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
-import { JournalType } from '../journal.js';
-import { UserType } from '../user.js';
+import { JournalType } from '../../journal.js';
+import { UserType } from '../../user.js';
 import crypto from 'crypto';
 
 /**

@@ -2,14 +2,14 @@
  * @jest-environment node
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as AccessServices from '../../../src/models/services/access.js';
-import { Config, Entry, Journal, User } from '../../../src/models/index.js';
+import * as AccessServices from '../../../../src/models/services/access/access.js';
+import { Config, Entry, Journal, User } from '../../../../src/models/index.js';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { ConfigType } from '../../../src/models/config.js';
-import ExpressError from '../../../src/utils/ExpressError.js';
-import { JournalType } from '../../../src/models/journal.js';
-import { UserType } from '../../../src/models/user.js';
-import connectDB from '../../../src/db.js';
+import { ConfigType } from '../../../../src/models/config.js';
+import ExpressError from '../../../../src/utils/ExpressError.js';
+import { JournalType } from '../../../../src/models/journal.js';
+import { UserType } from '../../../../src/models/user.js';
+import connectDB from '../../../../src/db.js';
 
 describe('Account services tests', () => {
   let testUser: UserType;
