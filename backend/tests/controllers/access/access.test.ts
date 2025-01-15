@@ -475,6 +475,9 @@ describe('Entry Controller Tests', () => {
     });
 
     it('should return a success flash message if the user is logged in and remember is true', async () => {
+      const ORIGINAL_JWT_SECRET = process.env.JWT_SECRET;
+      process.env.JWT_SECRET = 'testJwtSecret';
+
       const req = mockReq();
       req.body = { email: 'test@test.com', remember: true };
 
@@ -499,6 +502,8 @@ describe('Entry Controller Tests', () => {
         token: expect.any(String),
       });
       expect(next).not.toHaveBeenCalled();
+
+      process.env.JWT_SECRET = ORIGINAL_JWT_SECRET;
     });
 
     it('should return an error if JWT_SECRET is not set and remember is true', async () => {
