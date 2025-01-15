@@ -1,4 +1,4 @@
-import * as AccessServices from '../../models/services/access.js';
+import * as AccessServices from '../../models/services/access/access.js';
 import { Journal, User } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -246,6 +246,8 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
         )
       );
     }
+  } else {
+    return next(new ExpressError('Invalid deletion item.', 400));
   }
 };
 
@@ -431,7 +433,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       password,
       title
     );
-    req.login(newUser, (err) => {
+    req.logIn(newUser, (err) => {
       if (err) return next(err);
 
       req.flash(
