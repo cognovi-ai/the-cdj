@@ -9,6 +9,7 @@
     "test": "jest --coverage --detectOpenHandles",
     "lint": "npx eslint . --fix",
     "build": "tsc",
+    "seed": "tsx data/seed.js",
     "start": "pm2 start dist/index.js --name the-cdj",
     "start:prod": "npm run build && npm run start"
   },
