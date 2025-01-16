@@ -20,7 +20,7 @@ export default async function connectDB(dbName: string): Promise<void> {
       const localUri = `${process.env.MONGO_URI}/${dbName}`;
 
       // Connect to the local MongoDB for development
-      if (localUri) {
+      if (!localUri) {
         throw new Error(
           'MONGO_URI is not defined in the environment variables'
         );
