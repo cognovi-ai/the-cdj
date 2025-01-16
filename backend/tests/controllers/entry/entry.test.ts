@@ -651,11 +651,13 @@ describe('Entry Controller Tests', () => {
       });
 
       (EntryServices.createEntryConversation as jest.Mock).mockResolvedValue({
-        entry: 'testEntryId',
-        messages: {
-          message_content: 'This is a test message.',
-          llm_response: 'This is a test response.',
-        },
+        toObject: jest.fn().mockReturnValue({
+          entry: 'testEntryId',
+          messages: {
+            message_content: 'This is a test message.',
+            llm_response: 'This is a test response.',
+          },
+        })
       });
 
       await EntryController.createEntryConversation(req, res, next);
@@ -719,11 +721,13 @@ describe('Entry Controller Tests', () => {
       });
 
       (EntryServices.updateEntryConversation as jest.Mock).mockResolvedValue({
-        entry: 'testEntryId',
-        messages: {
-          message_content: 'This is an updated test message.',
-          llm_response: 'This is an updated test response.',
-        },
+        toObject: jest.fn().mockReturnValue({
+          entry: 'testEntryId',
+          messages: {
+            message_content: 'This is an updated test message.',
+            llm_response: 'This is an updated test response.',
+          },
+        })
       });
 
       await EntryController.updateEntryConversation(req, res, next);
