@@ -1,34 +1,60 @@
-import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../src/models/index.js';
+/*
+ * This script is used to seed the database with dummy data. It is run by
+ * executing the command `npm run seed`. The application itself does not need
+ * to be running but there must be a MongoDB server running.
+ *
+ * For testing purposes, the script will use an in-memory database. This is
+ * done by using the `mongodb-memory-server` package. The in-memory database
+ * is used to avoid modifying the actual database during testing.
+ */
+
+import {
+  Config,
+  Entry,
+  EntryAnalysis,
+  EntryConversation,
+  Journal,
+  User,
+} from '../src/models/index.js';
 
 import analyses from './analysisData.js';
 import configData from './configData.js';
 import conversations from './conversationData.js';
-
 import entries from './entryData.js';
 import journalTitles from './journalData.js';
 import mongoose from 'mongoose';
 import users from './userData.js';
 
+const mongoURI = process.env.MONGO_URI + '/cdj';
+
+/**
+ * Seed the database with users using passport-local-mongoose's register method.
+ */
 async function seedUsers() {
   for (const userData of users) {
-    await User.register({ email: userData.email, fname: userData.fname, lname: userData.lname }, userData.password);
+    await User.register(
+      { email: userData.email, fname: userData.fname, lname: userData.lname },
+      userData.password
+    );
   }
 
   return await User.find({});
 }
 
+/**
+ * Seed the database with journal configurations.
+ */
 async function seedConfigs() {
   await Config.insertMany(configData);
 
   return await Config.find({});
 }
 
-// Seed function
+/**
+ * Seed the database with dummy data.
+ */
 export async function seedDatabase() {
   try {
-    // only connect if not testing otherwise connect to test db
-    let mongoURI = process.env.MONGO_URI + "/cdj"; // pulled from compose.yaml env vars
-    if (process.env.NODE_ENV === 'test') { mongoURI = mongoURI + '-test'; }
     await mongoose.connect(mongoURI);
 
     // Remove existing data
@@ -38,7 +64,7 @@ export async function seedDatabase() {
       Journal.deleteMany({}),
       Entry.deleteMany({}),
       EntryAnalysis.deleteMany({}),
-      EntryConversation.deleteMany({})
+      EntryConversation.deleteMany({}),
     ]);
 
     const users = await seedUsers();
@@ -49,7 +75,7 @@ export async function seedDatabase() {
       let journal = new Journal({
         user: user._id,
         config: configs[configIndex]._id, // Assign a config ID to the journal
-        title: journalTitles.shift()
+        title: journalTitles.shift(),
       });
       journal = await journal.save();
 
@@ -57,19 +83,29 @@ export async function seedDatabase() {
         let entry = new Entry({ journal: journal._id, ...entryData });
         entry = await entry.save();
 
-        const analysisContent = analyses.shift() || 'Default analysis content for this entry.';
-        const analysis = new EntryAnalysis({ entry: entry._id, analysis_content: analysisContent });
+        const analysisContent =
+          analyses.shift() || 'Default analysis content for this entry.';
+        const analysis = new EntryAnalysis({
+          entry: entry._id,
+          analysis_content: analysisContent,
+        });
         await analysis.save();
 
         const messages = [];
         for (let i = 0; i < 3; i++) {
-          const conversationData = conversations.shift() || { userMessage: 'Default user message', llmResponse: 'Default LLM response' };
-          messages.push({ message_content: conversationData.userMessage, llm_response: conversationData.llmResponse });
+          const conversationData = conversations.shift() || {
+            userMessage: 'Default user message',
+            llmResponse: 'Default LLM response',
+          };
+          messages.push({
+            message_content: conversationData.userMessage,
+            llm_response: conversationData.llmResponse,
+          });
         }
 
         const conversation = new EntryConversation({
           entry: entry._id,
-          messages
+          messages,
         });
 
         await conversation.save();
@@ -77,26 +113,28 @@ export async function seedDatabase() {
 
       configIndex = (configIndex + 1) % configs.length;
     }
+    await mongoose.disconnect();
 
     console.log('Database has been seeded successfully.');
   } catch (error) {
     console.error('Error while seeding database:', error);
-  } finally {
-    await mongoose.disconnect();
   }
-};
+}
 
-// Teardown database
+/**
+ * Tear down the database by dropping all collections and closing the
+ * connection.
+ */
 export async function teardownDatabase() {
   try {
-    // clear contents of database
+    // Clear contents of database
+    await mongoose.connect(mongoURI);
     const collections = await mongoose.connection.db.collections();
-
     for (const collection of collections) {
       await collection.drop();
     }
 
-    // close connection
+    // Close connections
     await mongoose.disconnect();
 
     console.log('Database has been torn down successfully.');
