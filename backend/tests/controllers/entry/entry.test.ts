@@ -431,9 +431,11 @@ describe('Entry Controller Tests', () => {
       const next = mockNext();
   
       (EntryServices.getPopulatedEntryAnalysis as jest.Mock).mockResolvedValue({
-        title: 'Test Entry',
-        content: 'This is a test entry.',
-        analysis: 'This is an analysis of the test entry.',
+        toObject: jest.fn().mockReturnValue({
+          title: 'Test Entry',
+          content: 'This is a test entry.',
+          analysis: 'This is an analysis of the test entry.',
+        }),
       });
   
       await EntryController.getEntryAnalysis(req, res, next);
