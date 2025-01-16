@@ -1,41 +1,39 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true
-  },
-  extends: 'standard',
-  overrides: [
-    {
-      env: {
-        node: true
-      },
-      files: [
-        '.eslintrc.{js,cjs}'
-      ],
-      parserOptions: {
-        sourceType: 'script'
-      }
-    }
+  root: true,
+  env: { node: true, es6: true, "jest/globals": true },
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
   ],
+  ignorePatterns: ["dist", "*.cjs"],
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module'
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
+  plugins: ["jest", "@typescript-eslint"],
   rules: {
-    quotes: ['error', 'single'],
-    semi: ['error', 'always'],
-    'sort-imports': ['error', {
-      ignoreCase: false,
-      ignoreDeclarationSort: false,
-      ignoreMemberSort: false,
-      memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single']
-    }],
-    'space-before-function-paren': ['error', {
-      anonymous: 'always',
-      named: 'never',
-      asyncArrow: 'always'
-    }],
-    'template-curly-spacing': ['error', 'always'],
-    'no-undef': 'off'
-  }
+    "capitalized-comments": [1, "always"],
+    "dot-notation": 1,
+    "prefer-destructuring": ["error", { object: true, array: false }],
+    "quotes": ["error", "single"],
+    "indent": ["error", 2],
+    "object-curly-spacing": ["error", "always"],
+    "sort-imports": 1,
+    "semi": ["error", "always"],
+    "callback-return": "warn",
+    "global-require": "warn",
+    "handle-callback-err": "warn",
+    "no-buffer-constructor": "error",
+    "no-mixed-requires": ["warn", { grouping: true, allowCall: true }],
+    "no-new-require": "error",
+    "no-path-concat": "error",
+    "no-process-exit": "warn",
+    "jest/no-disabled-tests": "warn",
+    "jest/no-focused-tests": "error",
+    "jest/no-identical-title": "error",
+    "jest/prefer-to-have-length": "warn",
+    "jest/valid-expect": "error",
+    "@typescript-eslint/no-unused-vars": ["error"],
+  },
 };

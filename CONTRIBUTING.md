@@ -1,6 +1,7 @@
 # Contributing to The CDJ! 🤖 🧠
 
 ## Contents
+
 - [Contributing to The CDJ! 🤖 🧠](#contributing-to-the-cdj-🤖-🧠)
   - [Contents](#contents)
   - [Welcome!](#welcome)
@@ -46,8 +47,10 @@ All types of contributions are welcome. To start, improving documentation, bug t
 
 Please do not contribute any content that is not your own. This includes, but is not limited to, content that is copyrighted, patented, trademarked, or otherwise protected by intellectual property laws.
 
-##  Ground Rules
+## Ground Rules
+
 ### Expectations
+
 1. We expect all contributors to be respectful and considerate in their interactions with others. Since this project is open to all skill levels, we also expect contributors to be patient and helpful when interacting with others.
 
 2. We expect all contributors to test their code before submitting a pull request. We also expect all contributors to be familiar with the project dependencies and to keep them up to date.
@@ -59,6 +62,7 @@ Please do not contribute any content that is not your own. This includes, but is
 5. We expect all contributors to be familiar with the project's issue tracker and to use it to report bugs, suggest features, and ask questions. We also expect all contributors to be familiar with the project's pull request process and to follow it when submitting code.
 
 ### Responsibilities
+
 1. Ensure cross-platform compatibility for every change that's accepted. Windows, Mac, Debian & Ubuntu Linux.
 
 2. Ensure proper coding standards and practices are followed. Please refer to the project's ESLint configuration for details.
@@ -70,6 +74,7 @@ Please do not contribute any content that is not your own. This includes, but is
 5. Ensure that your code is well-tested preferably with unit tests. We use Jest for testing, so please make sure to run any tests `npm run test` before submitting a pull request.
 
 ## Your First Contribution
+
 Good first contributions help you learn the project and the community so that you can make more significant contributions in the future. Here are a few ways you can make your first contribution:
 
 - Improving documentation. Documentation is important for any project, and sometime what made sense to one developer may not make sense to another. So, if you see something that could be improved, go ahead and make the change.
@@ -83,24 +88,27 @@ Good first contributions help you learn the project and the community so that yo
 If these are too open-ended for you, you can look for issues labeled "hello" in the project's issue tracker. These are issues with easy to medium difficulty that are ideal for new contributors of varying skill levels.
 
 ## Getting started
+
 This section is a useful reference for all contributors to The CDJ. It defines the GitHub workspace, such as how issues are used, how to use the project board, and how to submit a pull request. In other words, it's a guide to the project's workflow.
 
 ### Definitions
+
 - **Issues**: Issues are used to track bugs, feature requests, design ideas, and tasks. They are the primary way to communicate with the project's maintainers and contributors. Think of issues as a place to discuss and plan work on the project.
 
 - **Project board**: The project board is used to track the progress of issues and pull requests. It is divided into columns that represent different stages of the project's workflow. These columns are labeled "Backlog", "Ready", "In Progress", "In Review", and "Done". The project board is a visual representation of the project's workflow. It helps contributors see what work is in progress, what work is ready to be picked up, and what work has been completed. In every Pull Request, you can set the project status in the right column under the "Projects" section. This will automatically move the PR to the corresponding column in the project board.
-  
-- **Pull requests**: Pull requests are used to submit code changes to the project. They are the primary way to contribute code to the project. Every pull request should be associated with an issue that it may close upon merging. ***All pull requests must be reviewed by the project owner before being merged.***
-  
+- **Pull requests**: Pull requests are used to submit code changes to the project. They are the primary way to contribute code to the project. Every pull request should be associated with an issue that it may close upon merging. **_All pull requests must be reviewed by the project owner before being merged._**
 - **TDD**: Test-driven development (TDD) is a software development process that relies on the repetition of a very short development cycle: first the developer writes an (initially failing) automated test case that defines a desired improvement or new function, then produces the minimum amount of code to pass that test, and finally refactors the new code to acceptable standards.
 
 #### Size of Pull Requests
+
 The CDJ project follows the "small PR" philosophy. This means that pull requests should be small and focused on a single issue. This makes it easier to review and merge pull requests and reduces the risk of introducing bugs. If a pull request is too large, the project owner may ask the contributor to split it into smaller pull requests.
 
 #### TDD from v2.0.0-beta
+
 After version v2.0.0-beta, The CDJ will be developed using TDD. This means that all new features and bug fixes will be developed using TDD. This is to ensure that the project remains stable and reliable as it grows. The release of v2.0.0-beta indicates a transition from JavaScript to TypeScript. This transition will be gradual, with new features and bug fixes being written in TypeScript.
 
 ## Workflow
+
 This section describes in step-by-step detail how to make a single contribution, from the initial issue to merging a pull request. We use an issue-driven sprint-like workflow to iteratively build the project. This workflow is based on the following steps:
 
 1. **Find an issue to work on or create a new issue**: Look through the project's issue tracker for bugs that have been reported, features that have been requested, or tasks that need to be completed. If you find an issue that you think you can work on, assign it to yourself. If you don't find an issue that you want to work on, create a new issue.
@@ -114,19 +122,24 @@ This section describes in step-by-step detail how to make a single contribution,
 9. **Celebrate**: Congratulations! You have made a contribution to The CDJ. Thank you for your hard work and dedication.
 
 ## How to report a bug
+
 ### Security Vulnerabilities
-***If you find a security vulnerability, do NOT open an issue.*** Instead email, security@thecdj.app. We will look into it immediately.
+
+**_If you find a security vulnerability, do NOT open an issue._** Instead email, security@thecdj.app. We will look into it immediately.
 
 In order to determine whether you are dealing with a security issue, ask yourself these two questions:
-* Can I access something that's not mine, or something I shouldn't have access to?
-* Can I disable something for other people?
+
+- Can I access something that's not mine, or something I shouldn't have access to?
+- Can I disable something for other people?
 
 If the answer to either of those two questions are "yes", then you're probably dealing with a security issue. Note that even if you answer "no" to both questions, you may still be dealing with a security issue, so if you're unsure, just email us at security@thecdj.app.
 
 ### How to submit a (non-security) bug
+
 If you find a bug in the source code, you can help us by submitting an issue to our GitHub Repository. Once you've created an issue, you are welcome to submit a pull request with a fix if you can. Otherwise, you can just wait for one of our maintainers to fix it.
 
 When filing an issue, make sure to answer these five questions:
+
 1. What version of The CDJ are you running locally?
 2. What operating system, processor architecture, and browser are you using?
 3. What did you do?
@@ -138,12 +151,15 @@ Please provide as much detail as possible when answering these questions. The mo
 For any questions or general feedback, please email us at support@thecdj.app.
 
 ## How to suggest a feature or enhancement
+
 If you find yourself wishing for a feature or enhancement feel free to open an issue describing the feature or enhancement you would like to see, why you need it, and how it should work.
 
 ### Feature vs. Enhancement
+
 A feature is a new piece of functionality that doesn't exist yet. An enhancement is a change to an existing feature. If you're not sure which one you're suggesting, feel free to ask.
 
 ## Code Review Process
+
 Once a pull request has been submitted, the project owner will review it and provide feedback. The project owner may request changes to the pull request, in which case the contributor should make the changes and push them to the branch. The project owner will review the changes and provide further feedback if necessary. This process will continue until the pull request is ready to be merged.
 
 Depending on the complexity and size of the pull request, the review process may take anywhere from a few hours to a few days. The project owner will do their best to provide timely feedback and keep the contributor informed of the status of the pull request.
@@ -151,31 +167,37 @@ Depending on the complexity and size of the pull request, the review process may
 Ensuring that pull requests handle one issue at a time which introduces a single feature, enhancement, or bug fix will help streamline the review process. This will also help contributors get feedback on their work more quickly and reduce the risk of introducing bugs.
 
 ## Community
+
 If you are a contributor, you are part of the community! Contributors will be invited to interact with other contributors, project maintainers, and users in our other channels.
 
 ### Am I a contributor?
-Contributors don't only write code. 
+
+Contributors don't only write code.
 
 You are a contributor if you have contributed code, documentation, or other resources to the project. You are also a contributor if you have participated in discussions, provided feedback, or helped other contributors.
 
 ## Code Styling, Commit Messages, and Labeling Conventions
+
 This section describes the commit message and labeling conventions used in The CDJ project. These conventions help to keep the project organized and make it easier to track changes and issues.
 
 ### ES6+, TypeScript, and ESLint
+
 The CDJ project uses ES6+ and TypeScript for all new features and bug fixes. This means that all new code should be written in ES6+ and TypeScript. Existing code should be converted to ES6+ and TypeScript as it is modified.
 
 ES6+ code should be written using modern JavaScript features such as arrow functions, template literals, and destructuring. TypeScript code should be written using TypeScript features such as type annotations, interfaces, and generics.
 
-You know you are looking at ES6+ code when you see `import` and `export` statements. 
+You know you are looking at ES6+ code when you see `import` and `export` statements.
 
 Please ensure that your code follows the project's ESLint configuration. This will help to ensure that the code isn't only maintainable and consistent but also nice to look at.
 
 ### Commit Messages
+
 Commit messages should be clear, concise, and descriptive. Long commit messages are fine only in the commit body, not in the subject line. Commit messages should be written in the present tense, following the format: "Add feature", "Fix bug", "Update documentation", etc.
 
 If you are making a commit using `git commit -m` the message should then be clear, concise, and descriptive. For example, `git commit -m "Add feature to allow users to upload images"`.
 
 If you are making a commit using `git commit`, you will be taken to a text editor where you can write a longer commit message. The first line should be a clear, concise, and descriptive summary of the commit. The following lines should provide more detail about the commit, if necessary. For example:
+
 ```
 Add feature to allow users to upload images.
 
@@ -183,9 +205,11 @@ This commit adds a new feature that allows users to upload images to the project
 ```
 
 ### Labels
+
 The CDJ project uses labels extensively to categorize issues and pull requests. Labels are used to provide additional context about the issue or pull request and indicate the expected version that the issue or pull request will push the project to.
 
 The following labels are used in The CDJ project:
+
 - `ai`: Indicates that the issue or pull request is an LLM feature or enhancement.
 - `analytics`: Indicates that the issue or pull request is related to analytics.
 - `api`: Indicates that the issue or pull request is related to the project's API or backend.
@@ -217,6 +241,7 @@ The following labels are used in The CDJ project:
 - `wontfix`: Indicates that the issue or pull request will not be fixed.
 
 #### Labels Examples
+
 1. You are working on a bug that needs to be fixed on the project's API. Chain the `bug`, `api`, and `patch` labels.
 2. You are working on a new enhance,ent that will improve the project's user interface. Chain the `feature`, `ui`, and `minor` labels.
 3. You are working on a concept or idea that needs to be explored. Chain the `concept`, `research`, or `question` labels.
