@@ -63,7 +63,7 @@ interface UserModel<T extends Document> extends PassportLocalModel<T> {
 const userSchema = new Schema<UserType, UserModel<UserType>>({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   resetPasswordToken: { type: String, default: undefined },
