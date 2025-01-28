@@ -34,8 +34,6 @@ jest.mock('../../../src/models/services/access/access.js', () => ({
   getAccount: jest.fn(),
   updateProfile: jest.fn(),
   updatePassword: jest.fn(),
-  updateConfig: jest.fn(),
-  deleteConfig: jest.fn(),
   deleteAccount: jest.fn(),
   ensureJournalExists: jest.fn(),
   getPopulatedJournal: jest.fn(),
@@ -145,7 +143,7 @@ describe('Entry Controller Tests', () => {
   });
 
   describe('getAccount', () => {
-    it('should return the account with config and user documents', async () => {
+    it('should return the account and user documents', async () => {
       const req = mockReq();
       req.params.journalId = 'testJournalId';
     
@@ -153,9 +151,7 @@ describe('Entry Controller Tests', () => {
       const next = mockNext();
     
       (AccessServices.getAccount as jest.Mock).mockResolvedValue({
-        configMessage: null,
         user: { _id: 'testUserId', name: 'Test User' },
-        config: { _id: 'testConfigId', settings: {} },
       });
     
       await AccessController.getAccount(req, res, next);
@@ -163,31 +159,6 @@ describe('Entry Controller Tests', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         user: { _id: 'testUserId', name: 'Test User' },
-        config: { _id: 'testConfigId', settings: {} },
-        flash: {},
-      });
-    });
-
-    it('should return an info flash message if configMessage is not null', async () => {
-      const req = mockReq();
-      req.params.journalId = 'testJournalId';
-    
-      const res = mockRes();
-      const next = mockNext();
-    
-      (AccessServices.getAccount as jest.Mock).mockResolvedValue({
-        configMessage: 'Test config message',
-        user: { _id: 'testUserId', name: 'Test User' },
-        config: { _id: 'testConfigId', settings: {} },
-      });
-    
-      await AccessController.getAccount(req, res, next);
-    
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        user: { _id: 'testUserId', name: 'Test User' },
-        config: { _id: 'testConfigId', settings: {} },
-        flash: { info: ['Test config message'] },
       });
     });
 
@@ -247,22 +218,6 @@ describe('Entry Controller Tests', () => {
       await AccessController.updateAccount(req, res, next);
   
       expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-
-    it('should update the config successfully', async () => {
-      req.params.journalId = 'testJournalId';
-      req.body.config = { model: { chat: 'testChatModel', analysis: 'testAnalysisModel' } };
-  
-      const journalMock = { _id: 'testJournalId', user: 'testUserId', config: 'configId' };
-      (Models.Journal.findById as jest.Mock).mockResolvedValueOnce(journalMock);
-      (AccessServices.updateConfig as jest.Mock).mockResolvedValueOnce(undefined);
-  
-      await AccessController.updateAccount(req, res, next);
-  
-      expect(AccessServices.updateConfig).toHaveBeenCalledWith('configId', journalMock, {  model: { chat: 'testChatModel', analysis: 'testAnalysisModel' } });
-      expect(req.flash).toHaveBeenCalledWith('success', 'Config updated successfully.');
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ flash: { success: ['Config updated successfully.'] } });
     });
 
     it('should update the profile successfully', async () => {
@@ -346,37 +301,6 @@ describe('Entry Controller Tests', () => {
   });
 
   describe('deleteItem', () => {
-    it('should return a success flash message if the config is deleted', async () => {
-      const req = mockReq();
-      req.params.journalId = 'testJournalId';
-      req.query.deletionItem = 'config';
-    
-      const res = mockRes();
-      const next = mockNext();
-    
-      (AccessServices.deleteConfig as jest.Mock).mockResolvedValue(true);
-    
-      await AccessController.deleteItem(req, res, next);
-    
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ flash: { success: ['Config deleted successfully.'] } });
-    });
-
-    it('should call next if an error if thrown by deleteConfig', async () => {
-      const req = mockReq();
-      req.params.journalId = 'testJournalId';
-      req.query.deletionItem = 'config';
-    
-      const res = mockRes();
-      const next = mockNext();
-    
-      (AccessServices.deleteConfig as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
-    
-      await AccessController.deleteItem(req, res, next);
-    
-      expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-
     it('should return a success flash message if the account is deleted', async () => {
       const req = mockReq();
       req.params.journalId = 'testJournalId';

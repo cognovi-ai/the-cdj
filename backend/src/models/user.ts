@@ -141,16 +141,6 @@ const createPasswordValidation = (isRequired = false) => {
   return isRequired ? validator.required() : validator;
 };
 
-// Common validation schema for both chat and analysis
-const modelFieldValidation = Joi.string()
-  .pattern(/^[a-zA-Z0-9-.]+$/) // Allow alphanumerics, hyphens, and periods
-  .allow('')
-  .max(50)
-  .messages({
-    'string.pattern.base':
-      'Field must only contain alphanumeric characters, hyphens, and periods.',
-  });
-
 const baseUserJoiSchema = Joi.object({
   email: createEmailValidation(true),
   password: createPasswordValidation(true),
@@ -188,10 +178,6 @@ userSchema.statics.accountJoi = function (obj: unknown, options?: object): Joi.V
     email: createEmailValidation(),
     oldPassword: createPasswordValidation(),
     newPassword: createPasswordValidation(),
-    model: Joi.object({
-      chat: modelFieldValidation,
-      analysis: modelFieldValidation,
-    }),
   });
   return accountJoiSchema.validate(obj, options);
 };

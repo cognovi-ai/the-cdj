@@ -91,11 +91,10 @@ export default class CdGpt extends Assistant {
 
   constructor(
     bearer: string,
-    model: string,
     persona?: string,
     temperature?: number
   ) {
-    super(bearer, model, temperature);
+    super(bearer, temperature);
     this.method = 'POST';
     this.contentType = 'application/json';
     this.persona = persona || '';

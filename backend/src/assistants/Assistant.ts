@@ -34,10 +34,10 @@ export default class Assistant {
   model: string;
   temperature: number;
 
-  constructor(bearer: string, model: string = '', temperature: number = 0.7) {
+  constructor(bearer: string, temperature: number = 0.7) {
     this.baseUrl = process.env.OPENAI_API_URL as string;
     this.bearer = `Bearer ${bearer}`;
-    this.model = model;
+    this.model = process.env.OPENAI_API_MODEL as string;
     this.temperature = temperature;
   }
 

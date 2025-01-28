@@ -51,11 +51,10 @@ export const createEntry = async (
   const entryData: EntryRequestBody = req.body;
 
   try {
-    const configId = await verifyJournalExists(journalId);
+    await doesJournalExists(journalId);
 
     const { errMessage, entry: newEntry } = await EntryServices.createEntry(
       journalId,
-      configId,
       entryData
     );
   
@@ -99,11 +98,11 @@ export const updateEntry = async (
   const entryData: EntryRequestBody = req.body;
 
   try {
-    const configId = await verifyJournalExists(journalId);
+    await doesJournalExists(journalId);
+
     const { errMessage, entry: updatedEntry } = await EntryServices
       .updateEntry(
         entryId,
-        configId,
         entryData,
       );
 
@@ -172,9 +171,9 @@ export const updateEntryAnalysis = async (
   const { entryId, journalId } = req.params;
 
   try {
-    const configId = await verifyJournalExists(journalId);
+    await doesJournalExists(journalId);
 
-    const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId, configId);
+    const { errMessage, entry, entryAnalysis } = await EntryServices.updateEntryAnalysis(entryId);
     
     if (errMessage) {
       req.flash('info', errMessage);
@@ -222,11 +221,10 @@ export const createEntryConversation = async (
   const messageData: EntryConversationRequestBody = req.body;
 
   try {
-    const configId = await verifyJournalExists(journalId);
+    await doesJournalExists(journalId);
 
     const entryConversation = await EntryServices.createEntryConversation(
       entryId,
-      configId,
       messageData
     );
 
@@ -249,9 +247,9 @@ export const updateEntryConversation = async (
   const messageData: EntryConversationRequestBody = req.body;
 
   try {
-    const configId = await verifyJournalExists(journalId);
+    await doesJournalExists(journalId);
 
-    const updatedEntryConversation = await EntryServices.updateEntryConversation(chatId, configId, messageData);
+    const updatedEntryConversation = await EntryServices.updateEntryConversation(chatId, messageData);
 
     /* FIXME: No flash messages are attached to prevent over-displaying--this
      * seems like something the frontend should handle 
@@ -263,18 +261,16 @@ export const updateEntryConversation = async (
 };
 
 /**
- * Checks if journal with journalId exists and returns configId in journal.
+ * Checks if journal with journalId exists.
  * 
  * @param journalId id of journal to check
- * @returns configId
+ * @returns true if journal exists
  */
-async function verifyJournalExists(journalId: string): Promise<string> {
+async function doesJournalExists(journalId: string): Promise<boolean> {
   const journal = await Journal.findById(journalId);
   if (!journal) {
     throw new ExpressError('Journal not found.', 404);
   }
-  if (!journal.config) {
-    throw new ExpressError('Journal config not found.', 404);
-  }
-  return journal.config.toString();
+
+  return true;
 }

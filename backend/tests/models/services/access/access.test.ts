@@ -3,13 +3,11 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as AccessServices from '../../../../src/models/services/access/access.js';
-import { Config, Entry, Journal, User } from '../../../../src/models/index.js';
-import mongoose, { HydratedDocument } from 'mongoose';
-import { ConfigType } from '../../../../src/models/config.js';
+import { Entry, Journal, User } from '../../../../src/models/index.js';
 import ExpressError from '../../../../src/utils/ExpressError.js';
-import { JournalType } from '../../../../src/models/journal.js';
 import { UserType } from '../../../../src/models/user.js';
 import connectDB from '../../../../src/db.js';
+import mongoose from 'mongoose';
 
 describe('Account services tests', () => {
   let testUser: UserType;
@@ -36,33 +34,14 @@ describe('Account services tests', () => {
   });
 
   describe('getAccount tests', () => {
-    it('gets user and config without message for getAccount when config set', async () => {
-      const testConfig = await Config.create({
-        model: {
-          chat: 'test chat model',
-          analysis: 'test analysis model'
-        }
-      });
+    it('gets user with getAccount', async () => {
       const mockJournal = await Journal.create({ 
         user: testUser.id,
-        config: testConfig.id,
       });
   
-      const { user, config, configMessage } = await AccessServices.getAccount(mockJournal.id);
+      const { user } = await AccessServices.getAccount(mockJournal.id);
       
       expect(user.id).toBe(testUser.id);
-      expect(config!.id).toBe(testConfig.id);
-      expect(configMessage).toBeUndefined();
-    });
-  
-    it('gets user, config, and message for getAccount when config not set', async () => {
-      const testJournal = await Journal.create({ user: testUser.id });
-  
-      const { user, config, configMessage } = await AccessServices.getAccount(testJournal.id);
-      
-      expect(user.id).toBe(testUser.id);
-      expect(config).toBe(config);
-      expect(configMessage).toBe('Click the Config tab to complete your journal setup.');
     });
   
     it('throws error if journal not found', async () => {
@@ -198,144 +177,10 @@ describe('Account services tests', () => {
     });
   });
 
-  describe('updateConfig tests', () => {
-    let testJournal: HydratedDocument<JournalType>;
-    
-    beforeEach(async () => {
-      testJournal = await Journal.create({
-        title: 'Test Journal',
-        user: testUser.id
-      });
-    });
-
-    it('should create a new configuration if none exists', async () => {
-      const testConfig: ConfigType = {
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      } as ConfigType;
-  
-      await AccessServices.updateConfig(undefined, testJournal, testConfig);
-  
-      const updatedJournal = await Journal
-        .findById(testJournal.id)
-        .populate<{ config: ConfigType }>('config');
-      expect(updatedJournal?.config).toBeDefined();
-      expect(updatedJournal?.config.model.chat).toBe(testConfig.model.chat);
-      expect(updatedJournal?.config.model.analysis).toBe(testConfig.model.analysis);
-    });
-  
-    it('should update an existing configuration', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      } as ConfigType);
-  
-      testJournal.config = testConfig._id;
-      await testJournal.save();
-  
-      const updatedConfig: ConfigType = {
-        model: { chat: 'updatedChatModel', analysis: undefined },
-      } as ConfigType;
-  
-      await AccessServices.updateConfig(testConfig.id, testJournal, updatedConfig);
-  
-      const reloadedConfig = await Config.findById(testConfig.id);
-      expect(reloadedConfig).toBeDefined();
-      expect(reloadedConfig?.model.chat).toBe(updatedConfig.model.chat);
-      expect(reloadedConfig?.model.analysis).toBeUndefined();
-    });
-  
-    it('should handle an undefined model field in the new configuration', async () => {
-      const testConfig: ConfigType = {
-        model: {},
-      } as ConfigType;
-  
-      await AccessServices.updateConfig(undefined, testJournal, testConfig);
-  
-      const updatedJournal = await Journal
-        .findById(testJournal.id)
-        .populate<{ config: ConfigType }>('config');
-      expect(updatedJournal!.config).toBeDefined();
-      expect(updatedJournal!.config.model).toBeDefined();
-      expect(updatedJournal!.config.model.analysis).toBeUndefined();
-      expect(updatedJournal!.config.model.chat).toBeUndefined();
-    });
-  
-    it('should preserve unrelated fields when updating configuration', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-        apiKey: 'apiKey',
-      });
-  
-      testJournal.config = testConfig._id;
-      await testJournal.save();
-  
-      const updatedConfig: ConfigType = {
-        model: { chat: 'updatedChatModel' },
-      } as ConfigType;
-  
-      await AccessServices.updateConfig(testConfig.id, testJournal, updatedConfig);
-  
-      const reloadedConfig = await Config.findById(testConfig._id);
-      expect(reloadedConfig).toBeDefined();
-      expect(reloadedConfig?.model.chat).toBe('updatedChatModel');
-      expect(reloadedConfig?.model.analysis).toBeUndefined();
-      expect(reloadedConfig?.apiKey).toBe('apiKey');
-    });
-  });
-
-  describe('deleteConfig', () => {
-    it('should delete the associated config if the journal exists', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      });
-      const testJournal = await Journal.create({ 
-        user: testUser.id,
-        config: testConfig.id
-      });
-  
-      await AccessServices.deleteConfig(testJournal.id.toString());
-  
-      const deletedConfig = await Config.findById(testConfig.id);
-      const deletedJournal = await Journal.findById(testJournal.id);
-  
-      expect(deletedConfig).toBeNull();
-      expect(deletedJournal).not.toBeNull();
-    });
-  
-    it('should throw an error if the journal does not exist', async () => {
-      const nonExistentJournalId = new mongoose.Types.ObjectId().toString();
-  
-      await expect(AccessServices.deleteConfig(nonExistentJournalId))
-        .rejects
-        .toThrow(ExpressError);
-      await expect(AccessServices.deleteConfig(nonExistentJournalId))
-        .rejects
-        .toThrow('Journal not found.');
-    });
-  
-    it('should throw an error if the config does not exist', async () => {
-      const nonExistentConfigId = new mongoose.Types.ObjectId();
-      const testJournal = await Journal.create({
-        user: testUser.id,
-        config: nonExistentConfigId
-      });
-  
-      await expect(AccessServices.deleteConfig(testJournal.id))
-        .rejects
-        .toThrow(ExpressError);
-      await expect(AccessServices.deleteConfig(testJournal.id))
-        .rejects
-        .toThrow('Config not found.');
-    });
-  });
-
   describe('deleteAccount', () => {
     it('should delete the journal, user, entries, and related data', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      });
       const testJournal = await Journal.create({
         user: testUser.id,
-        config: testConfig.id
       });
   
       await Entry.create({
@@ -355,12 +200,10 @@ describe('Account services tests', () => {
 
       const deletedJournal = await Journal.findById(testJournal.id);
       const deletedUser = await User.findById(testUser.id);
-      const deletedConfig = await Config.findById(testConfig.id);
       const remainingEntries = await Entry.find({ journal: testJournal.id });
   
       expect(deletedJournal).toBeNull();
       expect(deletedUser).toBeNull();
-      expect(deletedConfig).toBeNull();
       expect(remainingEntries).toHaveLength(0);
     });
   
@@ -372,12 +215,8 @@ describe('Account services tests', () => {
     });
   
     it('should throw an error if the user does not exist', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      });
       const testJournal = await Journal.create({
         user: new mongoose.Types.ObjectId(),
-        config: testConfig.id
       });
   
       await expect(AccessServices.deleteAccount(testJournal.id))
@@ -389,29 +228,23 @@ describe('Account services tests', () => {
     });
   
     it('should handle journals with no entries gracefully', async () => {
-      const testConfig = await Config.create({
-        model: { chat: 'chatModel', analysis: 'analysisModel' },
-      });
       const testJournal = await Journal.create({
         title: 'Test Journal',
         user: testUser.id,
-        config: testConfig.id
       });
   
       await AccessServices.deleteAccount(testJournal.id);
   
       const deletedJournal = await Journal.findById(testJournal.id);
       const deletedUser = await User.findById(testUser.id);
-      const deletedConfig = await Config.findById(testConfig.id);
   
       expect(deletedJournal).toBeNull();
       expect(deletedUser).toBeNull();
-      expect(deletedConfig).toBeNull();
     });
   });
 
   describe('createAccount', () => {
-    it('should create a new user, configuration, and journal', async () => {
+    it('should create a new user and journal', async () => {
       const fname = 'John';
       const lname = 'Doe';
       const email = 'john.doe@example.com';
@@ -426,16 +259,10 @@ describe('Account services tests', () => {
       expect(user?.fname).toBe(fname);
       expect(user?.lname).toBe(lname);
   
-      const config = await Config.findById(newJournal.config);
-      expect(config).not.toBeNull();
-      expect(config?.model.analysis).toBe('gpt-3.5-turbo-1106');
-      expect(config?.model.chat).toBe('gpt-4');
-  
       const journal = await Journal.findById(newJournal.id);
       expect(journal).not.toBeNull();
       expect(journal?.title).toBe(journalTitle);
       expect(journal?.user.toString()).toBe(newUser.id);
-      expect(journal?.config?.toString()).toBe(config?.id);
     });
   });
 
@@ -639,16 +466,10 @@ describe('Account services tests', () => {
       expect(result.user.toString()).toEqual(testUser.id);
     });
   
-    it('should create a new journal and config if none exists for the user', async () => {
+    it('should create a new journal if none exists for the user', async () => {
       const result = await AccessServices.ensureJournalExists(testUser.id);
   
       expect(result.user.toString()).toEqual(testUser.id);
-      expect(result.config).toBeDefined();
-  
-      const savedConfig = await Config.findById(result.config);
-      expect(savedConfig).not.toBeNull();
-      expect(savedConfig?.model.analysis).toEqual('gpt-3.5-turbo-1106');
-      expect(savedConfig?.model.chat).toEqual('gpt-4');
     });
   
     it('should handle multiple calls gracefully by reusing the existing journal', async () => {
@@ -658,9 +479,7 @@ describe('Account services tests', () => {
       expect(firstCall.id).toEqual(secondCall.id);
   
       const journalCount = await Journal.countDocuments({ user: testUser.id });
-      const configCount = await Config.countDocuments({});
       expect(journalCount).toBe(1);
-      expect(configCount).toBe(1);
     });
   });
 });

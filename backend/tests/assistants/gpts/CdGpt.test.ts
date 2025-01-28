@@ -8,7 +8,6 @@ import mongoose from 'mongoose';
 
 describe('CdGpt Class', () => {
   const bearerToken = 'testBearerToken';
-  const model = 'test-model';
   const persona = 'test-persona';
   const temperature = 0.7;
 
@@ -19,7 +18,7 @@ describe('CdGpt Class', () => {
   });
 
   beforeEach(() => {
-    cdgpt = new CdGpt(bearerToken, model, persona, temperature);
+    cdgpt = new CdGpt(bearerToken, persona, temperature);
   });
 
   afterEach(async () => {

@@ -1,8 +1,6 @@
-import { Config, Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../index.js';
-import { ConfigType } from '../../config.js';
+import { Entry, EntryAnalysis, EntryConversation, Journal, User } from '../../index.js';
 import ExpressError from '../../../utils/ExpressError.js';
 import { HydratedDocument } from 'mongoose';
-import { JournalType } from '../../journal.js';
 import { UserType } from '../../user.js';
 import crypto from 'crypto';
 
@@ -10,8 +8,7 @@ import crypto from 'crypto';
  * Get the user account information associated with a journal.
  * 
  * @param journalId id of journal associated with the account
- * @returns an object with the user and config for the journal and an optional 
- * message to set the config
+ * @returns an object with the user for the journal.
  */
 export async function getAccount(
   journalId: string,
@@ -22,22 +19,12 @@ export async function getAccount(
   const user = await User.findById(journal.user);
   if (!user) throw new Error('User not found.');
 
-  // Journal config is optional
-  const config = await Config.findById(journal.config);
-
   const result: {
-    config: HydratedDocument<ConfigType> | null,
     user: HydratedDocument<UserType>,
-    configMessage?: string
   } = {
-    config: config,
     user: user,
   };
 
-  // If the config doesn't exist instruct the user to set it up
-  if (!config || !config.model.analysis || !config.model.chat) {
-    result.configMessage = 'Click the Config tab to complete your journal setup.';
-  }
   return result;
 }
 
@@ -118,52 +105,8 @@ export async function updatePassword(
 }
 
 /**
- * Updates User Config with information in config. If no Config exists, a new 
- * one is created and linked to the user's Journal.
- * 
- * @param configId id of Config to update
- * @param journal Journal document linked to Config with configId
- * @param config Config JSON with properties to update
- */
-export async function updateConfig(
-  configId: string | undefined,
-  journal: HydratedDocument<JournalType>,
-  config: ConfigType
-): Promise<void> {
-  let response = await Config.findById(configId);
-
-  if (!response) {
-    response = new Config(config);
-    journal.config = response._id;
-    await journal.save();
-  }
-
-  const { model } = config;
-
-  if (model) {
-    response.model.chat = model.chat ?? undefined;
-    response.model.analysis = model.analysis ?? undefined;
-  }
-
-  await response.save();
-}
-
-/**
- * Deletes config associated with journalId if it exists.
- * 
- * @param journalId id of journal associated with the account
- */
-export async function deleteConfig(journalId: string): Promise<void> {
-  const journal = await Journal.findById(journalId);
-  if (!journal) throw new ExpressError('Journal not found.', 404);
-
-  const config = await Config.findByIdAndDelete(journal.config);
-  if (!config) throw new ExpressError('Config not found.', 404);
-}
-
-/**
  * Deletes the User, each Entry and each of the Entry's EntryAnalyses and 
- * EntryConversations, the Config and the Journal by journalId.
+ * EntryConversations and the Journal by journalId.
  * 
  * @param journalId id of journal associated with the account
  */
@@ -184,14 +127,12 @@ export async function deleteAccount(
     await Entry.findByIdAndDelete(entry.id);
   }
 
-  await Config.findByIdAndDelete(journal.config);
-
   await Journal.findByIdAndDelete(journalId);
 }
 
 /**
- * Creates a new account by registering a user, creating a configuration,
- * and associating the user with a journal.
+ * Creates a new account by registering a user and associating the user with a 
+ * journal.
  *
  * @param fname The first name of the user.
  * @param lname The last name of the user.
@@ -213,14 +154,9 @@ export async function createAccount(
     password
   );
 
-  const newConfig = await Config.create({
-    model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
-  });
-
   const newJournal = await Journal.create({
     user: newUser.id,
     title: journalTitle,
-    config: newConfig.id,
   });
 
   return { newUser, newJournal };
@@ -380,7 +316,7 @@ export async function forgotPassword(email: string) {
 
 /**
  * Ensures that a journal exists for a given user. If no journal is found, a 
- * new one is created with a default configuration and saved to the database.
+ * new one is created and saved to the database.
  *
  * @param userId - The ID of the user for whom the journal is being checked or created.
  * @returns A promise that resolves to the user's journal, either retrieved or newly created.
@@ -391,14 +327,8 @@ export async function ensureJournalExists (userId: string) {
   let journal = await Journal.findOne({ user: userId });
 
   if (!journal) {
-    const newConfig = new Config({
-      model: { analysis: 'gpt-3.5-turbo-1106', chat: 'gpt-4' },
-    });
-    await newConfig.save();
-
     journal = new Journal({
       user: userId,
-      config: newConfig.id,
     });
 
     await journal.save();

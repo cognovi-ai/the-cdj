@@ -128,10 +128,6 @@ describe('User model and validation tests', () => {
       email: 'john.doe@example.com',
       oldPassword: 'OldPassword123!',
       newPassword: 'NewPassword123!',
-      model: {
-        chat: 'someChatModel',
-        analysis: 'someAnalysisModel',
-      },
     };
 
     const { error, value } = User.accountJoi(validObj);
@@ -146,10 +142,6 @@ describe('User model and validation tests', () => {
       email: 'invalid-email',
       oldPassword: 'short',
       newPassword: 'short',
-      model: {
-        chat: 'someChatModel',
-        analysis: 'someAnalysisModel',
-      },
     };
 
     const { error, value } = User.accountJoi(invalidObj);

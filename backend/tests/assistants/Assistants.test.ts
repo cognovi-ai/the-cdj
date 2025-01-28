@@ -3,10 +3,12 @@ import Assistant from '../../src/assistants/Assistant.js';
 
 describe('Assistant Class', () => {
   const baseUrl = 'https://api.openai.com/v1';
+  const model = 'gpt-3.5-turbo';
   const bearerToken = 'testBearerToken';
 
   beforeAll(() => {
     process.env.OPENAI_API_URL = baseUrl;
+    process.env.OPENAI_API_MODEL = model;
   });
 
   afterEach(() => {
@@ -87,7 +89,9 @@ describe('Assistant Class', () => {
     ];
 
     it('should return the filtered model when it exists', () => {
-      const assistant = new Assistant(bearerToken, 'MODEL2');
+      process.env.OPENAI_API_MODEL = 'MODEL2';
+      const assistant = new Assistant(bearerToken);
+      
       const result = assistant.testModelAvailability(models);
     
       const expectedModel = models.find(
@@ -95,10 +99,11 @@ describe('Assistant Class', () => {
       );
     
       expect(result).toEqual(expectedModel ? [expectedModel] : models);
+      process.env.OPENAI_API_MODEL = model;
     });
 
     it('should return all models when the specified model does not exist', () => {
-      const assistant = new Assistant(bearerToken, 'model4');
+      const assistant = new Assistant(bearerToken);
       const result = assistant.testModelAvailability(models);
 
       expect(result).toEqual(models);
