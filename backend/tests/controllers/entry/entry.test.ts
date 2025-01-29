@@ -106,9 +106,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
   
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.createEntry as jest.Mock).mockResolvedValue({
         errMessage: null,
@@ -140,7 +138,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
     
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({ config: 'testConfigId' });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
 
       (EntryServices.createEntry as jest.Mock).mockResolvedValue({
         errMessage: 'Some warning.',
@@ -166,22 +164,6 @@ describe('Entry Controller Tests', () => {
       const next = mockNext();
   
       (Models.Journal.findById as jest.Mock).mockResolvedValue(null);
-      
-      await EntryController.createEntry(req, res, next);
-  
-      expect(next).toHaveBeenCalledWith(expect.any(ExpressError));
-    });
-
-    it('should call next with an error if the journal config is not found', async () => {
-      const req = mockReq();
-      req.params.journalId = 'testJournalId';
-  
-      const res = mockRes();
-      const next = mockNext();
-  
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: null,
-      });
       
       await EntryController.createEntry(req, res, next);
   
@@ -274,9 +256,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
   
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
         errMessage: null,
@@ -310,7 +290,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
       
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({ config: 'testConfigId' });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
         errMessage: 'Some warning.',
@@ -354,9 +334,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
   
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.updateEntry as jest.Mock).mockResolvedValue({
         errMessage: 'Entry not found.',
@@ -473,9 +451,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
     
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
     
       (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
         errMessage: null,
@@ -513,7 +489,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
         
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({ config: 'testConfigId' });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
     
       (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
         errMessage: 'Some warning.',
@@ -564,9 +540,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
   
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.updateEntryAnalysis as jest.Mock).mockResolvedValue({
         errMessage: 'Entry not found.',
@@ -586,9 +560,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
   
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
   
       (EntryServices.updateEntryAnalysis as jest.Mock).mockRejectedValue(
         new Error('Database error')
@@ -648,9 +620,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
 
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
 
       (EntryServices.createEntryConversation as jest.Mock).mockResolvedValue({
         toObject: jest.fn().mockReturnValue({
@@ -718,9 +688,7 @@ describe('Entry Controller Tests', () => {
       const res = mockRes();
       const next = mockNext();
 
-      (Models.Journal.findById as jest.Mock).mockResolvedValue({
-        config: 'testConfigId',
-      });
+      (Models.Journal.findById as jest.Mock).mockResolvedValue(true);
 
       (EntryServices.updateEntryConversation as jest.Mock).mockResolvedValue({
         toObject: jest.fn().mockReturnValue({

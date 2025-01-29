@@ -3,12 +3,9 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Config,
   Entry,
   EntryAnalysis,
   EntryConversation,
-  Journal,
-  User,
 } from '../../../src/models/index.js';
 
 import CdGpt from '../../../src/assistants/gpts/CdGpt.js';
@@ -244,22 +241,15 @@ describe('EntryConversation tests', () => {
         total_tokens: 1,
       },
     });
-    const mockConfig = new Config({
-      model: {
-        analysis: 'test',
-      },
-    });
     const mockEntry = new Entry({ content: '' });
     const mockAnalysis = new EntryAnalysis({
       entry: mockEntry.id,
       analysis_content: '',
     });
-    await mockConfig.save();
     await mockAnalysis.save();
     const mockChat = new EntryConversation({ entry: mockEntry.id });
 
     const sut = await mockChat.getChatContent(
-      mockConfig.id,
       mockAnalysis.id,
       ''
     );
@@ -267,56 +257,13 @@ describe('EntryConversation tests', () => {
     expect(sut).toBe(expectedResult);
   });
 
-  it('throws error if config not set when getting analysis', async () => {
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(null);
-    const mockChat = new EntryConversation({});
-
-    const sut = () => {
-      return mockChat.getChatContent('', '', '', []);
-    };
-
-    await expect(sut()).rejects.toThrow(
-      'Configure your account settings to chat.'
-    );
-  });
-
-  it('removes API key from legacy config', async () => {
-    const mockConfig = new Config({
-      model: {
-        analysis: 'test',
-      },
-      apiKey: 'mockKey',
-    });
-    const findByIdAndUpdate = jest.fn();
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
-    jest
-      .spyOn(Config, 'findByIdAndUpdate')
-      .mockImplementationOnce(findByIdAndUpdate);
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
-    const mockJournal = await Journal.create({ user: mockUser.id });
-    const mockEntry = await Entry.create({
-      journal: mockJournal.id,
-      content: 'content',
-    });
-    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
-    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
-
-    await mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
-
-    expect(findByIdAndUpdate).toHaveBeenCalledWith(mockConfig._id, {
-      $unset: { apiKey: 1 },
-    });
-  });
-
   it('should throw an error if OPENAI_API_KEY is not set', async () => {
     const { OPENAI_API_KEY } = process.env;
     delete process.env.OPENAI_API_KEY;
 
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({ model: {} }));
-
     const entryConversation = new EntryConversation();
 
-    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
+    await expect(entryConversation.getChatContent('analysisId', 'content', []))
       .rejects
       .toThrow('OpenAI API Key not set. Cannot retrieve conversation response');
 
@@ -326,8 +273,7 @@ describe('EntryConversation tests', () => {
   it('should throw an error if response.error is defined', async () => {
     const { OPENAI_API_KEY } = process.env;
     process.env.OPENAI_API_KEY = 'test-api-key';
-  
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(new Config({ model: {} }));
+
     
     const mockPopulate = jest.fn().mockResolvedValue({
       entry: 'mockEntryId',
@@ -359,66 +305,10 @@ describe('EntryConversation tests', () => {
   
     const entryConversation = new EntryConversation();
   
-    await expect(entryConversation.getChatContent('configId', 'analysisId', 'content', []))
+    await expect(entryConversation.getChatContent('analysisId', 'content', []))
       .rejects
       .toThrow(ExpressError);
 
     process.env.OPENAI_API_KEY = OPENAI_API_KEY;
-  });
-
-  it('catches string thrown when trying to remove legacy API key', async () => {
-    const mockConfig = new Config({
-      model: {
-        analysis: 'test',
-      },
-      apiKey: 'mockKey',
-    });
-
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
-    jest
-      .spyOn(Config, 'findByIdAndUpdate')
-      .mockRejectedValueOnce('string error');
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
-    const mockJournal = await Journal.create({ user: mockUser.id });
-    const mockEntry = await Entry.create({
-      journal: mockJournal.id,
-      content: 'content',
-    });
-    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
-    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
-
-    const sut = () => {
-      return mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
-    };
-
-    await expect(sut()).rejects.toThrow('string error');
-  });
-
-  it('catches error thrown when trying to remove legacy API key', async () => {
-    const mockConfig = new Config({
-      model: {
-        analysis: 'test',
-      },
-      apiKey: 'mockKey',
-    });
-
-    jest.spyOn(Config, 'findById').mockResolvedValueOnce(mockConfig);
-    jest
-      .spyOn(Config, 'findByIdAndUpdate')
-      .mockRejectedValueOnce(new Error('error type'));
-    const mockUser = await User.create({ lname: 'lname', fname: 'fname', email: 'email' });
-    const mockJournal = await Journal.create({ user: mockUser.id });
-    const mockEntry = await Entry.create({
-      journal: mockJournal.id,
-      content: 'content',
-    });
-    const mockAnalysis = await EntryAnalysis.create({ entry: mockEntry.id });
-    const mockChat = await EntryConversation.create({ entry: mockEntry.id });
-
-    const sut = () => {
-      return mockChat.getChatContent(mockConfig.id, mockAnalysis.id, '', []);
-    };
-
-    await expect(sut()).rejects.toThrow('error type');
   });
 });

@@ -2,7 +2,6 @@ import * as AccessServices from '../../models/services/access/access.js';
 import { Journal, User } from '../../models/index.js';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { ConfigType } from '../../models/config.js';
 import ExpressError from '../../utils/ExpressError.js';
 import { UserType } from '../../models/user.js';
 import crypto from 'crypto';
@@ -35,7 +34,6 @@ interface UpdateAccountRequestBody {
     oldPassword: string;
     newPassword: string;
   };
-  config?: ConfigType;
 }
 
 /**
@@ -144,16 +142,10 @@ export const getAccount = async (
 
   try {
     const {
-      configMessage,
       user,
-      config
     } = await AccessServices.getAccount(journalId);
 
-    // If the config doesn't exist instruct the user to set it up
-    if (configMessage) {
-      req.flash('info', configMessage);
-    }
-    res.status(200).json({ user, config, flash: req.flash() });
+    res.status(200).json({ user });
   } catch (err) {
     return next(new ExpressError((err as Error).message, 404));
   }
@@ -168,7 +160,7 @@ export const updateAccount = async (
   next: NextFunction
 ) => {
   const { journalId } = req.params;
-  const { profile, password, config } = req.body as UpdateAccountRequestBody;
+  const { profile, password } = req.body as UpdateAccountRequestBody;
 
   try {
     const journal = await Journal.findById(journalId);
@@ -191,12 +183,6 @@ export const updateAccount = async (
         return next(error);
       }
       req.flash('success', 'Password updated successfully.');
-    }
-
-    // Update the Config model with the config data
-    if (config) {
-      await AccessServices.updateConfig(journal.config?.toString(), journal, config);
-      req.flash('success', 'Config updated successfully.');
     }
 
     // If the email was updated, re-authenticate the user
@@ -222,15 +208,7 @@ export const deleteItem = async (req: Request, res: Response, next: NextFunction
   const { journalId } = req.params;
   const { deletionItem } = req.query;
 
-  if (deletionItem === 'config') {
-    try {
-      await AccessServices.deleteConfig(journalId);
-      req.flash('success', 'Config deleted successfully.');
-      res.status(200).json({ flash: req.flash() });
-    } catch (err) {
-      return next(err);
-    }
-  } else if (deletionItem === 'account') {
+  if (deletionItem === 'account') {
     try {
       await AccessServices.deleteAccount(journalId);
       req.flash('success', 'Account deleted successfully.');

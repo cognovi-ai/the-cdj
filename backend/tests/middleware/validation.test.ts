@@ -112,7 +112,7 @@ describe('Validation Middleware Tests', () => {
   });
 
   it('should call next() if account validation succeeds', () => {
-    req.body = { profile: {}, password: {}, config: {} };
+    req.body = { profile: {}, password: {} };
     mockValidation(User, 'accountJoi');
     validateAccount(req, res, next);
 

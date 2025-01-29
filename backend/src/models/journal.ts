@@ -3,7 +3,6 @@ import Joi from 'joi';
 
 export interface JournalType {
   user: Types.ObjectId;
-  config?: Types.ObjectId;
   title?: string;
   created_at?: Date;
   updated_at?: Date;
@@ -15,7 +14,6 @@ interface JournalStatics extends Model<JournalType> {
 
 const journalSchema = new Schema<JournalType, JournalStatics>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  config: { type: Schema.Types.ObjectId, ref: 'Config' },
   title: { type: String, default: 'The Cognitive Distortion Journal' },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },

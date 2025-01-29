@@ -71,10 +71,10 @@ export const validateRegistration = (req: Request, res: Response, next: NextFunc
  * Validate the request body for account data.
  */
 export const validateAccount = (req: Request, res: Response, next: NextFunction): void => {
-  const { profile, password, config } = req.body;
+  const { profile, password } = req.body;
 
   const { error } = User.accountJoi(
-    { ...profile, ...password, ...config },
+    { ...profile, ...password },
     {
       abortEarly: false,
     }

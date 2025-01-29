@@ -95,23 +95,16 @@ export async function getEntryConversation(entryId: string) {
  * with journalId with entryContent as content
  * 
  * @param journalId id of journal where creating new entry
- * @param configId id of config to use
  * @param entryData body of entry
  * @returns new Entry document with reference to EntryAnalysis
  */
 export async function createEntry(
   journalId: string,
-  configId: string,
   entryData: EntryRequestBody,
 ) {
   const newEntry = new Entry({ journal: journalId, ...entryData });
-  const newAnalysis = new EntryAnalysis({
-    entry: newEntry.id,
-  });
 
-  newEntry.analysis = newAnalysis.id;
-
-  return await _updateEntry(newEntry, newAnalysis, configId);
+  return await _updateEntry(newEntry);
 }
 
 /**
@@ -125,15 +118,14 @@ export async function createEntry(
  */
 export async function updateEntry(
   entryId: string,
-  configId: string,
   entryData: EntryRequestBody,
 ) {
   const { title: entryTitle, content: entryContent } = entryData;
-  const { entry, entryAnalysis } = await _verifyEntry(entryId);
+  const { entry } = await _verifyEntry(entryId);
 
   if (entryContent) {
     entry.content = entryContent;
-    return await _updateEntry(entry, entryAnalysis, configId);
+    return await _updateEntry(entry);
   } else if (entryTitle) {
     entry.title = entryTitle;
     await entry.save();
@@ -146,16 +138,14 @@ export async function updateEntry(
  * and updates fields.
  * 
  * @param entryId id of entry associated with EntryAnalysis to update
- * @param configId id of config to use for LLM
  * @returns updated EntryAnalysis, Entry, and possibly error message
  */
 export async function updateEntryAnalysis(
   entryId: string,
-  configId: string,
 ) {
   const { entry, entryAnalysis } = await _verifyEntry(entryId);
   return {
-    ...await _updateEntry(entry, entryAnalysis, configId),
+    ...await _updateEntry(entry),
     entryAnalysis: entryAnalysis 
   };
 }
@@ -200,7 +190,6 @@ export async function deleteEntry(
  */
 export async function createEntryConversation(
   entryId: string,
-  configId: string,
   messageData: EntryConversationRequestBody
 ) {
   // TODO: #198 check if this conditional is necessary; Joi validation should catch this before this line
@@ -219,7 +208,6 @@ export async function createEntryConversation(
   
   // TODO: #199 try to use _populateChatContent. Can't currently because this doesn't append; it modifies in place
   const llmResponse = await newConversation.getChatContent(
-    configId,
     entryAnalysis.id,
     messageData.messages[0].message_content
   );
@@ -245,12 +233,11 @@ export async function createEntryConversation(
  */
 export async function updateEntryConversation(
   chatId: string,
-  configId: string,
   messageData: EntryConversationRequestBody
 ) {
   const { conversation, analysis } = await _verifyEntryConversation(chatId);
 
-  return await _populateChatContent(configId, analysis, messageData, conversation);
+  return await _populateChatContent(analysis, messageData, conversation);
 }
 
 /**
@@ -282,36 +269,12 @@ async function _verifyEntry(entryId: string) {
  */
 async function _updateEntry(
   updatedEntry: HydratedDocument<EntryType>,
-  // TODO: #173, may not need to pass in oldAnalysis
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  oldAnalysis: any, 
-  configId: string
 ) {
-  // Creating return object to push error handling into service rather than controller
   const updateEntryResponse: EntryResponse = {
     entry: updatedEntry,
   };
-  try {
-    // TODO: #173, move getAnalysisContent out of EntryAnalysis
-    const analysis = await oldAnalysis.getAnalysisContent(
-      configId,
-      updatedEntry.content
-    );
-  
-    if (analysis) {
-      updatedEntry.title = analysis.title;
-      updatedEntry.mood = analysis.mood;
-      updatedEntry.tags = analysis.tags;
-  
-      // TODO: you might validate here instead, not use middleware
-      oldAnalysis.analysis_content = analysis.analysis_content;
-    }
-  } catch (analysisError) {
-    updateEntryResponse.errMessage = (analysisError as Error).message;
-  } finally {
-    await updatedEntry.save();
-    await oldAnalysis.save();
-  }
+
+  await updatedEntry.save();
   return updateEntryResponse;
 }
 
@@ -325,7 +288,6 @@ async function _updateEntry(
  * @returns EntryConversation updated with LLM content
  */
 async function _populateChatContent(
-  configId: string,
   analysis: HydratedDocument<EntryAnalysisType>,
   messageData: EntryConversationRequestBody,
   // TODO: #174 define conversation type
@@ -333,7 +295,6 @@ async function _populateChatContent(
   conversation: any
 ): Promise<HydratedDocument<EntryConversationType>> {
   const llmResponse = await conversation.getChatContent(
-    configId,
     analysis.id,
     messageData.messages[0].message_content,
     conversation.messages

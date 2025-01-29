@@ -1,7 +1,6 @@
 import CdGpt, { ChatCompletionResponse, } from '../../assistants/gpts/CdGpt.js';
 import { Model, Schema, Types, model } from 'mongoose';
 
-import { Config } from '../index.js';
 import ExpressError from '../../utils/ExpressError.js';
 import Joi from 'joi';
 
@@ -18,7 +17,6 @@ export interface EntryConversationType {
 
 interface EntryConversationMethods {
   getChatContent(
-    configId: string,
     analysisId: string,
     content: string,
     messages?: ChatMessage[]
@@ -73,28 +71,7 @@ entryConversationSchema.index({ entry: 1 });
 // To order messages within a conversation by time.
 entryConversationSchema.index({ 'messages.created_at': 1 });
 
-async function removeLegacyApiKey(configId: string) {
-  const config = await Config.findById(configId);
-
-  if (!config) {
-    throw new ExpressError('Configure your account settings to chat.', 404);
-  } else if (config.apiKey) {
-    try {
-      // Remove an API key from a legacy config
-      await Config.findByIdAndUpdate(config._id, { $unset: { apiKey: 1 } });
-    } catch (err) {
-      if (typeof err === 'string') {
-        throw new ExpressError(err, 500);
-      } else if (err instanceof Error) {
-        throw new ExpressError(err.message, 500);
-      }
-    }
-  }
-  return config.model.analysis ? config.model.analysis : '';
-}
-
 async function getAnalysisCompletion(
-  configModelAnalysis: string,
   analysisId: string,
   messages: ChatMessage[],
   content: string
@@ -106,7 +83,7 @@ async function getAnalysisCompletion(
   }
   const cdGpt = new CdGpt(
     process.env.OPENAI_API_KEY,
-    configModelAnalysis,
+    process.env.OPENAI_API_MODEL,
   );
 
   await cdGpt.seedChatMessages(analysisId, messages);
@@ -122,14 +99,11 @@ async function getAnalysisCompletion(
 //TODO: pull out this method to somewhere else. dependency on CdGpt not great
 // Get the analysis content for an entry
 entryConversationSchema.methods.getChatContent = async function (
-  configId: string,
   analysisId: string,
   content: string,
   messages: ChatMessage[] = []
 ): Promise<string> {
-  const configModelAnalysis = await removeLegacyApiKey(configId);
   const response: ChatCompletionResponse = await getAnalysisCompletion(
-    configModelAnalysis,
     analysisId,
     messages,
     content
